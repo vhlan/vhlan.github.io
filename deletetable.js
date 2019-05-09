@@ -19,7 +19,7 @@
               columns.push($(this).html());
             }else{
               //CONTENT COLUMN, strip leading and trailing whitespace
-              data+= '      <div class="'+settings.prefix+columns[col_count].replace(/\s+/g,'')+' '+settings.prefix+'row">\n';
+              data+= '      <div class="'+columns[col_count].replace(/\s+/g,'')+'">\n';
               data+= '         <label>'+columns[col_count]+'</label>\n';
               data+= '         <span>'+element.replace(/^\s\s*/, '').replace(/\s\s*$/, '')+'</span>\n';
               data+= '      </div>\n'; 
