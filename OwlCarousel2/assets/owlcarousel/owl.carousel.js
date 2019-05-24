@@ -324,7 +324,7 @@
 				items = this._items,
 				settings = this.settings,
 				// TODO: Should be computed from number of min width items in stage
-			    	view = Math.max(settings.items * 2, 1),
+			    	view = Math.max(settings.items * 1, 1),
 			    	view = Math.max(settings.items * 2, 4),
 				view = Math.max(settings.items * 2, 2),
 				size = Math.ceil(items.length / 2) * 2,
