@@ -1,6 +1,5 @@
 var twLSN = [
     "www.vhlan.my.id"
-    "kecanduan-pornografi.blogspot.com/",
     "www.physiostore.co.id",
 ];
 function cekLSN(value, arr) {
