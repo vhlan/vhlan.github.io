@@ -1,5 +1,5 @@
 var twLSN = [
-    "www.vhlan.my.id"
+    "www.vhlan.my.id",
     "www.physiostore.co.id",
 ];
 function cekLSN(value, arr) {
