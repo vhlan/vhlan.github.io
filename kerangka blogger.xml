@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE html>
+<HTML expr:class='data:blog.languageDirection + &quot; no-js rwd&quot;' expr:dir='data:blog.languageDirection'>
+<head>
+<meta charset='utf-8'/>
+<b:if cond='data:blog.url == data:blog.homepageUrl'><link href='https://plus.google.com/ID_G-pluss' rel='author'/></b:if>
+<b:if cond='data:blog.pageType == &quot;index&quot;'>
+    <title><data:blog.pageTitle/></title>
+<b:else/>
+    <b:if cond='data:blog.pageType == &quot;error_page&quot;'>
+        <title>404: Page Not Found ~ <data:blog.title/></title>
+    <b:else/>
+        <title><data:blog.pageName/> ~ <data:blog.title/></title>
+    </b:if>
+</b:if>
+<meta content='width=device-width, initial-scale=1, maximum-scale=1' name='viewport'/>
+<meta content='text/html; charset=UTF-8' http-equiv='Content-Type'/>
+<meta content='blogger' name='generator'/>
+<link expr:href='data:blog.homepageUrl + &quot;favicon.ico&quot;' rel='icon' type='image/x-icon'/>
+<link expr:href='data:blog.url' rel='canonical'/>
+<link expr:href='data:blog.homepageUrl + &quot;feeds/posts/default&quot;' expr:title='data:blog.title + &quot; - Atom&quot;' rel='alternate' type='application/atom+xml'/>
+<link expr:href='data:blog.homepageUrl + &quot;feeds/posts/default?alt=rss&quot;' expr:title='data:blog.title + &quot; - RSS&quot;' rel='alternate' type='application/rss+xml'/>
+<link expr:href='&quot;http://www.blogger.com/feeds/&quot; + data:blog.blogId + &quot;/posts/default&quot;' expr:title='data:blog.title + &quot; - Atom&quot;' rel='alternate' type='application/atom+xml'/>
+<link href='http://www.blogger.com/openid-server.g' rel='openid.server'/>
+<link expr:href='data:blog.homepageUrl' rel='openid.delegate'/>
+<b:if cond='data:blog.pageType == &quot;item&quot;'>
+<b:if cond='data:blog.postImageThumbnailUrl'>
+<link expr:href='data:blog.postImageThumbnailUrl' rel='image_src'/>
+</b:if>
+<b:if cond='data:blog.metaDescription != &quot;&quot;'>
+<meta expr:content='data:blog.metaDescription' name='description'/>
+<b:else/>
+<meta expr:content='data:blog.pageName + &quot; - &quot; + data:blog.title' name='description'/>
+</b:if>
+</b:if>
+<b:if cond='data:blog.url == data:blog.homepageUrl'>
+<meta content='Deskripsi - Blog' name='description'/>
+<meta content='Keyword blog' name='keywords'/>
+</b:if>
+&lt;style type=&quot;text/css&quot;&gt;&lt;!-- /* <b:skin><![CDATA[
+Disini nantinya akan di isi CSS untuk Layout Tata Letak
+*/]]></b:skin>
+<style type='text/css'>
+/*
+Name : Kerangka template dengan Schema.org
+Designer: Mas Yadi Ganteng Banget
+URL : http://www.masyadi.com
+*/
+
+Tulis CSS anda disini, mulai dari outer-wrapper dan seterusnya 
+</style>
+
+Jquery disini
+
+</head>
+<body expr:class='data:blog.pageType' itemscope='itemscope' itemtype='http://schema.org/WebPage'>
+
+<div id='outer-wrapper'> <!-- Disini posisi elemen outer-wrapper -->
+
+<header class='header' id='header' itemscope='itemscope' itemtype='http://schema.org/WPHeader'>
+<!-- Disini lokasi untuk Header judul dan deskripsi Blog -->
+</header>
+
+<div id='main-wrapper' itemprop='mainContentOfPage'>
+<!-- Disini lokasi untuk posting dan komentar dan b:section dibawah ini adalah widget untuk posting dan komentar -->
+
+<b:section class='main' id='main' showaddelement='no'>
+<b:widget id='Blog1' locked='true' title='Posting Blog' type='Blog'/>
+</b:section>
+
+</div>
+
+<aside id='sidebar-wrapper' itemscope='itemscope' itemtype='http://schema.org/WPSideBar'>
+<!-- Disini Lokasi sidebar blog yang berisi widget, dan kode b:section dibawah ini adalah kode untuk widget sidebar -->
+<b:section class='sidebar' id='sidebar-kanan' showaddelement='yes'>
+</b:section>
+</aside>
+<div class='clear'>&#160;</div>
+<div class='clear'/> <!-- Pembatas dari outer-wrapper -->
+
+<footer class='clear' id='site-footer' itemscope='itemscope' itemtype='http://schema.org/WPFooter'>
+
+<!-- Disini lokasi footer, bisa di isi widget dan copyright desainer -->
+
+</footer>
+
+</div> <!-- Akhir dari outer-wrapper -->
+
+&lt;!--</body>--&gt;&lt;/body&gt;</HTML>
