@@ -51,7 +51,7 @@ function counter(time, url) {
 }
 
 var thehours = new Date().getHours();
-var theminutes = new Date().getMinutes();
+var theminutes = new Date().getMinutes().toString().replace(/^(\d)$/, '0$1');
 var link = 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN';
 var themessage;
 var begadang = ("Sudah hampir jam 1, ingat kata Opa Rhoma <i>'Begadang boleh saja, kalau ada perlunya'</i>");
