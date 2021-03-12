@@ -9,52 +9,65 @@
   color: #333;
 }
 
-.greeting {
-  font-weight: 600;
+p {
+  margin: 0;
+  padding: 0;
+  font-weight: 700;
+}
+
+#container {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: 2fr;
+  margin: 0 auto;
   position: absolute;
-  left: 50%;
   top: 50%;
+  left: 50%;
+  margin-right: -50%;
   transform: translate(-50%, -50%);
 }
     </style>
   </head>
   <body>
-    <div class="greeting"></div>
+<div id="container">
+<div class="greeting"></div>
 <p class="countdown"></p>
+</div>
     <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
     <script type="text/javascript">
     //<![CDATA[
-var thehours = new Date().getHours();
-	var themessage;
-	var morning = ('Good morning');
-	var afternoon = ('Good afternoon');
-	var evening = ('Good evening');
+function counter(time, url) {
+  var interval = setInterval(function() {
+    $('.countdown').text("Tunggu " + time + " Detik");
+    time = time - 1;
 
-	if (thehours >= 0 && thehours < 12) {
-		themessage = morning; 
-
-	} else if (thehours >= 12 && thehours < 17) {
-		themessage = afternoon;
-
-	} else if (thehours >= 17 && thehours < 24) {
-		themessage = evening;
-	}
-
-function counter(time, url){
-	var interval = setInterval(function(){
-		$('.countdown').text(time);
-		time = time - 1;
- 
-		if(time == 0){
-			clearInterval(interval);
-			window.location = url;
-		}
-	}, 1000);
+    if (time == 0) {
+      clearInterval(interval);
+      window.location = url;
+    }
+  }, 1000);
 }
-$(document).ready(function(){
-	counter(5, 'http://www.tutorialweb.net');
-});
-	$('.greeting').append(themessage);
+
+var thehours = new Date().getHours();
+var themessage;
+var morning = ("Sudah Jam "+thehours+" Tidur dulu nu', pagi baru lanjut nonton.");
+var afternoon = ("Sore Ainun, jangan lupa Shalat Azar.");
+var evening = ("Sudah makan nu'? makan dulu gih");
+
+if (thehours >= 0 && thehours < 12) {
+  themessage = morning;
+  counter(15, 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN');
+
+} else if (thehours >= 12 && thehours < 17) {
+  themessage = afternoon;
+  counter(5, 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN');
+
+} else if (thehours >= 18 && thehours < 24) {
+  themessage = evening;
+  counter(10, 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN');
+}
+
+$('.greeting').append(themessage);
     //]]>
 </script>
   </body>
