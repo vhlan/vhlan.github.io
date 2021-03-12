@@ -51,30 +51,59 @@ function counter(time, url) {
 var thehours = new Date().getHours();
 var link = 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN';
 var themessage;
-var morning = ("Sudah Jam "+thehours+" Tidur dulu nu', pagi baru lanjut nonton.");
-var afternoon = ("Sore Ainun, jangan lupa Shalat.");
-var evening = ("Sudah makan nu'? makan dulu gih");
-var jamsepuluh = ("Sudah makan nu'? makan dulu gih");
+var begadang = ("Sudah Jam " + thehours + " Tidur dulu nu', jangan begadang, pagi baru lanjut nonton lagi.");
+var pagi = ("Pagi Ainun, Nikmatnya nonton itu pas sambil makan! Selamat Menonton");
+var dzuhur = ("Sudah ji shalat dzuhur?, shalat dulu kalau belum.");
+var sore = ("Sore Ainun, jangan lupa Shalat.");
+var malam = ("Sudah makan nu'? makan dulu gih, shalat dulu tapi");
+var badaisya = ("Malam Ainun, Jangan lupa istirahat.");
+var jamsepuluh = ("Sudah hampir jam 11 nu', prepare tidur!!!");
+var jamsebelas = ("Maumi tengah malam, ku ksh lamai waktu tunggunya");
 
-if (thehours >= 0 && thehours < 12) {
-  themessage = morning;
-  counter(15, link);
+if (thehours >= 0 && thehours < 7) {
 
-} else if (thehours >= 12 && thehours < 17) {
-  themessage = afternoon;
-  counter(5, link);
+  themessage = begadang;
+  counter(17, link);
 
-} else if (thehours >= 18 && thehours < 24) {
-  themessage = evening;
-  counter(10, link );
+} else if (thehours >= 7 && thehours < 12) {
+
+  themessage = pagi;
+  counter(7, link);
+
+} else if (thehours >= 12 && thehours < 15) {
+
+  themessage = dzuhur;
+  counter(7, link);
+
+} else if (thehours >= 15 && thehours < 18) {
+
+  themessage = sore;
+  counter(7, link);
+
+} else if (thehours >= 18 && thehours < 19) {
+
+  themessage = malam;
+  counter(10, link);
+  
+} else if (thehours >= 19 && thehours < 22) {
+
+  themessage = badaisya;
+  counter(10, link);
+  
 } else if (thehours >= 22 && thehours < 23) {
+
   themessage = jamsepuluh;
   counter(10, link);
+  
+} else if (thehours >= 23 && thehours < 24) {
+
+  themessage = jamsebelas;
+  counter(15, link);
+  
 }
 
 
 $('.greeting').append(themessage);
-
     //]]>
 </script>
   </body>
