@@ -1,59 +1,376 @@
+<!DOCTYPE html>
 <html>
-</head>
-<title>My Project Order</title>
-<style>
-    body {
-        background-color: #a6c0c3;
-    }
-    
-    #wrap {
-        width: 500px;
-        margin: 0 auto;
-        background: #fafbfc;
-        height: 100%;
-        border-radius: 5px;
-    }
-    
-    .judul {
-        padding: 20px;
-        background-color: #f1f8ff;
-        font-family: arial;
-        color: #586069;
-        font-weight: bold;
-        font-size: 30px;
-        border-bottom: 1px solid #e1e4e8;
-    }
-    
-    .isi {
-        padding: 20px;
-    }
-    
-    ul.isi {}
-    
-    .isi a {
-        text-decoration: none;
-    }
-</style>
-</head>
-
-<body>
-    <div id="wrap">
-        <div class="judul">
-            My Project Order
-        </div>
-        <div class="isi">
-            <b>Dropdown List</b>
-            <ul>
-                <li><a href="https://vhlan.github.io/prov.json"> Data Provinsi</a></li>
-                <li><a href="https://vhlan.github.io/kota.json"> Data Kota</a></li>
-                <li><a href="https://vhlan.github.io/kec.json"> Data Kecamatan</a></li>
+    <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+        <title>VHLAN - Designer &Front End Developer</title>
+        <link rel="stylesheet" href="assets\styles\main.css"/>
+        <link rel="preconnect" href="https://fonts.googleapis.com"/>
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+        <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,200;1,300;1,400;1,600&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet"/>
+        <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    </head>
+    <body class="isHomepage" itemscope="itemscope" itemtype="https://schema.org/WebPage">
+        <nav id="bottom-nav">
+            <ul class="bottom-bar">
+                <li>
+                    <a class="bottom-bar-element" href="#home">
+                        <i class="fas fa-home"></i>
+                        <br>
+                        <span>Home</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="bottom-bar-element" href="#about">
+                        <i class="fas fa-address-card"></i>
+                        <br>
+                        <span>About</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="bottom-bar-element" href="#work">
+                        <i class="fas fa-briefcase"></i>
+                        <br>
+                        <span>Work</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="bottom-bar-element" href="#blog">
+                        <i class="fas fa-book"></i>
+                        <br>
+                        <span>Blog</span>
+                    </a>
+                </li>
             </ul>
-            <b>Image</b>
-            <ul>
-                <li><a href="https://vhlan.github.io/iconpayship.json">Icon Pay dan Ship</a></li>
-            </ul>
-        </div>
-    </div>
-</body>
+        </nav>
+        
+        <header id="header-wrapper" class="header-wrapper shadow">
+            <div class="container">
+                <div class="nav-left">
+                    <ul class="menu">
+                        <li class="active">
+                            <a class="menu-anchor" href="#home">Home</a>
+                        </li>
+                        <li>
+                            <a class="menu-anchor" href="#about">About</a>
+                        </li>
+                        <li>
+                            <a class="menu-anchor" href="#work">Works</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="nav-brand">
+                    <div class="logo-brand active">VA</div>
+                    <h1 class="title active">
+                        <a href="/">VHLAN</a>
+                    </h1>
+                </div>
+                <div class="nav-right">
+                    <ul class="menu">
+                        <li>
+                            <a class="menu-anchor" href="#blog">Blog</a>
+                        </li>
+                        <li>
+                            <a href="/resume">Resume</a>
+                        </li>
+                        <li>
+                            <a href="/contact">Contact</a>
+                        </li>
+                    </ul>
+                </div>
+                <div class="hamburger" id="hamburger">
+                    <span class="line"></span>
+                    <span class="line"></span>
+                    <span class="line"></span>
+                </div>
+                <div class="hamburger-menu">
+                    <ul>
+                        <li>
+                            <a class="menuitem active" href="#home">Home</a>
+                        </li>
+                        <li>
+                            <a class="menuitem" href="#about">Resume</a>
+                        </li>
+                        <li>
+                            <a class="menuitem" href="#work">Contact</a>
+                        </li>
+                        <li>
+                            <a class="menuitem" href="#blog">Blog</a>
+                        </li>
+                    </ul>
+                    <div class="hamburger-bg"></div>
+                </div>
+            </div>
+        </header>
+        <section id="home">
+            <div class="container">
+                <div class="row">
+                    <div class="greeting_text">
+                        <span>Hi there, I'm</span>
+                    </div>
+                    <div class="landing_name">
+                        <div class="ahlan">
+                            <svg id="vhlan" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186.26 68">
+                                <path d="M198,217h11v27h11V216h11v67H220V253H209v31H198Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M238,217h11v57h17v10H238Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M279.88,217h14.26L305,284H294.9L293,270.81V271H281.14l-1.9,13H269Zm11.47,44-4.67-33h-.19l-4.58,33Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M310,217h14l9.83,40H334V217h9v67H332l-12.83-49H319v49h-9Z" transform="translate(-156.74 -216)"></path>
+                                <polygon points="25.17 68 10.91 68 0 1 10.55 1 17.66 52.97 24.57 1 36.08 1 25.17 68"></polygon>
+                            </svg>
+                        </div>
+                        <div class="vhlan">
+                            <svg id="ahlan" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 186.26 68">
+                                <path d="M167.66,217h14.26l10.91,67H181.9L180,270.81V271H168.14l-1.9,13h-9.5Zm11.47,44-4.67-33h-.19l-4.58,33Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M198,217h11v27h11V216h11v67H220V253H209v31H198Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M238,217h11v57h17v10H238Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M279.88,217h14.26L305,284H294.9L293,270.81V271H281.14l-1.9,13H269Zm11.47,44-4.67-33h-.19l-4.58,33Z" transform="translate(-156.74 -216)"></path>
+                                <path d="M310,217h14l9.83,40H334V217h9v67H332l-12.83-49H319v49h-9Z" transform="translate(-156.74 -216)"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="summary">
+                        <p>Graphic Designer dan Developer in Makassar.</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+        <div class="line-brand"></div>
+        <section id="about">
+            <div class="container">
+                <div class="row">
+                    <div class="about-left">
+                        <div class="title">
+                            <h2>About Me</h2>
+                        </div>
+                        <div class="social">
+                            <ul>
+                                <li>
+                                    <a href="https://instagr.am/vhlan">
+                                        Instagram <i class="fab fa-instagram"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="#">
+                                        Linkedin <i class="fab fa-linkedin-in"></i>
+                                    </a>
+                                </li>
+                                <li>
+                                    <a href="https://twitter.com/muhahlan">
+                                        Twitter <i class="fab fa-twitter"></i>
+                                    </a>
+                                </li>
+                            </ul>
+                        </div>
+                    </div>
+                    <div class="profile">
+                        <img src="assets/img/profile.jpg">
+                    </div>
+                    <div class="social-mobile">
+                        <ul>
+                            <li>
+                                <a href="https://instagr.am/vhlan">
+                                    <i class="fab fa-instagram"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="#">
+                                    <i class="fab fa-linkedin-in"></i>
+                                </a>
+                            </li>
+                            <li>
+                                <a href="https://twitter.com/muhahlan">
+                                    <i class="fab fa-twitter"></i>
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+                    <div class="aboutTitle">
+                        <h2>UI / UX Designer &amp;Web Developer. Based in San Francisco. I'm
+                  Code &amp;Design things for web.
+                </h2>
+                    </div>
+                    <div class="summary">
+                        <p>I am a professional web designer from San Francisco. Consectetur
+                  adipisicing elit olore iusto cupiditate possimus amet aliquam
+                  qui voluptatem. Animi perferendis Minima nemo blanditiis rem
+                  odio provident delectus ab magni omnis optio. Architecto debitis
+                  mollitia itaque eius accusamu.
+                </p>
+                    </div>
+                </div>
+            </div>
+        </section>
 
+        <section id="work">
+            <div class="container">
+                <div class="row">
+                    <h2>Recent Works</h2>
+                    <div class="recent-work">
+                        <div class="item-work">
+                            <div class="header_item">
+                                <img src="assets/img/develop_game.jpg">
+                                <span class="year_item">Upcoming</span>
+                                <div class="label_item">
+                                    <a href="#">Develop</a>
+                                </div>
+                            </div>
+                            <div class="post_item">
+                                <a href="#">
+                                    <h3>Development Game Puzzle for Education</h3>
+                                </a>
+                                <div class="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut
+                    libero est, vestibulum at lorem sit amet, condimentum mollis
+                    lorem. Phasellus id massa non risus volutpat consequat. Donec
+                    accumsan metus ac sollicitudin euismod.
+                  </div>
+                            </div>
+                        </div>
+                        <div class="item-work">
+                            <div class="header_item">
+                                <img src="assets/img/build-template.png">
+                                <span class="year_item">2015-2019</span>
+                                <div class="label_item">
+                                    <a href="#">Front-End</a>
+                                </div>
+                            </div>
+                            <div class="post_item">
+                                <a href="#">
+                                    <h3>Build Template for CMS Blogger</h3>
+                                </a>
+                                <div class="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut
+                    libero est, vestibulum at lorem sit amet, condimentum mollis
+                    lorem. Phasellus id massa non risus volutpat consequat. Donec
+                    accumsan metus ac sollicitudin euismod.
+                  </div>
+                            </div>
+                        </div>
+                        <div class="item-work">
+                            <div class="header_item">
+                                <img src="assets/img/jajan_branding.jpg">
+                                <span class="year_item">2020</span>
+                                <div class="label_item">
+                                    <a href="#">Design Graphic</a>
+                                </div>
+                            </div>
+                            <div class="post_item">
+                                <a href="#">
+                                    <h3>Branding Jajan</h3>
+                                </a>
+                                <div class="summary">Lorem ipsum dolor sit amet, consectetur adipiscing elit. Ut
+                    libero est, vestibulum at lorem sit amet, condimentum mollis
+                    lorem. Phasellus id massa non risus volutpat consequat. Donec
+                    accumsan metus ac sollicitudin euismod.
+                  </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="moreBtn">View All Works</div>
+            </div>
+        </section>
+
+        <section id="blog" class="blog last">
+            <div class="container">
+                <div class="row">
+                    <h2>Blog Post</h2>
+                    <div class="blog-post">
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets/img/develop_game.jpg">
+                                    <h3>Develop Puzzle Game For Learn Web</h3>
+                                    <span>Upcoming </span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets/img/jajan_branding.jpg">
+                                    <h3>Jajan Branding</h3>
+                                    <span>21, August 2021</span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets/img/build-template.png">
+                                    <h3>Build Template for CMS Blogger</h3>
+                                    <span>2015-2019 </span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets\img\build-template.png">
+                                    <h3>Build Template for CMS Blogger</h3>
+                                    <span>2015-2019 </span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets\img\build-template.png">
+                                    <h3>Build Template for CMS Blogger</h3>
+                                    <span>2015-2019 </span>
+                                </div>
+                            </a>
+                        </div>
+                        <div class="item-blog">
+                            <a href="#">
+                                <div class="item-info">
+                                    <img src="assets\img\build-template.png">
+                                    <h3>Build Template for CMS Blogger</h3>
+                                    <span>2015-2019 </span>
+                                </div>
+                            </a>
+                        </div>
+                    </div>
+                </div>
+                <div class="moreBtn">
+                    <a href="" class="#">View All Posts</a>
+                </div>
+                <div class="moreBtn2">View More</div>
+            </div>
+        </section>
+        
+<div class="line-brand"></div>
+
+<footer id="footer-wrapper" class="footer-wrapper">
+            <div class="container">
+                <div class="row">
+                    <div class="footer-brand">
+                        <div class="logo">VA
+            </div>
+                        <div class="copyright">
+                            © 2021 All <br>Rights Reserved
+            
+                        
+                        
+                        
+                        </div>
+                    </div>
+                    <nav class="menu-footer">
+                        <ul>
+                            <li>
+                                <a href="#">Disclaimer</a>
+                            </li>
+                            <li>
+                                <a href="#">TOS</a>
+                            </li>
+                            <li>
+                                <a href="#">Privacy</a>
+                            </li>
+                        </ul>
+                    </nav>
+                </div>
+            </div>
+        </footer>
+        
+        <script src="assets/js/vendor/jquery/jquery-3.4.1.min.js"></script>
+        <script src="assets/js/app.js"></script>
+    </body>
 </html>
