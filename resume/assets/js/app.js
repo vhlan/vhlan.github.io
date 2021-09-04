@@ -8,7 +8,7 @@ var Nohp = "+6285796655795";
 var Telegram = "t.me/vhlan";
 var Email = "hello@vhlan.my.id";
 var Web = "vhlan.my.id";
-var linkBarcode = "barcode.jpg";
+var linkBarcode = "assets/img/barcode.jpg";
 var Instagram = "instagr.am/vhlan";
 var Facebook = "fb.me/vhlan.id";
 
