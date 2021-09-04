@@ -1,0 +1,165 @@
+body {
+  background: #666;
+  font-family: "Titillium Web", sans-serif;
+}
+h3 {
+  margin: 0;
+}
+header h1 {
+  font-size: 2.5em;
+  color: #097677;
+  font-family: "Titillium Web", sans-serif;
+  text-transform: uppercase;
+  margin: 0;
+}
+header {
+  text-align: center;
+  margin: 0 0 20px 0;
+  display: grid;
+}
+header .summary {
+  font-weight: 400;
+  line-height: 1.2em;
+}
+header span {
+  font-weight: 300;
+  margin: 0 0 10px;
+}
+.experience li.sub-title {
+  font-weight: 400;
+  font-style: italic;
+}
+.experience li.summary {
+  line-height: 1.4em;
+  margin-bottom: 10px;
+  text-align: justify;
+}
+aside {
+  border-right: 2px solid #c4e6ed;
+  padding-right: 20px;
+  margin-right: 20px;
+}
+.info,
+.education,
+.experience {
+  border-bottom: 2px solid #c4e6ed;
+  margin-bottom: 0.83em;
+  padding-bottom: 0.83em;
+}
+.info ul {
+  padding: 0;
+  margin: 0;
+}
+.info ul li ul li {
+  margin: 0;
+}
+.info ul li ul li a {
+  text-decoration: none;
+  color: #000;
+}
+.info h3 {
+  margin: 0;
+  display: inline-block;
+}
+.education ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.education ul li {
+  margin: 0 0 10px 0;
+}
+.education ul li ul li {
+  margin: 0;
+}
+.fab,
+.fas {
+  margin-right: 10px;
+  font-size: 17px;
+  font-weight: 700;
+  color: #097677;
+}
+.info ul li {
+  list-style: none;
+  line-height: 1.8em;
+  margin-bottom: 15px;
+  display: flex;
+  vertical-align: baseline;
+  align-items: baseline;
+  align-content: space-around;
+  justify-content: flex-start;
+}
+.info ul {
+  padding: 0;
+  margin: 0;
+}
+.barcode img {
+  width: 60%;
+}
+h2.title {
+  font-family: "Titillium Web", sans-serif;
+  color: #097677;
+  position: relative;
+}
+h2.title:before {
+  content: "";
+  position: absolute;
+  left: 0;
+  bottom: -10px;
+  height: 25px;
+  width: 45px;
+  border-bottom: 3px solid #097677;
+}
+h3.title small {
+  margin: 0 5px;
+}
+#container {
+  background: #fff;
+  max-width: 600px;
+  padding: 70px 90px;
+  margin: 0 auto;
+}
+
+.main-wrapper {
+  display: grid;
+  grid-area: main;
+  grid-template-columns: 40% 60%;
+  grid-gap: 10px;
+}
+.experience ul {
+  padding: 0 25px;
+  margin: 0;
+}
+.experience ul li ul {
+  padding: 0;
+}
+.experience li {
+  list-style: square;
+}
+.experience ul li::marker {
+  font-size: 25px;
+  color: #097677;
+}
+.experience ul li ul li {
+  list-style: none;
+}
+h3.title {
+  margin: 0;
+  display: inline-block;
+}
+.skill ul li::marker {
+  font-size: 25px;
+  color: #097677;
+}
+
+.skill li {
+  list-style: square;
+}
+
+.skill ul {
+  padding: 0 25px;
+  margin: 0;
+}
+.skill ul li ul li {
+  list-style: circle;
+}
