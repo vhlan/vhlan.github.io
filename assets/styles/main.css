@@ -1121,6 +1121,9 @@ footer.footer-wrapper .logo {
 
 /* Landscape phones and down */
 @media (max-width: 480px) {
+    .landing_name {
+    width: 80%;
+    }
     #about .title h2::before {
         width: 203px;
     }
