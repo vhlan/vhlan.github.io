@@ -2,43 +2,41 @@
 <html>
     <head>
         <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-        <title>VHLAN - Designer &Front End Developer</title>
+        <title>VHLAN - Designer & Front End Developer</title>
         <link rel="stylesheet" href="/assets/styles/main.css"/>
         <link rel="preconnect" href="https://fonts.googleapis.com"/>
         <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
         <link href="https://fonts.googleapis.com/css2?family=Titillium+Web:ital,wght@0,200;0,300;0,400;0,600;0,700;1,200;1,300;1,400;1,600&display=swap" rel="stylesheet"/>
         <link href="https://fonts.googleapis.com/css2?family=Staatliches&display=swap" rel="stylesheet"/>
+        <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&display=swap" rel="stylesheet">
         <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" integrity="sha512-1ycn6IcaQQ40/MKBW2W4Rhis/DbILU74C1vSrLJxCq57o941Ym01SwNsOMqvEBFlcgUa6xLiPY/NS5R+E6ztJQ==" crossorigin="anonymous" referrerpolicy="no-referrer"/>
     </head>
     <body class="isHomepage" itemscope="itemscope" itemtype="https://schema.org/WebPage">
-        <nav id="bottom-nav">
+<nav id="bottom-nav">
             <ul class="bottom-bar">
                 <li>
-                    <a class="bottom-bar-element" href="#home">
+                    <a class="bottom-bar-element" href="/">
                         <i class="fas fa-home"></i>
-                        <br>
-                        <span>Home</span>
                     </a>
                 </li>
                 <li>
-                    <a class="bottom-bar-element" href="#about">
+                    <a class="bottom-bar-element" href="/#about">
                         <i class="fas fa-address-card"></i>
-                        <br>
-                        <span>About</span>
                     </a>
                 </li>
                 <li>
-                    <a class="bottom-bar-element" href="#work">
-                        <i class="fas fa-briefcase"></i>
-                        <br>
-                        <span>Work</span>
+                    <a class="bottom-bar-element" href="/#work">
+                        <i class="fas fa-mug-hot"></i>
                     </a>
                 </li>
                 <li>
-                    <a class="bottom-bar-element" href="#blog">
+                    <a class="bottom-bar-element" href="/#blog">
                         <i class="fas fa-book"></i>
-                        <br>
-                        <span>Blog</span>
+                    </a>
+                </li>
+                <li>
+                    <a class="bottom-bar-element" href="/resume.pdf">
+                        <i class="fas fa-briefcase"></i>
                     </a>
                 </li>
             </ul>
@@ -47,8 +45,8 @@
             <div class="container">
                 <div class="nav-left">
                     <ul class="menu">
-                        <li class="active">
-                            <a href="/#home">Home</a>
+                        <li>
+                            <a href="/">Home</a>
                         </li>
                         <li>
                             <a href="/#about">About</a>
@@ -70,10 +68,10 @@
                             <a href="/#blog">Blog</a>
                         </li>
                         <li>
-                            <a href="/resume">Resume</a>
+                            <a href="/resume.pdf">Resume</a>
                         </li>
-                        <li>
-                             <a href="/contact">Contact</a>
+                        <li class="active">
+                            <a href="/contact">Contact</a>
                         </li>
                     </ul>
                 </div>
@@ -85,16 +83,22 @@
                 <div class="hamburger-menu">
                     <ul>
                         <li>
-                            <a class="menuitem active" href="#home">Home</a>
+                            <a href="/">Home</a>
                         </li>
                         <li>
-                            <a class="menuitem" href="#about">Resume</a>
+                            <a href="/#about">About</a>
                         </li>
                         <li>
-                            <a class="menuitem" href="#work">Contact</a>
+                            <a href="/#work">Works</a>
                         </li>
                         <li>
-                            <a class="menuitem" href="#blog">Blog</a>
+                            <a href="/#Blog">Blog</a>
+                        </li>
+                          <li class="show">
+                            <a href="/resume.pdf">Resume</a>
+                        </li>
+                        <li class="show">
+                            <a href="/contact">Contact</a>
                         </li>
                     </ul>
                     <div class="hamburger-bg"></div>
@@ -102,60 +106,60 @@
             </div>
         </header>
         <div class="contact-form">
-        <div class="container">
-            <ul class="tabs">
-                <li class="tab-link current" data-tab="email">Email</li>
-                <li class="tab-link" data-tab="whatsapp">WhatsApp</li>
-            </ul>
-            <div id="email" class="tab-content current">
-                <div id="contactemail" class="contactemail">
-                    <form action="https://formspree.io/f/mwkawwab" method="POST">
-                        <label data-tip="Your name!">
-                            <span>Name</span>
-                            <input class='nama required' type="text" name="name" placeholder="Name">
-                        </label>
-                        <label data-tip="Email Address">
-                            <span>Email</span>
-                            <input class='email required' type="email" name="_replyto" placeholder="example@domain.com">
-                        </label>
-                        <label data-tip="Phone">
-                            <span>Phone</span>
-                            <input class='telepon' type="telephone" name="telephone" placeholder="(+62) 812-34567890">
-                        </label>
-                        <label data-tip="Subject">
-                            <span>Subject</span>
-                            <input class='subjek required' name="subject" value=""/>
-                        </label>
-                        <label data-tip="Can I help you?">
-                            <span>Message</span>
-                            <textarea class='pesan required' name="message"></textarea>
-                        </label>
-                        <button type="submit" onclick="return validateRegister();" class="kirim">Send</button>
-                    </form>
+            <div class="container">
+                <ul class="tabs">
+                    <li class="tab-link current" data-tab="email">Email</li>
+                    <li class="tab-link" data-tab="whatsapp">WhatsApp</li>
+                </ul>
+                <div id="email" class="tab-content current">
+                    <div id="contactemail" class="contactemail">
+                        <form action="https://formspree.io/f/mwkawwab" method="POST">
+                            <label data-tip="Your name!">
+                                <span>Name</span>
+                                <input class='nama required' type="text" name="name" placeholder="Name">
+                            </label>
+                            <label data-tip="Email Address">
+                                <span>Email</span>
+                                <input class='email required' type="email" name="_replyto" placeholder="example@domain.com">
+                            </label>
+                            <label data-tip="Phone">
+                                <span>Phone</span>
+                                <input class='telepon' type="telephone" name="telephone" placeholder="(+62) 812-34567890">
+                            </label>
+                            <label data-tip="Subject">
+                                <span>Subject</span>
+                                <input class='subjek required' name="subject" value=""/>
+                            </label>
+                            <label data-tip="Can I help you?">
+                                <span>Message</span>
+                                <textarea class='pesan required' name="message"></textarea>
+                            </label>
+                            <button type="submit" onclick="return validateRegister();" class="kirim">Send</button>
+                        </form>
+                    </div>
                 </div>
-            </div>
-            <div id="whatsapp" class="tab-content">
-                <div class='contactwa' id='contactwa'>
-                    <div class='formwa'>
-                        <input class='tujuan' type='hidden' value='85796655795'/>
-                        <!-- No. WhatsApp -->
-                        <label data-tip="Your name">
-                            <span>Name</span>
-                            <input class='nama required bagi' placeholder='Name' type='text'/>
-                        </label>
-                        <label data-tip="Email Address">
-                            <span>Email</span>
-                            <input class='email required' placeholder='example@domain.com' type='email'/>
-                        </label>
-                        <label data-tip="Say something!">
-                            <span>Message</span>
-                            <textarea class='pesan required full'></textarea>
-                        </label>
-                        <a class='submit'>Send</a>
+                <div id="whatsapp" class="tab-content">
+                    <div class='contactwa' id='contactwa'>
+                        <div class='formwa'>
+                            <input class='tujuan' type='hidden' value='85796655795'/>
+                            <!-- No. WhatsApp -->
+                            <label data-tip="Your name">
+                                <span>Name</span>
+                                <input class='nama required bagi' placeholder='Name' type='text'/>
+                            </label>
+                            <label data-tip="Email Address">
+                                <span>Email</span>
+                                <input class='email required' placeholder='example@domain.com' type='email'/>
+                            </label>
+                            <label data-tip="Say something!">
+                                <span>Message</span>
+                                <textarea class='pesan required full'></textarea>
+                            </label>
+                            <a class='submit'>Send</a>
+                        </div>
                     </div>
                 </div>
             </div>
-        </div>
         </div>
         <div class="line-brand"></div>
         <footer id="footer-wrapper" class="footer-wrapper">
@@ -171,13 +175,13 @@
                     <nav class="menu-footer">
                         <ul>
                             <li>
-                                <a href="#">Disclaimer</a>
+                                <a href="https://www.vhlan.my.id/p/disclaimer.html">Disclaimer</a>
                             </li>
                             <li>
-                                <a href="#">TOS</a>
+                                <a href="https://www.vhlan.my.id/p/terms-and-conditions.html">TOS</a>
                             </li>
                             <li>
-                                <a href="#">Privacy</a>
+                                <a href="https://www.vhlan.my.id/p/privacy-policy.html">Privacy</a>
                             </li>
                         </ul>
                     </nav>
