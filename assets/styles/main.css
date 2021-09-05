@@ -1270,6 +1270,7 @@ footer.footer-wrapper .logo {
     top: 55px;
     width: 100%;
     padding: 0;
+    left:-1;
     text-align: left;
     background: #555;
     transition: transform 0.5s ease, opacity ease 0.2s;
