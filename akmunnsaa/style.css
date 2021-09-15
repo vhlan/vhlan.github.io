@@ -1,0 +1,57 @@
+body {
+  font-size: 20px;
+}
+* {
+  box-sizing: border-box;
+}
+.container {
+  display: block;
+  width: 100%;
+  padding: 10px;
+}
+.kuis{
+  display: flex;
+  flex-direction: column;
+}
+.kuis label {
+  padding: 10px 0;
+}
+.kuis label span {
+  display: block;
+  margin-bottom: 10px;
+}
+.kuis label input {
+  width: 100%;
+  font-size: 20px;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  height: 50px;
+  background: #f9f9f9;
+}
+.kuis a.submit {
+  background: #36AB82;
+  border-radius: 5px;
+  text-align: center;
+  padding: 10px;
+  width: 100%;
+  color:white;
+}
+.validasi.show {
+  display: block;
+  
+}
+.validasi {
+  display: none;
+  color:red;
+  font-size: small;
+  
+}
+.empty {
+  display:none;
+  font-size: small;
+  color: red;
+}
+.empty.show {
+  display: block;
+}
