@@ -1,17 +1,19 @@
-function counter(time, url) {0
- var interval = setInterval(function() {
-  $('.countdown').text("Tunggu " + time + " Detik");
-  time = time - 1;
+function counter(time, url) {
+  0
+  var interval = setInterval(function() {
+      $('.countdown').text("Tunggu " + time + " Detik");
+      time = time - 1;
 
-  if (time == 0) {
-   clearInterval(interval);
-   $(".loading").css("display","none");
-   $(".konten").addClass("show");
-  }
- },
-  1000);
+      if (time == 0) {
+        clearInterval(interval);
+        $(".loading").css("display", "none");
+        $(".konten").addClass("show");
+      }
+    },
+    1000);
 }
 
+var countSecond = 10;
 var thehours = new Date().getHours();
 var theminutes = new Date().getMinutes().toString().replace(/^(\d)$/, '0$1');
 var link = 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN';
@@ -30,58 +32,58 @@ var jamsebelas = ("Maumi tengah malam, ku ksh lamai waktu tunggunya");
 
 if (thehours >= 0 && thehours < 1) {
 
- themessage = begadang;
- counter(15);
+  themessage = begadang;
+  counter(countSecond);
 
 } else if (thehours >= 1 && thehours < 7) {
 
- themessage = begadang1;
- counter(15);
+  themessage = begadang1;
+  counter(countSecond);
 
 } else if (thehours >= 7 && thehours < 12) {
 
- themessage = pagi;
- counter(15);
+  themessage = pagi;
+  counter(countSecond);
 
 } else if (thehours >= 12 && thehours < 15) {
 
- themessage = dzuhur;
- counter(15);
+  themessage = dzuhur;
+  counter(countSecond);
 
 } else if (thehours >= 15 && thehours < 18) {
 
- themessage = sore;
- counter(15);
+  themessage = sore;
+  counter(countSecond);
 
 } else if (thehours >= 18 && thehours < 19) {
 
- themessage = malam;
- counter(15);
+  themessage = malam;
+  counter(countSecond);
 
 } else if (thehours >= 19 && thehours < 20) {
 
- themessage = malam2;
- counter(15);
+  themessage = malam2;
+  counter(countSecond);
 
 } else if (thehours >= 20 && thehours < 21) {
 
- themessage = malam3;
- counter(15);
+  themessage = malam3;
+  counter(countSecond);
 
 } else if (thehours >= 21 && thehours < 22) {
 
- themessage = badaisya;
- counter(15);
+  themessage = badaisya;
+  counter(countSecond);
 
 } else if (thehours >= 22 && thehours < 23) {
 
- themessage = jamsepuluh;
- counter(15);
+  themessage = jamsepuluh;
+  counter(countSecond);
 
 } else if (thehours >= 23 && thehours < 24) {
 
- themessage = jamsebelas;
- counter(15);
+  themessage = jamsebelas;
+  counter(countSecond);
 
 }
 
@@ -97,5 +99,9 @@ $("#QAdult").on("change paste keyup", function() {
     $("p.adult").css("filter", "blur(0px)");
     $("p.adult").css("user-select", "auto");
     $(".QuestAdult").remove();
+  } else if ($(this).val() != "3993" && $(this).val().length >= 4) {
+    $(".wrongQAdult").addClass("show");
+  } else {
+    $(".wrongQAdult").removeClass("show");
   }
 });
