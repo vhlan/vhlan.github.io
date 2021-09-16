@@ -49,15 +49,9 @@ body {
 .konten.show {
   display: block;
 }
-
-.adult {
-  filter: blur(2.5px);
-  -webkit-filter: blur(2.5px);
-}
-
 p.adult {
   filter: blur(3.5px);
-  -webkit-filter: blur(2.5px);
+  -webkit-filter: blur(3.5px);
   user-select: none;
 }
 
