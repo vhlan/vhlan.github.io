@@ -6,6 +6,7 @@ function counter(time, url) {0
   if (time == 0) {
    clearInterval(interval);
    $(".loading").css("display","none");
+   $(".konten").addClass("show");
   }
  },
   1000);
