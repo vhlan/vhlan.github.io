@@ -1,13 +1,16 @@
 body {
-  font-size: 20px;
+    font-size: 20px;
+    font-family: "Trebuchet MS", Helvetica, sans-serif;
 }
 * {
   box-sizing: border-box;
 }
 .container {
-  display: block;
-  width: 100%;
-  padding: 10px;
+    display: block;
+    width: 100%;
+    max-width: 800px;
+    padding: 10px;
+    margin: 0 auto;
 }
 .kuis{
   display: flex;
