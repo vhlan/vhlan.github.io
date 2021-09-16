@@ -38,3 +38,25 @@ body {
  margin-right: -50%;
  transform: translate(-50%, -50%);
 }
+p.adult {
+  filter: blur(2.5px);
+  -webkit-filter: blur(2.5px);
+  user-select:none;
+}
+.openContent {color: #2ebcff;cursor: pointer;}
+
+.openContent:hover {
+    text-decoration: underline;
+    text-decoration-thickness: 2px;
+    color: #2ebcff;
+    cursor: pointer;
+}
+.QuestAdult {
+  display:none;
+}
+.QuestAdult.show {
+  display:block;
+}
+input#QAdult {
+    width: 50px;
+}
