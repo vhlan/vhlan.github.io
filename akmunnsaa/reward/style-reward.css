@@ -56,7 +56,7 @@ body {
 }
 
 p.adult {
-  filter: blur(2.5px);
+  filter: blur(3.5px);
   -webkit-filter: blur(2.5px);
   user-select: none;
 }
