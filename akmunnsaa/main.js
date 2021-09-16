@@ -83,6 +83,6 @@ function kirim() {
     $(".kuis").css("display", "none")
     setTimeout(function() {
       window.location.href = "/akmunnsaa/reward";
-    }, 2500);
+    }, 3000);
   }
 }
