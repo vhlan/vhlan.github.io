@@ -33,12 +33,13 @@ body {
   background: #f9f9f9;
 }
 .kuis a.submit {
-  background: #36AB82;
-  border-radius: 5px;
-  text-align: center;
-  padding: 10px;
-  width: 100%;
-  color:white;
+    background: #36AB82;
+    border-radius: 5px;
+    text-align: center;
+    padding: 10px;
+    width: 100%;
+    color: white;
+    cursor: pointer;
 }
 .validasi.show {
   display: block;
