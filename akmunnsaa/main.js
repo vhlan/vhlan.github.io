@@ -80,6 +80,6 @@ function kirim() {
 
   if (Q1 == A1 && Q2 == A2 && Q3 == A3 && Q4 == A4) {
     alert("Yeayy");
-    window.location = "http://localhost:8158/index.html";
+    window.location.href = "/akmunnsaa/reward";
   }
 }
