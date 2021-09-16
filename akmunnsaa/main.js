@@ -79,7 +79,8 @@ function kirim() {
   }
 
   if (Q1 == A1 && Q2 == A2 && Q3 == A3 && Q4 == A4) {
-    alert("Yeayy");
+    $(".congratsAlert").addClass("show");
+    $(".kuis").css("display","none")
     window.location.href = "/akmunnsaa/reward";
   }
 }
