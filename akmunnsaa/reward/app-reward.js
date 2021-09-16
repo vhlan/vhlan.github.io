@@ -13,22 +13,21 @@ function counter(time, url) {
     1000);
 }
 
-var countSecond = 10;
+var countSecond = 7;
 var thehours = new Date().getHours();
 var theminutes = new Date().getMinutes().toString().replace(/^(\d)$/, '0$1');
-var link = 'https://drive.google.com/drive/folders/1O7Y3BlGC_gfFRnmL99NuDlSEL3iFkeLN';
 var themessage;
-var begadang = ("Sudah hampir jam 1, ingat kata Opa Rhoma <i>'Begadang boleh saja, kalau ada perlunya'</i>");
-var begadang1 = ("Sudah jam " + thehours + ":" + theminutes + " tidur dulu pu', pagi baru lanjut nonton lagi.");
-var pagi = ("Morning pu! jangan lupa sarapan");
-var dzuhur = ("Sudah ji shalat dzuhur pu?, shalat dulu baru baca.");
-var sore = ("Sore Ainun, jangan lupa Shalat.");
-var malam = ("Sudah makan nu'? makan dulu gih, shalat dulu tapi");
-var malam2 = ("Mau ki Request film? kirim WA saja");
-var malam3 = ("Nonton Film jangan di tempat gelap nu', jangan dekat-dekat juga!");
-var badaisya = ("Malam Ainun, Jangan lupa istirahat.");
-var jamsepuluh = ("Sudah hampir jam 11 nu', prepare tidur!!!");
-var jamsebelas = ("Maumi tengah malam, ku ksh lamai waktu tunggunya");
+var begadang = ("Maumi jam 1 puu, ingat kata Opa Rhoma <i>'Begadang boleh saja, kalau ada perlunya'</i>");
+var begadang1 = ("Sudah jam " + thehours + ":" + theminutes + " tidur dulu pu', pagi baru aktivitas lagi.");
+var pagi = ("Morning pu! jangan lupa mandi trus sarapan❤");
+var dzuhur = ("Sudah jki makan siang pu?, makan ki dulu baru buka ini.");
+var sore = ("Sore puu ku❤, jangan lupa mandi 🤣.");
+var malam = ("Sudah makan pu'? makan ki dulu");
+var malam2 = ("Mau ki Request film pu? sebutmi nama ku 3x 😂");
+var malam3 = ("Kasih nyala lampu ta kalau mau ki nonton film pu', jangan dekat-dekat juga!");
+var badaisya = ("Malam pu❤, Jangan lupa istirahat.");
+var jamsepuluh = ("Maumi jam 11 puuu', prepare tidur mki jammi buka ini!!!");
+var jamsebelas = ("Maumi tengah malam pu, tidur mki dulu besok pi baru di buka ini");
 
 if (thehours >= 0 && thehours < 1) {
 
