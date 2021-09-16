@@ -84,3 +84,13 @@ p.adult {
 input#QAdult {
   width: 50px;
 }
+
+.wrongQAdult {
+  display:none;
+  color:red;
+  font-size:small;
+}
+
+.wrongQAdult.show {
+  display:block;
+}
