@@ -7,9 +7,9 @@ body {
 }
 
 #container {
-  width: 100%;
-  max-width: 800px;
-  margin: 0 auto;
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 20px;
 }
 
 .bg {
@@ -82,7 +82,8 @@ p.adult {
 }
 
 input#QAdult {
-  width: 50px;
+    width: 60px;
+    height: 20px;
 }
 
 .wrongQAdult {
