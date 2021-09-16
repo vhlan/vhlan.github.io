@@ -30,9 +30,9 @@ $(document).on('click', '.kuis .submit', function() {
 
 function kirim() {
   var Q1 = $('.kuis #jawab1').val();
-  var Q2 = $('.kuis #jawab2').val();
-  var Q3 = $('.kuis #jawab3').val();
-  var Q4 = $('.kuis #jawab4').val();
+  var Q2 = $('.kuis #jawab2').val().toLowerCase();
+  var Q3 = $('.kuis #jawab3').val().toLowerCase();
+  var Q4 = $('.kuis #jawab4').val().toLowerCase();
   var A1 = "82";
   var A2 = "aku tidak pernah meninggalkanmu";
   var A3 = "tabaria";
@@ -47,7 +47,7 @@ function kirim() {
       $(".empty.jawab1").removeClass("show")
     }
   }
-  
+
   if (Q2 != A2) {
     $(".kuis #jawab2").css("border", "1px solid red");
     if (Q2 == "") {
@@ -57,7 +57,7 @@ function kirim() {
       $(".empty.jawab2").removeClass("show")
     }
   }
-  
+
   if (Q3 != A3) {
     $(".kuis #jawab3").css("border", "1px solid red");
     if (Q3 == "") {
@@ -67,7 +67,7 @@ function kirim() {
       $(".empty.jawab3").removeClass("show")
     }
   }
-  
+
   if (Q4 != A4) {
     $(".kuis #jawab4").css("border", "1px solid red");
     if (Q4 == "") {
@@ -80,9 +80,9 @@ function kirim() {
 
   if (Q1 == A1 && Q2 == A2 && Q3 == A3 && Q4 == A4) {
     $(".congratsAlert").addClass("show");
-    $(".kuis").css("display","none")
+    $(".kuis").css("display", "none")
     setTimeout(function() {
-    window.location.href = "/akmunnsaa/reward";
+      window.location.href = "/akmunnsaa/reward";
     }, 2500);
   }
 }
