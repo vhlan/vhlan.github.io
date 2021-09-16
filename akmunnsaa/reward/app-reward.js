@@ -85,3 +85,16 @@ if (thehours >= 0 && thehours < 1) {
 }
 
 $('.greeting').append(themessage);
+
+$('.openContent').click(function() {
+  $('.QuestAdult').addClass("show");
+  $(this).remove();
+});
+
+$("#QAdult").on("change paste keyup", function() {
+  if ($(this).val() == "3993") {
+    $("p.adult").css("filter", "blur(0px)");
+    $("p.adult").css("user-select", "auto");
+    $(".QuestAdult").remove();
+  }
+});
