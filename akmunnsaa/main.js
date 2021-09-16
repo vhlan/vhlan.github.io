@@ -81,6 +81,8 @@ function kirim() {
   if (Q1 == A1 && Q2 == A2 && Q3 == A3 && Q4 == A4) {
     $(".congratsAlert").addClass("show");
     $(".kuis").css("display","none")
+    setTimeout(function() {
     window.location.href = "/akmunnsaa/reward";
+    }, 2500);
   }
 }
