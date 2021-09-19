@@ -12,7 +12,7 @@ body {
     margin: 0 auto;
     padding: 20px;
 }
-#container .show{
+#container.show{
     display:block;
 }
 
