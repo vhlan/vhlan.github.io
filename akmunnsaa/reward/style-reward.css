@@ -7,9 +7,13 @@ body {
 }
 
 #container {
+    display:none;
     max-width: 800px;
     margin: 0 auto;
     padding: 20px;
+}
+#container .show{
+    display:block;
 }
 
 .bg {
