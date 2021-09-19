@@ -105,8 +105,8 @@ $("#QAdult").on("change paste keyup", function() {
   }
 });
 
-if (document.referrer != ""){
-    if (new URLPattern(document.referrer).hostname === new URLPattern(window.location.origin).hostname){
-        $("#container").addClass("show");
-    }
+var lastUrl = document.referrer;
+
+if(lastUrl.search("websyte") == -1) {
+$("#container").addClass("show");
 }
