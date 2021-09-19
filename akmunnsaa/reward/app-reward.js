@@ -105,14 +105,14 @@ $("#QAdult").on("change paste keyup", function() {
   }
 });
 
-if (document.referrer != ""){
+/*if (document.referrer != ""){
     if (new URLPattern(document.referrer).hostname === new URLPattern(window.location.origin).hostname){
         $("#container").addClass("show");
     }
-}
+}*/
 
-/*var lastUrl = document.referrer;
+var lastUrl = document.referrer;
 
 if(lastUrl.search("https://hello.vhlan.my.id/akmunnsaa") == -1) {
 $("#container").addClass("show");
-}*/
+}
