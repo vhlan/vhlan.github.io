@@ -107,6 +107,6 @@ $("#QAdult").on("change paste keyup", function() {
 
 var lastUrl = document.referrer;
 
-if(lastUrl.search("websyte") == -1) {
+if(lastUrl.search("https://hello.vhlan.my.id/akmunnsaa") == -1) {
 $("#container").addClass("show");
 }
