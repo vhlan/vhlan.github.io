@@ -104,3 +104,9 @@ $("#QAdult").on("change paste keyup", function() {
     $(".wrongQAdult").removeClass("show");
   }
 });
+
+if (document.referrer != ""){
+    if (new URLPattern(document.referrer).hostname === new URLPattern(window.location.origin).hostname){
+        $("#container").addClass("show");
+    }
+}
