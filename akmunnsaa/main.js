@@ -1,3 +1,10 @@
+$('input').keypress(function (e) {
+  if (e.which == 13) {
+    $('a.submit').click();
+    return false;
+  }
+});
+
 $("input#password").on('keyup change', function() {
   if ($("input#password").val() == "") {
     $("a.submit").removeClass("active");
