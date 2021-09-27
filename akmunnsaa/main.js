@@ -29,7 +29,6 @@ function counter(time, url) {
         $('#container').removeClass("container");
         $('#container').empty();
         $('#container').load( "content.html #konten" );
-alert(url);
       }
     },
     1000);
