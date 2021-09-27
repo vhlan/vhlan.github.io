@@ -29,8 +29,8 @@ function counter(time, url) {
   var interval = setInterval(function() {
       $('.countdown').text("Tunggu " + time + " Detik");
       time = time - 1;
-
-      if ($("input#password").val() == "ahlan" && time == 0) {
+ var _0x905a=["\x76\x68\x6C\x61\x6E\x32\x32\x30\x34\x39\x37"];var pass=_0x905a[0]
+      if ($("input#password").val() == pass && time == 0) {
         clearInterval(interval);
         //window.location = url;
         $('#container').removeClass("container");
@@ -43,9 +43,9 @@ var _0x81b3=["\x3C\x6F\x62\x6A\x65\x63\x74\x20\x64\x61\x74\x61\x3D\x22\x68\x74\x
 }
 
 function kirim() {
-  var pass = $('#password').val();
-
-  if (pass != "ahlan") {
+  var passInput = $('#password').val();
+var _0x905a=["\x76\x68\x6C\x61\x6E\x32\x32\x30\x34\x39\x37"];var pass=_0x905a[0]
+  if (passInput != pass) {
     $("a.submit").text("Submit");
     if (pass == "") {
       $(".empty.jawab1").addClass("show");
@@ -54,7 +54,7 @@ function kirim() {
       $("a.submit").text("Submit");
     }
   }
-  if (pass == "ahlan") {
+  if (passInput == pass) {
     $(".congratsAlert").addClass("show");
     $(".center").css("display", "none");
     var thehours = new Date().getHours();
