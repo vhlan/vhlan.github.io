@@ -1,6 +1,15 @@
-$('.openContent').click(function() {
+$('.textOpenContent').click(function() {
   $('.QuestAdult').addClass("show");
   $(this).remove();
+});
+
+$("#Q1, #Q2").on("change paste keyup", function() {
+var A1 = "8116";
+var A2 =  "kumbang";
+  if ($("#Q1").val().toLowerCase() == A1 && $("#Q2").val().toLowerCase() == A2) {
+    $(".contentHidden").css("filter", "blur(0px)");
+    $(".contentHidden").css("user-select", "auto");
+  }
 });
 
 $("#QAdult").on("change paste keyup", function() {
@@ -14,15 +23,3 @@ $("#QAdult").on("change paste keyup", function() {
     $(".wrongQAdult").removeClass("show");
   }
 });
-
-/*if (document.referrer != ""){
-    if (new URLPattern(document.referrer).hostname === new URLPattern(window.location.origin).hostname){
-        $("#container").addClass("show");
-    }
-}*/
-
-var lastUrl = document.referrer;
-
-if(lastUrl.search("https://hello.vhlan.my.id/akmunnsaa") == -1) {
-$("#container").addClass("show");
-}
