@@ -25,7 +25,7 @@ $("#QAdult").on("change paste keyup", function() {
   }
 });
 
-if (document.location.href == 'https://hello.vhlan.my.id/akmunnsaa/ex/') {
+if (window.location.href == 'https://hello.vhlan.my.id/akmunnsaa/ex/') {
   $('#container').show();
 } else {
   $('#container').empty();
