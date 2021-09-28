@@ -9,6 +9,7 @@ var A2 =  "kumbang";
   if ($("#Q1").val().toLowerCase() == A1 && $("#Q2").val().toLowerCase() == A2) {
     $(".contentHidden").css("filter", "blur(0px)");
     $(".contentHidden").css("user-select", "auto");
+    $(".textOpenContent").css("pointer-events", "auto");
   }
 });
 
