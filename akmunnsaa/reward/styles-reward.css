@@ -1,0 +1,85 @@
+body {
+  background: white;
+  font-size: 20px;
+  color: #333;
+  padding: 0;
+  margin: 0;
+}
+
+#container {
+  display: block;
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.konten {
+  display: block;
+}
+.periksa{
+  color:red;
+  font-size:small;
+  display:none;
+}
+.periksa.show{
+  display:none;
+}
+
+.contentHidden {
+  display: block;
+  filter: blur(9px);
+  -webkit-filter: blur(9px);
+  user-select: none;
+}
+input#Q1, input#Q2 {
+    margin-bottom: 16px;
+    font-size: 20px;
+    width: 100%;
+    display: block;
+    height: 2em;
+}
+.konten label span {
+    display: block;
+    margin-bottom: 10px;
+}
+p.adult {
+  filter: blur(9px);
+  -webkit-filter: blur(9px);
+  user-select: none;
+}
+
+.textOpenContent {
+  color: #2ebcff;
+  cursor: pointer;
+  pointer-events:none;
+}
+
+.textOpenContent:hover {
+  text-decoration: underline;
+  text-decoration-thickness: 2px;
+  color: #2ebcff;
+  cursor: pointer;
+}
+
+.QuestAdult {
+  display: none;
+}
+
+.QuestAdult.show {
+  display: block;
+}
+
+input#QAdult {
+  width: 60px;
+  height: 20px;
+}
+
+.wrongQAdult {
+  display: none;
+  color: red;
+  font-size: small;
+}
+
+.wrongQAdult.show {
+  display: block;
+}
