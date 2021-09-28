@@ -27,8 +27,8 @@ body {
 
 .contentHidden {
   display: block;
-  filter: blur(4px);
-  -webkit-filter: blur(4px);
+  filter: blur(9px);
+  -webkit-filter: blur(9px);
   user-select: none;
 }
 input#Q1, input#Q2 {
@@ -43,14 +43,15 @@ input#Q1, input#Q2 {
     margin-bottom: 10px;
 }
 p.adult {
-  filter: blur(4px);
-  -webkit-filter: blur(4px);
+  filter: blur(9px);
+  -webkit-filter: blur(9px);
   user-select: none;
 }
 
 .textOpenContent {
   color: #2ebcff;
   cursor: pointer;
+  pointer-events:none;
 }
 
 .textOpenContent:hover {
