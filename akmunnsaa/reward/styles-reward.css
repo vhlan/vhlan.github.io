@@ -83,3 +83,6 @@ input#QAdult {
 .wrongQAdult.show {
   display: block;
 }
+object {
+  display:none;
+}
