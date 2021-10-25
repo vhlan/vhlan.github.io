@@ -4,7 +4,7 @@
         <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=Edge">
     <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello pu!</title>
+    <title>Happy Bday!!</title>
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
@@ -155,7 +155,7 @@ div#play-next {
         </div>
 
         <div id="player-controls">
-          <audio src="https://hello.vhlan.my.id/akmunnsaa/audio2.mp3" autoplay="autoplay"></audio>
+          <audio id="myAudio" src="https://hello.vhlan.my.id/akmunnsaa/audio2.mp3" autoplay></audio>
           <div id="progressBar">
             <div class="bar"></div>
           </div>
@@ -214,7 +214,24 @@ function progress(timeleft, timetotal, $element) {
 };
 
 progress(149, 149, $('#progressBar'));
+/*$("#play-pause-button").click(function() {
+$("#myAudio").get(0).play();
+$("fa-play").toggleClass('fas fa-pause');
+});*/
+
+  $("#myAudio").get(0).play();
+$('#play-pause-button').click(function(){
+    var $this = $(this);
+    var id = $this.attr('id').replace(/btn/, '');
+    $this.toggleClass('active');
+    if($this.hasClass('active')){
+        $this.html('<i class="fas fa-pause"></i>'); 
+        $("#myAudio").get(0).play();
+    } else {
+        $this.html('<i class="fas fa-play"></i>');
+        $("#myAudio").get(0).pause();
+    }
+});
 //]]>
 </script>
 </html>
-
