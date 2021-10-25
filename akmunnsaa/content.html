@@ -1,110 +1,215 @@
-<!DOCTYPE html>
 <html>
 
   <head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=Edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Hello pu!</title>
-    <!-- Custom Styles -->
-    <link rel="stylesheet" href="https://hello.vhlan.my.id/akmunnsaa/reward/style-reward.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Caveat&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Open+Sans+Condensed:wght@700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.3.1/css/all.min.css" integrity="sha512-KulI0psuJQK8UMpOeiMLDXJtGOZEBm8RZNTyBBHIWqoXoPMFcw+L5AEo0YMpsW8BfiuWrdD1rH6GWGgQBF59Lg==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<style>
+body {
+  margin: 20px;
+  background: url(https://images.unsplash.com/photo-1586075010923-2dd4570fb338?ixid=MnwxMjA3fDB8MHxzZWFyY2h8MXx8cGFwZXIlMjBiYWNrZ3JvdW5kfGVufDB8fDB8fA%3D%3D&ixlib=rb-1.2.1&w=1000&q=80)
+}
+
+.player {
+  background: #f3c2c2;
+  border-radius: 30px;
+  max-width: 351px;
+  height: 330px;
+  margin: 150px auto 75px auto;
+  display: grid;
+  grid-template-rows: 40% 15% 45%;
+  grid-template-areas:
+    "album"
+    "title"
+    "button";
+  border: 8px solid #fff;
+}
+
+.imgAlbum {
+  position: relative;
+  display: flex;
+  flex-wrap: nowrap;
+  align-items: center;
+  justify-content: center;
+  grid-area: "album";
+}
+
+.imgAlbum img {
+  position: absolute;
+  top: -130px;
+  max-width: 245px;
+  border-radius: 20px;
+  box-shadow: 0 14px 18px #442c2c9e;
+}
+
+#player-controls {
+  display: grid;
+  grid-template-columns: 1fr;
+  padding: 7px;
+  background: #fff;
+  margin: 11px;
+  border-radius: 25px;
+  justify-content: center;
+  font-size: 29px;
+  grid-area: button;
+  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-rows: 1fr 1fr;
+  grid-template-areas:
+    "audio audio audio"
+    "previous play next";
+  align-items: center;
+  justify-items: center;
+}
+div#play-previous {
+    grid-area: previous;
+}
+
+div#play-pause-button {
+    grid-area: play;
+}
+
+div#play-next {
+    grid-area: next;
+}
+#progressBar {
+  grid-area: audio;
+}
+
+.control {
+  padding: 13px;
+}
+
+.title {
+  text-align: center;
+  padding: 6px;
+}
+
+.title h1 {
+  font-family: 'Caveat', cursive;
+  font-size: 20px;
+  grid-area: title;
+  margin: 0;
+}
+
+.title span {
+  font-family: 'Open Sans Condensed', sans-serif;
+  font-size: 14px;
+  color: #2e2e2e;
+}
+
+.content {
+  font-family: 'Caveat', cursive;
+  font-size: 30px;
+}
+#progressBar {
+  width: 90%;
+  margin: 10px auto;
+  height: 5px;
+  background-color: #e5e5e5;
+}
+
+#progressBar div {
+  height: 100%;
+  float:right;
+  text-align: left;
+  padding: 0;
+  line-height: 22px; /* same as #progressBar height if we want text middle aligned */
+  width: 0;
+  background-color: #343434;
+  box-sizing: border-box;
+  color:transparent;
+}
+
+@media (max-width: 480px) {
+
+.imgAlbum img {
+  position: absolute;
+  top: -130px;
+  max-width: 245px;
+  border-radius: 20px;
+  box-shadow: 0 14px 18px #442c2c9e;
+}
+}
+</style>
+
   </head>
 
   <body>
-    <div id="container">
-      <div class="konten">
-        <p style="font-size:small;line-height: 0.5em;">Last updated on <strong>September 2021</strong></p>
-        <p>Jika sekarang halaman ini terbuka dan sedang dibaca oleh (Akramunnisa), jelas <strong>Headphone</strong> sudah di terima kepada yang saya peruntukkan, untuk gitar sendiri saya tidak tau semoga tidak di teruskan ke orang lain. :"</p>
-        <p>
-          Sebaliknya jika halaman ini dibuka oleh orang yang bukan saya peruntukkan, <strong>this page will automatically send data about you to me, so I know your location</strong>.
-        </p>
-        <p>
-          <strong style="font-size:small;">*pesan akan terlihat jika pertanyaan dijawab dengan benar</strong>
-        </p>
-        <label>
-          <span>4 digit terakhir NIM Ahlan</span>
-          <input type="text" id="Q1">
-        </label>
+    <div class="container">
+      <div class="player">
+        <div class="imgAlbum">
+          <img src="https://hello.vhlan.my.id/akmunnsaa/Album.jpg">
+        </div>
 
-        <label>
-          <span>Nama senior SMA nya akra di tekpen</span>
-          <input type="text" id="Q2">
-        </label>
+        <div class="title">
+          <h1>
+            Happy Birthday
+          </h1>
+          <span>Akmunnsaa</span>
+        </div>
 
-        <div class="contentHidden">
-          <h1>
-            25/Sep/2017
-          </h1>
-          <p>
-            Lorem ipsum dolor sit amet, consectetur adipiscing elit. Curabitur eleifend congue purus et pulvinar. Duis aliquet eget nisi quis tempor. Vestibulum ullamcorper, nisi at tempor gravida, nulla massa scelerisque nunc, ut ornare orci odio non lorem. Duis
-            volutpat blandit elit a hendrerit. In ut convallis tortor, id rhoncus nulla. Suspendisse porttitor sapien vel egestas pulvinar. Nunc sit amet blandit nisi. Curabitur viverra efficitur imperdiet.
-          </p>
-          <p>
-            Ut faucibus magna non justo ultricies molestie. Integer blandit lacinia maximus. Morbi quis sapien lectus. Ut ut commodo odio, ut feugiat libero. Pellentesque quis vestibulum nisi, ornare vestibulum ante. Aliquam at velit sed risus rutrum placerat. Nullam
-            eget elementum ante. Etiam maximus quam vel odio hendrerit, nec ullamcorper leo hendrerit. Integer ac aliquet arcu, ac congue diam. Aenean erat lectus, consequat ut magna sit amet, interdum pellentesque libero. Cras hendrerit nibh tempor
-            dui luctus porttitor. Nam convallis tellus sed porttitor vehicula.
-          </p>
-          <h1>
-            My second title
-          </h1>
-          <p>
-            Cras placerat velit tellus, id dapibus lorem cursus a. Cras aliquet mauris tortor, vitae imperdiet eros dictum a. Sed tincidunt, justo ac tempor maximus, nulla eros pulvinar lectus, sit amet elementum elit massa sed magna. Duis gravida mauris in tristique
-            hendrerit. In et erat convallis, volutpat metus nec, tempor nunc. Donec ac enim tincidunt, lobortis massa porta, consectetur augue. Proin ac viverra erat. Duis finibus faucibus tempor. Cras in est quis elit viverra convallis sed eget eros.
-          </p>
-          <p>
-            Nullam tempus volutpat imperdiet. Pellentesque aliquet erat urna, sed vehicula urna blandit nec. Proin varius facilisis dignissim. Vestibulum placerat gravida magna, vel blandit diam posuere non. Praesent vehicula ligula condimentum, ornare lacus eget,
-            ultrices quam. Aliquam in varius ex. Maecenas semper, sapien quis pharetra euismod, quam arcu venenatis leo, id faucibus felis nulla eget nunc. Curabitur tortor eros, commodo vitae erat vitae, molestie lacinia urna. Quisque eu nisi odio.
-            Nunc tincidunt gravida lorem ut pellentesque. Morbi euismod libero id leo cursus consectetur.
-          </p>
-          <h1>
-            My third title
-          </h1>
-          <p>
-            Nulla ac neque dignissim, commodo dolor sed, egestas lorem. Aenean tincidunt blandit gravida. Ut sit amet turpis sagittis, laoreet est id, dapibus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas
-            dapibus volutpat sodales. Ut sagittis maximus metus a malesuada. Nam gravida, justo ut mattis egestas, arcu leo ultricies purus, nec interdum diam tellus quis urna. Maecenas consequat ante eget lectus tincidunt porttitor. Sed id molestie
-            turpis, ac imperdiet augue. Pellentesque porta enim in nulla accumsan pellentesque. Fusce nec diam sed erat sagittis fermentum porttitor id lacus. Nulla varius ligula non laoreet mollis. Etiam et gravida lorem, vel varius ipsum. Quisque
-            dui velit, ultrices nec tempus eu, vestibulum ac libero.
-          </p>
-          <h1>
-            Adult Content
-          </h1>
-          <div class="textOpenContent">
-            How to open?
+        <div id="player-controls">
+          <audio id="blast" src="https://hello.vhlan.my.id/akmunnsaa//audio2.mp3" autoplay></audio>
+          <div id="progressBar">
+            <div class="bar"></div>
           </div>
-          <div class="QuestAdult">
-            ur birth year + my birth year = <input type="text" id="QAdult" /> <span class="wrongQAdult">Wrong pu!</span>
+          <div class="control">
+            <div class="button" id="play-previous">
+              <i class="fas fa-backward"></i>
+            </div>
           </div>
-          <p class='adult'>Pria itu mengecup singkat pipi wanita itu dari samping.</p>
-          <p class='adult'>Wanita itu tersenyum miring saat merasakan sebuah kecupan di pipinya. Meski mereka sudah menikah selama satu tahun, kecupan di pipi adalah hal yang paling intim dan yang paling sakral yang pernah mereka lakukan. Jika dihitung - hitung, selama
-            setahun belakangan ini, wanita itu hanya baru menerima 8 kecupan oleh suami sahnya itu, dan semua kecupan itu diberikan oleh suaminya saat mereka menghadiri suatu acara tertentu.</p>
-          <p class='adult'>Untuk meyakinkan semua orang bahwa pernikahan mereka adalah pernikahan yang romantis, bukankah terkadang diperlukan sebuah bukti? Dan kecupan di pipi adalah hal yang lebih dari cukup untuk pembuktian itu.</p>
-          <p class='adult'>"Kuserahkan semuanya kepadamu, thank you" ucap pria itu sambil berlalu meninggalkan wanita itu sendirian.</p>
-          <p class='adult'>Setelah kepergian pria itu, wanita itu langsung memasang wajah angkuh nan elegannya, dia tidak ingin terlihat rapuh di hari yang bahagia ini. Selama ini, dia sudah berakting sangat baik di depan teman-temannya dan keluarganya, dan hari ini
-            dia juga harus berakting dengan baik.</p>
-          <h1>
-            My third title
-          </h1>
-          <p>
-            Nulla ac neque dignissim, commodo dolor sed, egestas lorem. Aenean tincidunt blandit gravida. Ut sit amet turpis sagittis, laoreet est id, dapibus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas
-            dapibus volutpat sodales. Ut sagittis maximus metus a malesuada. Nam gravida, justo ut mattis egestas, arcu leo ultricies purus, nec interdum diam tellus quis urna. Maecenas consequat ante eget lectus tincidunt porttitor. Sed id molestie
-            turpis, ac imperdiet augue. Pellentesque porta enim in nulla accumsan pellentesque. Fusce nec diam sed erat sagittis fermentum porttitor id lacus. Nulla varius ligula non laoreet mollis. Etiam et gravida lorem, vel varius ipsum. Quisque
-            dui velit, ultrices nec tempus eu, vestibulum ac libero.
-          </p>
-          <h1>
-            My Ending title
-          </h1>
-          <p>
-            Nulla ac neque dignissim, commodo dolor sed, egestas lorem. Aenean tincidunt blandit gravida. Ut sit amet turpis sagittis, laoreet est id, dapibus purus. Class aptent taciti sociosqu ad litora torquent per conubia nostra, per inceptos himenaeos. Maecenas
-            dapibus volutpat sodales. Ut sagittis maximus metus a malesuada. Nam gravida, justo ut mattis egestas, arcu leo ultricies purus, nec interdum diam tellus quis urna. Maecenas consequat ante eget lectus tincidunt porttitor. Sed id molestie
-            turpis, ac imperdiet augue. Pellentesque porta enim in nulla accumsan pellentesque. Fusce nec diam sed erat sagittis fermentum porttitor id lacus. Nulla varius ligula non laoreet mollis. Etiam et gravida lorem, vel varius ipsum. Quisque
-            dui velit, ultrices nec tempus eu, vestibulum ac libero.
-          </p>
-
+          <div class="control">
+            <div class="button" id="play-pause-button">
+              <i class="fas fa-play"></i>
+            </div>
+          </div>
+          <div class="control">
+            <div class="button" id="play-next">
+              <i class="fas fa-forward"></i>
+            </div>
+          </div>
         </div>
       </div>
-    </div>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
-    <script src="https://hello.vhlan.my.id/akmunnsaa/reward/app-reward.js"></script>
-  </body>
 
+      <div class="content">
+        <p>Happy Birthday Akramunnisa Alwis 💗
+        </p>
+        <p>Barakallah fii Umrik...</p>
+
+        <p>huhu ga kerasa ya udah oktober, perasaan baru kemarin bulan oktober eh udah oktober lagi. maaf ya lagi lagi telat ucapinnya, bukan karna ga ingat atau ketiduran, tapi persiapannya lamaaaaaa🤣. Selamat bertambah usia ke dua puluh empat pu, gausah sedih... tidak tambah tua kok, pu tetap unyu seperti biasanya.
+        </p>
+
+        <p>harusnya ini jadi kado spesial buat pu, tapi karena waktu sangat singkat buat persiapan, jadi cuma halaman sederhana ini yang bisa saya buat. kali ini cuma bisa ucapin Selamat ulang tahun :&quot; , maafin ya kalau kadonya ga ada dan belum bisa di rayaain seperti pas pertama kali ketemu.</p>
+
+        <p>ohiya semoga di tahun ini pu di murahkan rezekinya, di permudah segala urusannya, di panjaaangkan umurnya, makin sayang sama ibu dan bapak, semoga hal-hal baik selalu menyertai pu, dan semoga semua keinginannya tercapai di usia 24 tahun.</p>
+
+        <p>semoga kamu yang saat ini merupakan salah satu orang terdekatu bertahan untuk menerima keadaan ahlan di kala senang maupun sedih, terimakasih telah hadir di hidup Ahlan, tidak menyangka bahwa ada seseorang yang mengenal ahlan sedalam ini, aku juga tidak pernah berfikir bahwa ada seseorang yang memperdulikan ahlan seserius ini. terima kasih banyak udah jadi teman hidup yang terbaik buat ahlan. dalam bgt ya 😂</p>
+
+        <p>udah mau jam 4. harusnya tadi udah ucapin selamat tidur. daripada ga sama sekali. buat kata-kata penutup. Selamat ulang tahun pu, Good Morning ❤</p>
+
+        <p>sehat selalu ya...</p>
+
+        <p>vhlan</p>
+      </div>
+    </div>
+
+  </body>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js" integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<script type="text/javascript">
+//<![CDATA[
+function progress(timeleft, timetotal, $element) {
+    var progressBarWidth = timeleft * $element.width() / timetotal;
+    $element.find('div').animate({ width: progressBarWidth }, 500);
+    if(timeleft > 0) {
+        setTimeout(function() {
+            progress(timeleft - 1, timetotal, $element);
+        }, 1000);
+    }
+};
+
+progress(149, 149, $('#progressBar'));
+//]]>
+</script>
 </html>
