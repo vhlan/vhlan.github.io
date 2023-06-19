@@ -23,8 +23,21 @@
     <input type="submit" value="Kirim">
   </form>
 
+  <div id="adminName"></div>
+
   <script>
     $(document).ready(function() {
+      var phoneNumbers = [
+        { name: "Admin 1", number: "1234567890" },
+        { name: "Admin 2", number: "0987654321" },
+        { name: "Admin 3", number: "9876543210" }
+      ];
+
+      // Menampilkan nama admin saat halaman diakses
+      var randomIndex = Math.floor(Math.random() * phoneNumbers.length);
+      var selectedAdmin = phoneNumbers[randomIndex].name;
+      $('#adminName').text("Admin yang sedang bertugas: " + selectedAdmin);
+
       $('#whatsappForm').submit(function(e) {
         e.preventDefault(); // Mencegah pengiriman form biasa
         
@@ -33,6 +46,9 @@
         var issue = $('#issue').val();
         var details = $('#details').val();
         
+        // Mengambil nomor HP yang dipilih secara acak
+        var selectedPhoneNumber = phoneNumbers[randomIndex].number;
+        
         // Format pesan yang akan dikirimkan melalui WhatsApp
         var message = "Halo, saya memiliki kerusakan pada HP dengan detail berikut:\n\n" +
                       "Nama: " + name + "\n" +
@@ -40,8 +56,8 @@
                       "Jenis Kerusakan: " + issue + "\n" +
                       "Detail Kerusakan: " + details;
         
-        // Mengganti nomor WhatsApp berikut dengan nomor yang Anda inginkan
-        var whatsappLink = "https://wa.me/1234567890?text=" + encodeURIComponent(message);
+        // Mengganti nomor WhatsApp dengan nomor yang dipilih secara acak
+        var whatsappLink = "https://wa.me/" + selectedPhoneNumber + "?text=" + encodeURIComponent(message);
         
         // Mengarahkan pengguna ke aplikasi WhatsApp
         window.location.href = whatsappLink;
