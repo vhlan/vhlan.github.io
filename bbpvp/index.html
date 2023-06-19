@@ -27,9 +27,9 @@
     <script>
         $(document).ready(function () {
             var phoneNumbers = [
-                { name: "ahlan 1", number: "1234567890" },
-                { name: "Admin 2", number: "0987654321" },
-                { name: "Admin 3", number: "9876543210" }
+                { name: "Admin 1", number: "1234567890", noAdm: "013" },
+                { name: "Admin 2", number: "0987654321", noAdm: "025" },
+                { name: "Admin 3", number: "9876543210", noAdm: "037" }
             ];
 
             var selectedAdmin = localStorage.getItem('currentAdmin');
@@ -54,10 +54,14 @@
 
                 var selectedPhoneNumber = selectedAdmin.number;
 
-                var message = "Halo, saya memiliki kerusakan pada HP dengan detail berikut:\n\n" +
+                var randomCode = Math.floor(Math.random() * 1000000);
+                var invoiceCode = "x" + randomCode.toString() + selectedAdmin.noAdm;
+
+                var message = "Halo, berikut adalah detail kerusakan pada HP:\n\n" +
                     "Tipe HP: " + phone + "\n" +
                     "Jenis Kerusakan: " + issue + "\n" +
-                    "Detail Kerusakan: " + details;
+                    "Detail Kerusakan: " + details + "\n" +
+                    "Kode Invoice: " + invoiceCode;
 
                 var whatsappLink = "https://wa.me/" + selectedPhoneNumber + "?text=" + encodeURIComponent(message);
 
