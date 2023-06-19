@@ -32,10 +32,8 @@
                 { name: "Admin 3", number: "9876543210" }
             ];
 
-            // Cek apakah ada informasi admin yang tersimpan di local storage
             var selectedAdmin = localStorage.getItem('currentAdmin');
             if (!selectedAdmin) {
-                // Jika tidak ada, pilih admin secara acak
                 var randomIndex = Math.floor(Math.random() * phoneNumbers.length);
                 selectedAdmin = phoneNumbers[randomIndex];
                 localStorage.setItem('currentAdmin', JSON.stringify(selectedAdmin));
@@ -43,13 +41,12 @@
                 selectedAdmin = JSON.parse(selectedAdmin);
             }
 
-            // Menampilkan nama admin saat halaman diakses
             $('#adminName').text("Admin yang sedang bertugas: " + selectedAdmin.name);
 
-            $('#formContainer').show(); // Menampilkan form setelah nama admin ditampilkan
+            $('#formContainer').show();
 
             $('#whatsappForm').submit(function (e) {
-                e.preventDefault(); // Mencegah pengiriman form biasa
+                e.preventDefault();
 
                 var phone = $('#phone').val();
                 var issue = $('#issue').val();
