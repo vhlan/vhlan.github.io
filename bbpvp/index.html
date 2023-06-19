@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Form WhatsApp</title>
+  <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+  <h1>Form WhatsApp</h1>
+  
+  <form id="whatsappForm">
+    <label for="name">Nama:</label>
+    <input type="text" id="name" name="name" required><br><br>
+    
+    <label for="phone">Tipe HP:</label>
+    <input type="text" id="phone" name="phone" required><br><br>
+    
+    <label for="issue">Jenis Kerusakan:</label>
+    <input type="text" id="issue" name="issue" required><br><br>
+    
+    <label for="details">Detail Kerusakan:</label>
+    <textarea id="details" name="details" required></textarea><br><br>
+    
+    <input type="submit" value="Kirim">
+  </form>
+
+  <script>
+    $(document).ready(function() {
+      $('#whatsappForm').submit(function(e) {
+        e.preventDefault(); // Mencegah pengiriman form biasa
+        
+        var name = $('#name').val();
+        var phone = $('#phone').val();
+        var issue = $('#issue').val();
+        var details = $('#details').val();
+        
+        // Format pesan yang akan dikirimkan melalui WhatsApp
+        var message = "Halo, saya memiliki kerusakan pada HP dengan detail berikut:\n\n" +
+                      "Nama: " + name + "\n" +
+                      "Tipe HP: " + phone + "\n" +
+                      "Jenis Kerusakan: " + issue + "\n" +
+                      "Detail Kerusakan: " + details;
+        
+        // Mengganti nomor WhatsApp berikut dengan nomor yang Anda inginkan
+        var whatsappLink = "https://wa.me/1234567890?text=" + encodeURIComponent(message);
+        
+        // Mengarahkan pengguna ke aplikasi WhatsApp
+        window.location.href = whatsappLink;
+      });
+    });
+  </script>
+</body>
+</html>
