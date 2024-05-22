@@ -220,3 +220,44 @@ $(window).scroll(function() {
         menuItems.parent().removeClass("active").end().filter("[href='#" + id + "']").parent().addClass("active");
     }
 });
+
+        $(document).ready(function() {
+            const rssUrl = 'https://vhlan.blogspot.com/rss.xml';
+            const apiKey = 'API_KEY_ANDA';  // Ganti dengan API key Anda
+
+            const apiUrl = `https://api.rss2json.com/v1/api.json?rss_url=https%3A%2F%2Fvhlan.blogspot.com%2Frss.xml`;
+
+             $.ajax({
+                url: apiUrl,
+                method: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    data.items.forEach(function(item) {
+                        const title = item.title;
+                        const link = item.link;
+                        const pubDate = new Date(item.pubDate).toLocaleDateString('id-ID');
+                        const description = item.description;
+
+                        // Membuat elemen sementara untuk memparsing deskripsi HTML
+                        const tempDiv = $('<div>').html(description);
+                        const imageUrl = tempDiv.find('img').first().attr('src');
+
+                        const itemHtml = `
+                        <div class="item-blog">
+                            <a href="${link}">
+                                <div class="item-info">
+                                    <img src="${imageUrl ? imageUrl :'https://blogger.googleusercontent.com/img/b/R29vZ2xl/AVvXsEisBILjKvYckupiJ-BQa2pIaCUszSK6KnuGTJM6ZNJurR-XuysU8lykBPMZGTFXHGhcpVlqj_GyDJ7joc-s2iNWmY4KhKhW8SRFkr8yWUI6oFIsrVy9qYiLQD_dHyAYAlDBSulvKGfZ5zExonraDMN1Z1Pq5NL8VKkEkwrEV0iGnDACJ8niNLDYGFxRoEY/s1600/images.png'}">
+                                    <h3>${title}</h3>
+                                    <span>${pubDate}</span>
+                                </div>
+                            </a>
+                        </div>`;
+                        
+                        $('.blog-post').append(itemHtml);
+                    });
+                },
+                error: function() {
+                    console.log('Failed to fetch RSS feed');
+                }
+            });
+        });
