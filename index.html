@@ -346,10 +346,7 @@
                         <div class="logo">VA
             </div>
                         <div class="copyright">
-                            © 2021 All <br>Rights Reserved
-                        
-                        
-                        
+                            © <span id="year"></span> All <br>Rights Reserved
                         </div>
                     </div>
                     <nav class="menu-footer">
@@ -368,6 +365,12 @@
                 </div>
             </div>
         </footer>
+            <script>
+        document.addEventListener("DOMContentLoaded", function() {
+            const currentYear = new Date().getFullYear();
+            document.getElementById("year").textContent = currentYear;
+        });
+    </script>
         <script src="assets/js/vendor/jquery/jquery-3.4.1.min.js"></script>
         <script src="assets/js/app.js"></script>
     </body>
