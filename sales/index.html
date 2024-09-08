@@ -275,7 +275,7 @@ button:hover {
             const userTotal = parseRupiah(form.querySelector('.endUserTotal').value);
 
             totalEndUser += userTotal;
-            endUserDetails += `- USER-${userName.toUpperCase()} = ${userTotal.toLocaleString('id-ID')}\n`;
+            endUserDetails += `- USER-${userName.toUpperCase()} = Rp${userTotal.toLocaleString('id-ID')}\n`;
         });
 
         const invDealer = totalInvoice - totalEndUser;
@@ -283,19 +283,19 @@ button:hover {
 
         const formattedResultWithUser = `
 *DN-MKS CMC ${new Date().toLocaleDateString('id-ID')}* 
-INV Dealer : ${invDealer.toLocaleString('id-ID')}
+INV Dealer : Rp${invDealer.toLocaleString('id-ID')}
 INV User : 
 ${endUserDetails}
-CN : -${creditNote.toLocaleString('id-ID')}
-TOTAL : ${total.toLocaleString('id-ID')}
+CN : Rp-${creditNote.toLocaleString('id-ID')}
+TOTAL : Rp*${total.toLocaleString('id-ID')}*
         `.trim();
 
         const formattedResultWithoutUser = `
 *DN-MKS CMC ${new Date().toLocaleDateString('id-ID')}* 
-INV Dealer : ${totalInvoice.toLocaleString('id-ID')}
+INV Dealer : Rp${totalInvoice.toLocaleString('id-ID')}
 INV End User : 
-CN : ${creditNote > 0 ? `-${creditNote.toLocaleString('id-ID')}` : ''}
-TOTAL : ${total.toLocaleString('id-ID')}
+CN : Rp${creditNote > 0 ? `-${creditNote.toLocaleString('id-ID')}` : ''}
+TOTAL : *Rp${total.toLocaleString('id-ID')}*
         `.trim();
 
         resultText.textContent = endUserDetails ? formattedResultWithUser : formattedResultWithoutUser;
