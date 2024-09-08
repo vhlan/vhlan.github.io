@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="id">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Form Invoice</title>
+    <style>
+      /* Gabungan CSS */
+body {
+  font-family: Arial, sans-serif;
+  background-color: #181919;
+  margin: 0;
+  padding: 20px;
+}
+
+.container {
+  max-width: 800px;
+  margin: auto;
+  background: #181919;
+  /* Warna background dari CSS pertama */
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  /* Tambahkan box-shadow dari CSS kedua */
+}
+
+h1 {
+  color: #fff;
+  /* Warna dari CSS pertama */
+  text-align: center;
+  margin-bottom: 20px;
+}
+
+form {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group {
+  margin-bottom: 15px;
+}
+
+.form-group-inline {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  /* Tambahkan gap dari CSS kedua */
+  margin-bottom: 10px;
+  /* Ubah margin-bottom untuk konsistensi */
+}
+
+.form-group-inline input {
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-group input {
+  /* width: calc(100% - 22px); */
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  box-sizing: border-box;
+}
+
+.form-group-inline .endUserName,
+.form-group-inline .endUserTotal {
+  width: 45%;
+  /* Konsistensi lebar dari CSS pertama */
+}
+
+input[type="text"] {
+  width: 100%;
+}
+
+button {
+  padding: 10px;
+  border: none;
+  border-radius: 4px;
+  background-color: #3498db;
+  /* Warna tombol dari CSS pertama */
+  color: #fff;
+  font-size: 16px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+button:hover {
+  background-color: #2980b9;
+  /* Warna hover dari CSS pertama */
+}
+
+#addEndUser {
+    background: #0b82e7;
+    color: #121212;
+    font-weight: bold;
+}
+
+#addEndUser:hover {
+  background: #0f67b1;
+}
+
+#generateButton {
+  background: #ffb82e;
+  color: #181919;
+  text-transform: capitalize;
+  font-weight: bold;
+}
+
+#generateButton:hover {
+  background: #e9a530;
+}
+
+.closeEndUser {
+  background: #732f2f;
+  color: #fd504f;
+  margin-top:0;
+}
+
+.closeEndUser:hover {
+  background: #c0392b;
+  /* Warna hover dari CSS pertama */
+}
+
+
+/*     color: #181919;
+    color: #1e1f1f;
+    color: #737373;
+    color: #e9a530;
+    color: #582f45;
+    color: #b84f88; */
+
+      .result-container {
+        margin-top: 20px;
+      }
+      .result {
+        border: 1px solid #ccc;
+        padding: 10px;
+        margin-bottom: 10px;
+        white-space: pre-wrap; /* Preserve whitespace formatting */
+      }
+      .copy-button {
+        background-color: #007bff;
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        cursor: pointer;
+      }
+      .copy-button:hover {
+        background-color: #0056b3;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <form id="invoiceForm">
+        <div class="form-group">
+          <input type="text" id="totalInvoice" name="totalInvoice" placeholder="Masukkan total invoice" required>
+        </div>
+        <div class="form-group">
+          <input type="text" id="creditNote" name="creditNote" placeholder="Masukkan credit note" required>
+        </div>
+        <div id="endUserContainer">
+          <div class="endUserForm">
+            <div class="form-group-inline">
+              <input type="text" class="endUserName" name="endUserName[]" placeholder="Nama End User" required>
+              <input type="text" class="endUserTotal" name="endUserTotal[]" placeholder="Total End User" required>
+              <button type="button" class="closeEndUser">X</button>
+            </div>
+          </div>
+        </div>
+        <button type="button" id="addEndUser">Tambah End User</button>
+        <button type="button" id="generateButton">Hitung</button>
+      </form>
+      <div class="result-container" id="resultContainer" style="display: none;">
+        <pre id="resultText" class="result"></pre>
+        <button id="copyButton" class="copy-button">Copy</button>
+      </div>
+    </div>
+    <script>
+      document.addEventListener('DOMContentLoaded', () => {
+    const addEndUserButton = document.getElementById('addEndUser');
+    const endUserContainer = document.getElementById('endUserContainer');
+    const form = document.getElementById('invoiceForm');
+    const generateButton = document.getElementById('generateButton');
+    const resultContainer = document.getElementById('resultContainer');
+    const resultText = document.getElementById('resultText');
+    const copyButton = document.getElementById('copyButton');
+
+    const formatRupiah = (angka, prefix = 'Rp ') => {
+        let number_string = angka.replace(/,/g, '').replace(/[^,\d]/g, '').toString(),
+            split = number_string.split('.'),
+            sisa = split[0].length % 3,
+            rupiah = split[0].substr(0, sisa),
+            ribuan = split[0].substr(sisa).match(/\d{3}/gi);
+
+        if (ribuan) {
+            let separator = sisa ? '.' : '';
+            rupiah += separator + ribuan.join('.');
+        }
+
+        rupiah = split[1] !== undefined ? rupiah + ',' + split[1] : rupiah;
+        return prefix + rupiah;
+    };
+
+    const parseRupiah = (angka) => {
+        return parseInt(angka.replace(/[^,\d]/g, '')) || 0;
+    };
+
+    const formatInputField = (event) => {
+        const value = event.target.value;
+        event.target.value = formatRupiah(value);
+    };
+
+    document.getElementById('totalInvoice').addEventListener('input', formatInputField);
+    document.getElementById('creditNote').addEventListener('input', formatInputField);
+
+    const handleEndUserInput = () => {
+        document.querySelectorAll('.endUserTotal').forEach((input) => {
+            input.addEventListener('input', formatInputField);
+        });
+
+        document.querySelectorAll('.closeEndUser').forEach((button) => {
+            button.addEventListener('click', (e) => {
+                e.target.closest('.endUserForm').remove();
+            });
+        });
+    };
+
+    addEndUserButton.addEventListener('click', () => {
+        const newEndUserForm = document.createElement('div');
+        newEndUserForm.classList.add('endUserForm');
+        newEndUserForm.innerHTML = `
+            <div class="form-group-inline">
+                <input type="text" class="endUserName" name="endUserName[]" placeholder="Nama End User" required>
+                <input type="text" class="endUserTotal" name="endUserTotal[]" placeholder="Total End User" required>
+                <button type="button" class="closeEndUser">X</button>
+            </div>
+        `;
+        endUserContainer.appendChild(newEndUserForm);
+        handleEndUserInput();
+    });
+
+    form.addEventListener('submit', (e) => {
+        e.preventDefault();
+    });
+
+    generateButton.addEventListener('click', () => {
+        const totalInvoice = parseRupiah(document.getElementById('totalInvoice').value);
+        const creditNote = parseRupiah(document.getElementById('creditNote').value);
+
+        let totalEndUser = 0;
+        let endUserDetails = '';
+
+        document.querySelectorAll('.endUserForm').forEach((form) => {
+            const userName = form.querySelector('.endUserName').value;
+            const userTotal = parseRupiah(form.querySelector('.endUserTotal').value);
+
+            totalEndUser += userTotal;
+            endUserDetails += `- USER-${userName.toUpperCase()} = ${userTotal.toLocaleString('id-ID')}\n`;
+        });
+
+        const invDealer = totalInvoice - totalEndUser;
+        const total = totalInvoice - creditNote;
+
+        const formattedResultWithUser = `
+*DN-MKS CMC ${new Date().toLocaleDateString('id-ID')}* 
+INV Dealer : ${invDealer.toLocaleString('id-ID')}
+INV User : 
+${endUserDetails}
+CN : -${creditNote.toLocaleString('id-ID')}
+TOTAL : ${total.toLocaleString('id-ID')}
+        `.trim();
+
+        const formattedResultWithoutUser = `
+*DN-MKS CMC ${new Date().toLocaleDateString('id-ID')}* 
+INV Dealer : ${totalInvoice.toLocaleString('id-ID')}
+INV End User : 
+CN : ${creditNote > 0 ? `-${creditNote.toLocaleString('id-ID')}` : ''}
+TOTAL : ${total.toLocaleString('id-ID')}
+        `.trim();
+
+        resultText.textContent = endUserDetails ? formattedResultWithUser : formattedResultWithoutUser;
+        resultContainer.style.display = 'block';
+    });
+
+    copyButton.addEventListener('click', () => {
+        navigator.clipboard.writeText(resultText.textContent).then(() => {
+            alert('Teks berhasil disalin ke clipboard!');
+        }, (err) => {
+            alert('Gagal menyalin teks ke clipboard: ', err);
+        });
+    });
+
+    handleEndUserInput(); // Initialize input formatting and delete event listeners on page load
+});
+    </script>
+  </body>
+</html>
