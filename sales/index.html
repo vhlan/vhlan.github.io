@@ -131,29 +131,41 @@ button:hover {
     color: #582f45;
     color: #b84f88; */
 
-      .result-container {
+      /* Styling for the result box and copy button */
+      #resultContainer {
         margin-top: 20px;
-      }
-      .result {
-        border: 1px solid #ccc;
         padding: 10px;
-        margin-bottom: 10px;
-        white-space: pre-wrap; /* Preserve whitespace formatting */
+        border: 1px solid #ddd;
+        border-radius: 5px;
+        background-color: #f9f9f9;
+        position: relative;
+        color:#333;
       }
-      .copy-button {
-        background-color: #007bff;
+
+      #copyButton {
+        position: absolute;
+        top: 10px;
+        right: 10px;
+        background-color: #4CAF50;
         color: white;
         border: none;
-        padding: 10px 15px;
+        padding: 5px 10px;
         cursor: pointer;
+        border-radius: 5px;
+        margin-top:0;
       }
-      .copy-button:hover {
-        background-color: #0056b3;
+
+      #resultText {
+        white-space: pre-wrap; 
+        margin:0;
       }
     </style>
   </head>
   <body>
-    <div class="container">
+        <div class="container">
+    <h1>
+    Laporan Omset
+    </h1>
       <form id="invoiceForm">
         <div class="form-group">
           <input type="text" id="totalInvoice" name="totalInvoice" placeholder="Masukkan total invoice" required>
@@ -171,11 +183,13 @@ button:hover {
           </div>
         </div>
         <button type="button" id="addEndUser">Tambah End User</button>
-        <button type="button" id="generateButton">Hitung</button>
+        <button type="submit" id="generateButton">Buat Laporan</button>
       </form>
-      <div class="result-container" id="resultContainer" style="display: none;">
-        <pre id="resultText" class="result"></pre>
-        <button id="copyButton" class="copy-button">Copy</button>
+
+      <!-- Result Container -->
+      <div id="resultContainer" style="display: none;">
+        <button id="copyButton">Copy</button>
+        <pre id="resultText"></pre>
       </div>
     </div>
     <script>
