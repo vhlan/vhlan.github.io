@@ -1,1 +1,8 @@
-
+[
+    { "name": "CG-AS015_Depan.jpg", "path": "images/CG-AS015_Depan.jpg" },
+    { "name": "CG-AS015_Belakang.jpg", "path": "images/CG-AS015_Belakang.jpg" },
+    { "name": "CG-AS017_Depan.jpg", "path": "images/CG-AS017_Depan.jpg" },
+    { "name": "CG-AS017_Belakang.jpg", "path": "images/CG-AS017_Belakang.jpg" },
+    { "name": "ORBT-AS017_Depan.jpg", "path": "images/ORBT-AS017_Depan.jpg" },
+    { "name": "OORBT-AS017_Socket.jpg", "path": "images/OORBT-AS017_Socket.jpg" }
+]
