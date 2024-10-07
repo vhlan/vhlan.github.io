@@ -1,6 +1,8 @@
 [
-    { "name": "CG-AS015_Depan.jpg", "path": "images/CG-AS015_Depan.jpg" },
-    { "name": "CG-AS015_Belakang.jpg", "path": "images/CG-AS015_Belakang.jpg" },
+    { "name": "CG-AS015 Colokan", "path": "images/CG-AS015_Colokan.jpg" },
+    { "name": "CG-AS015 Top View", "path": "images/CG-AS015_Top.jpg" },
+    { "name": "CG-AS015 Straight View", "path": "images/CG-AS015_Straight.jpg" },
+    { "name": "CG-AS017_Colokan", "path": "images/CG-AS015_Colokan.jpg" },
     { "name": "CG-AS017_Depan.jpg", "path": "images/CG-AS017_Depan.jpg" },
     { "name": "CG-AS017_Belakang.jpg", "path": "images/CG-AS017_Belakang.jpg" },
     { "name": "ORBT-AS017_Depan.jpg", "path": "images/ORBT-AS017_Depan.jpg" },
