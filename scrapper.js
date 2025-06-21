@@ -1,5 +1,5 @@
 (async () => {
-  const filterFind = 
+  const filterFind = `
 TDS-A-01,
 TDS-A-02,
 TDS-A-03,
@@ -25,7 +25,7 @@ TDS-D-07,
 TDS-D-08,
 TDS-D-09,
 TDS-D-10
-.trim();
+`.trim();
 
   const filterList = filterFind
     .split(',')
@@ -90,17 +90,17 @@ TDS-D-10
 
   async function clickBatchAndWaitAllReveal() {
     const icons = document.querySelectorAll('.ssc-table-body .ssc-table-row svg.sensitive-wrap-icon');
-    console.log(🔍 Menemukan ${icons.length} ikon mata. Klik batch...);
+    console.log(`🔍 Menemukan ${icons.length} ikon mata. Klik batch...`);
 
     icons.forEach((icon, i) => {
       try {
         icon.dispatchEvent(new MouseEvent('click', { bubbles: true }));
       } catch (e) {
-        console.warn(⚠️ Gagal klik mata ke-${i + 1}, e);
+        console.warn(`⚠️ Gagal klik mata ke-${i + 1}`, e);
       }
     });
 
-    console.log(⏳ Menunggu semua data sensitif tampil dan tidak mengandung '*'...);
+    console.log(`⏳ Menunggu semua data sensitif tampil dan tidak mengandung '*'...`);
 
     await new Promise(resolve => {
       const maxWait = 15000;
@@ -137,7 +137,7 @@ TDS-D-10
 
   let page = 1;
   while (true) {
-    console.log(📄 Scraping halaman ${page}...);
+    console.log(`📄 Scraping halaman ${page}...`);
     await clickBatchAndWaitAllReveal();
 
     const currentData = scrapePage();
@@ -156,7 +156,7 @@ TDS-D-10
   const wb = XLSX.utils.book_new();
   const ws = XLSX.utils.aoa_to_sheet(allData);
   XLSX.utils.book_append_sheet(wb, ws, 'SPX');
-  XLSX.writeFile(wb, data_spx_filtered.xlsx);
+  XLSX.writeFile(wb, `data_spx_filtered.xlsx`);
 
-  console.log(🏁 Selesai export semua data dengan 25 filter SPX zone!);
+  console.log(`🏁 Selesai export semua data dengan 25 filter SPX zone!`);
 })();
