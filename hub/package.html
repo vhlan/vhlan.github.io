@@ -1,0 +1,898 @@
+<!doctype html>
+<html lang="id" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin - Aksi Cepat</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" xintegrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- XLSX Library for Excel file reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: var(--bs-body-bg);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .navbar-brand, .card-title {
+            font-weight: 600;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+        }
+        .stat-card .stat-value {
+             font-size: 1.75rem;
+             font-weight: 600;
+        }
+        .stat-card p {
+            font-size: 0.85rem;
+            color: var(--bs-secondary-color);
+            font-weight: 500;
+        }
+        
+        /* Two-Panel Table Layout */
+        .table-container {
+            display: flex;
+            border: 1px solid var(--bs-border-color);
+            border-radius: var(--bs-card-border-radius);
+            overflow: hidden;
+        }
+
+        .details-panel {
+            flex-grow: 1;
+            overflow-x: auto; /* Allows horizontal scrolling for details */
+        }
+        
+        .action-panel {
+            flex-shrink: 0;
+            width: 270px;
+        }
+
+        .details-panel .table-responsive,
+        .action-panel .table-responsive {
+            max-height: 65vh;
+            overflow: auto;
+            /* Hide vertical scrollbar */
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+        .details-panel .table-responsive::-webkit-scrollbar,
+        .action-panel .table-responsive::-webkit-scrollbar {
+            display: none; /* WebKit browsers */
+        }
+
+        /* Hide horizontal scrollbar for action panel */
+        .action-panel .table-responsive {
+             overflow-x: hidden;
+        }
+        
+        .table th, .table td {
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: 0.75rem;
+        }
+        
+        .table thead th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: var(--bs-tertiary-bg);
+        }
+        
+        .page-item.active .page-link {
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-light-subtle">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-person-workspace me-2"></i>Admin / Aksi Cepat
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                   <li class="nav-item d-flex align-items-center">
+                        <i class="bi bi-sun-fill me-2"></i>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
+                            <label class="form-check-label" for="themeSwitch">
+                                <i class="bi bi-moon-stars-fill"></i>
+                            </label>
+                        </div>
+                   </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="bi bi-plus-circle-fill me-1"></i> Add Data
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://i.pravatar.cc/40?u=admin" class="rounded-circle me-2" alt="Foto Profil" width="30" height="30">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill me-2"></i>Settings</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="uploadModalLabel">Upload Laporan Excel</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Pilih file laporan `.xlsx` atau `.csv` untuk diimpor. Sistem akan menambahkan data baru atau memperbarui data yang sudah ada berdasarkan `SPX Tracking Number`.</p>
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label">File Excel/CSV</label>
+                        <input class="form-control" type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div class="text-center">
+                        <a href="#" id="downloadTemplate" class="link-primary small"><i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Download Template Excel</a>
+                    </div>
+                    <div class="progress mt-3 d-none" id="progressBarContainer">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div id="uploadStatus" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                    <button type="button" class="btn btn-primary" id="uploadBtn">Upload and Process</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER & FILTERS -->
+    <div class="container-fluid mt-4">
+        <!-- New Stats Card -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Tinjauan Operasional</h5>
+                <div class="row text-center g-3">
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end">
+                        <p class="mb-1">Delivering</p>
+                        <h4 class="stat-value text-info" id="statDelivering">0</h4>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end">
+                        <p class="mb-1">On-Hold</p>
+                        <h4 class="stat-value text-warning" id="statOnHold">0</h4>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end">
+                        <p class="mb-1">Delivered</p>
+                        <h4 class="stat-value text-success" id="statDelivered">0</h4>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end">
+                        <p class="mb-1">Bulky</p>
+                        <h4 class="stat-value text-secondary" id="statBulky">0</h4>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end">
+                        <p class="mb-1">Barhal (High Value)</p>
+                        <h4 class="stat-value text-danger" id="statBarhal">0</h4>
+                    </div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card">
+                        <p class="mb-1">Kurir Aktif</p>
+                        <h4 class="stat-value text-primary" id="statCourierActive">0</h4>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- COMPLEX FILTERS & ACTIONS -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label class="form-label">Rentang Tanggal</label>
+                        <div class="input-group">
+                            <input type="date" class="form-control" id="startDate">
+                            <span class="input-group-text">to</span>
+                            <input type="date" class="form-control" id="endDate">
+                        </div>
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filterTracking" class="form-label">Tracking Number</label>
+                        <input type="text" id="filterTracking" class="form-control" placeholder="e.g., SPXID05...">
+                    </div>
+                     <div class="col-lg-3 col-md-6">
+                        <label for="filterDriver" class="form-label">Nama Driver</label>
+                        <input type="text" id="filterDriver" class="form-control" placeholder="e.g., Nicky...">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filterStatus" class="form-label">Order Status</label>
+                        <select id="filterStatus" class="form-select">
+                            <option value="">Semua</option>
+                            <option value="Delivered">Delivered</option>
+                            <option value="On-Hold">On-Hold</option>
+                            <option value="Delivering">Delivering</option>
+                        </select>
+                    </div>
+                    <!-- New Filters Row -->
+                    <div class="col-lg-2 col-md-4">
+                         <label for="filterBulky" class="form-label">Bulky Type</label>
+                        <select id="filterBulky" class="form-select">
+                            <option value="">Semua</option>
+                            <option value="Bulky">Bulky</option>
+                            <option value="Non-Bulky">Non-Bulky</option>
+                        </select>
+                    </div>
+                     <div class="col-lg-2 col-md-4">
+                         <label for="filterBarhal" class="form-label">High Value / Barhal</label>
+                        <select id="filterBarhal" class="form-select">
+                            <option value="">Semua</option>
+                            <option value="Iya">Iya</option>
+                            <option value="Tidak">Tidak</option>
+                        </select>
+                    </div>
+                     <div class="col-lg-2 col-md-4">
+                        <label for="filterPickupTime" class="form-label">Pick Up Time (Jam)</label>
+                        <input type="time" id="filterPickupTime" class="form-control">
+                    </div>
+                     <div class="col-lg-2 col-md-4">
+                        <label for="filterDeliveredTime" class="form-label">Delivered Time (Jam)</label>
+                        <input type="time" id="filterDeliveredTime" class="form-control">
+                    </div>
+                    <!-- Action Buttons Integrated Here -->
+                    <div class="col-lg-4 col-md-12">
+                         <div class="d-flex gap-2 w-100">
+                            <button class="btn btn-outline-secondary w-100" id="resetFilterBtn" title="Reset Filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                            <button class="btn btn-success w-100" id="exportBtn"><i class="bi bi-file-earmark-excel-fill"></i> Export</button>
+                            <button class="btn btn-primary w-100" id="saveChangesBtn" disabled><i class="bi bi-save-fill"></i> Save</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MAIN TABLE -->
+    <main class="container-fluid my-4">
+        <div class="card">
+            <div class="card-body">
+                 <div id="saveStatus" class="mb-3"></div>
+                
+                 <!-- New Table Container -->
+                 <div class="table-container">
+                    <!-- Details Panel (Left) -->
+                    <div class="details-panel">
+                        <div class="table-responsive" id="detailsTableContainer">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th>SPX Tracking Number</th>
+                                        <th>Order Account</th>
+                                        <th>Order Direction</th>
+                                        <th>Bulky Type</th>
+                                        <th>Sort Code</th>
+                                        <th>Nama Zona</th>
+                                        <th>Location Type</th>
+                                        <th>Current Station</th>
+                                        <th>COD Cek Dulu</th>
+                                        <th>High Value / Barhal</th>
+                                        <th>Driver ID</th>
+                                        <th>Nama Driver</th>
+                                        <th>Pick Up Time</th>
+                                        <th>Delivered Time</th>
+                                        <th>Waktu Penjadwalan Ulang</th>
+                                        <th>On-Hold Time</th>
+                                        <th>Alasan On Hold</th>
+                                        <th>Total Waktu On Hold</th>
+                                        <th>Waktu Diterima di Station Saat Ini</th>
+                                        <th>Target Delivery Time</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailsTableBody">
+                                    <!-- Details rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Panel (Right) -->
+                    <div class="action-panel">
+                        <div class="table-responsive" id="actionTableContainer">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th>Order Status</th>
+                                        <th style="width:125px">Action</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="actionTableBody">
+                                    <!-- Action rows will be populated here -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                 </div>
+
+                 <!-- Pagination -->
+                <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <label for="rowsPerPageSelect" class="form-label me-2 mb-0 text-nowrap">Rows per page:</label>
+                        <select class="form-select form-select-sm" id="rowsPerPageSelect" style="width: auto;">
+                            <option value="24" selected>24</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <nav id="paginationNav"></nav>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-body-tertiary mt-auto py-4">
+        <div class="container text-center">
+            <p class="mb-1">&copy; 2025 Tondano Selatan Hub. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" xintegrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', function () {
+        
+        // --- GLOBAL VARIABLES ---
+        const DB_NAME = 'CourierDB';
+        const STORE_NAME = 'shipments';
+        const DB_VERSION = 1;
+        let db;
+        let changesToSave = {}; 
+        let currentPage = 1;
+        let rowsPerPage = 24;
+        let currentFilteredData = [];
+
+        // --- UI ELEMENTS ---
+        const uploadBtn = document.getElementById('uploadBtn');
+        const fileInput = document.getElementById('excelFile');
+        const uploadStatus = document.getElementById('uploadStatus');
+        const progressBarContainer = document.getElementById('progressBarContainer');
+        const progressBar = document.getElementById('progressBar');
+        const actionTableBody = document.getElementById('actionTableBody');
+        const detailsTableBody = document.getElementById('detailsTableBody');
+        const saveChangesBtn = document.getElementById('saveChangesBtn');
+        const saveStatus = document.getElementById('saveStatus');
+        const rowsPerPageSelect = document.getElementById('rowsPerPageSelect');
+        const exportBtn = document.getElementById('exportBtn');
+        const actionTableContainer = document.getElementById('actionTableContainer');
+        const detailsTableContainer = document.getElementById('detailsTableContainer');
+        
+        // --- THEME SWITCHER LOGIC ---
+        const themeSwitch = document.getElementById('themeSwitch');
+        const htmlElement = document.documentElement;
+        const setTheme = (isDark) => {
+            htmlElement.setAttribute('data-bs-theme', isDark ? 'dark' : 'light');
+            themeSwitch.checked = isDark;
+        };
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) setTheme(savedTheme === 'dark');
+        else setTheme(window.matchMedia('(prefers-color-scheme: dark)').matches);
+        themeSwitch.addEventListener('change', function () {
+            const theme = this.checked ? 'dark' : 'light';
+            htmlElement.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+        
+        // --- DATABASE FUNCTIONS ---
+        async function initDb() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = event => reject('Error opening DB: ' + event.target.errorCode);
+                request.onsuccess = event => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = event => {
+                    const dbInstance = event.target.result;
+                    if (!dbInstance.objectStoreNames.contains(STORE_NAME)) {
+                         dbInstance.createObjectStore(STORE_NAME);
+                    }
+                };
+            });
+        }
+        
+        // --- UPLOAD AND PROCESS LOGIC ---
+        uploadBtn.addEventListener('click', async () => {
+            if (fileInput.files.length === 0) {
+                uploadStatus.innerHTML = `<div class="alert alert-warning">Pilih file terlebih dahulu.</div>`;
+                return;
+            }
+            const file = fileInput.files[0];
+            uploadStatus.innerHTML = '';
+            progressBarContainer.classList.remove('d-none');
+            progressBar.style.width = '0%';
+            try {
+                const jsonData = await readExcelFile(file);
+                const stats = await saveDataToDB(jsonData);
+                uploadStatus.innerHTML = `<div class="alert alert-success">Sukses! ${stats.added} data baru ditambahkan, ${stats.updated} data diperbarui.</div>`;
+                await displayData();
+            } catch (error) {
+                console.error("Upload Error:", error);
+                uploadStatus.innerHTML = `<div class="alert alert-danger">Terjadi kesalahan: ${error.message}</div>`;
+            } finally {
+                 setTimeout(() => progressBarContainer.classList.add('d-none'), 3000);
+            }
+        });
+
+        function readExcelFile(file) {
+             return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.onload = (event) => {
+                    try {
+                        const data = event.target.result;
+                        const workbook = XLSX.read(data, { 
+                            type: file.name.toLowerCase().endsWith('.csv') ? 'string' : 'array', 
+                            cellDates: true 
+                        });
+                        const firstSheetName = workbook.SheetNames[0];
+                        const worksheet = workbook.Sheets[firstSheetName];
+                        const jsonData = XLSX.utils.sheet_to_json(worksheet, { defval: "" });
+                        resolve(jsonData);
+                    } catch (e) {
+                        console.error("File parsing error:", e);
+                        reject(new Error('Gagal memproses file. Pastikan format kolom sesuai.'));
+                    }
+                };
+                reader.onerror = () => reject(new Error('Gagal membaca file.'));
+
+                if (file.name.toLowerCase().endsWith('.csv')) {
+                    reader.readAsText(file);
+                } else {
+                    reader.readAsArrayBuffer(file);
+                }
+            });
+        }
+        
+        async function saveDataToDB(jsonData) {
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            let stats = { added: 0, updated: 0, skipped: 0 };
+            const dataByMonth = {};
+
+            jsonData.forEach((row) => {
+                let pickupTimeValue = row['Pick Up Time'];
+                let pickupDate;
+
+                if (pickupTimeValue instanceof Date) {
+                    pickupDate = pickupTimeValue;
+                } else if (typeof pickupTimeValue === 'string' && pickupTimeValue.trim() !== '') {
+                    pickupDate = new Date(pickupTimeValue);
+                } else if (typeof pickupTimeValue === 'number' && pickupTimeValue > 25569) {
+                    const excelEpoch = new Date(1899, 11, 30);
+                    pickupDate = new Date(excelEpoch.getTime() + pickupTimeValue * 86400000);
+                }
+
+                if (!pickupDate || isNaN(pickupDate.getTime())) {
+                    stats.skipped++;
+                    return;
+                }
+                
+                row['Pick Up Time'] = pickupDate; 
+
+                const monthKey = `${pickupDate.getFullYear()}-${String(pickupDate.getMonth() + 1).padStart(2, '0')}`;
+                if (!dataByMonth[monthKey]) dataByMonth[monthKey] = [];
+                dataByMonth[monthKey].push(row);
+            });
+
+            for (const monthKey in dataByMonth) {
+                const getRequest = store.get(monthKey);
+                let monthData = await new Promise(resolve => getRequest.onsuccess = () => resolve(getRequest.result)) || {};
+                dataByMonth[monthKey].forEach(row => {
+                    const pickupDate = row['Pick Up Time'];
+                    const dayKey = `${monthKey}-${String(pickupDate.getDate()).padStart(2, '0')}`;
+                    const trackingNumber = row['SPX Tracking Number'];
+                    if (!monthData[dayKey]) monthData[dayKey] = [];
+                    const existingIndex = monthData[dayKey].findIndex(item => item['SPX Tracking Number'] === trackingNumber);
+                    if (existingIndex > -1) {
+                        monthData[dayKey][existingIndex] = row;
+                        stats.updated++;
+                    } else {
+                        monthData[dayKey].push(row);
+                        stats.added++;
+                    }
+                });
+                store.put(monthData, monthKey);
+            }
+            await new Promise(resolve => tx.oncomplete = resolve);
+            return stats;
+        }
+
+        // --- DISPLAY, FILTER, AND PAGINATION LOGIC ---
+        async function getDataForDateRange(startDate, endDate) {
+            const allData = [];
+            const start = new Date(startDate);
+            const end = new Date(endDate);
+            if (start > end) return [];
+
+            const tx = db.transaction(STORE_NAME, 'readonly');
+            const store = tx.objectStore(STORE_NAME);
+            
+            for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
+                const monthKey = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+                const dayKey = `${monthKey}-${String(d.getDate()).padStart(2, '0')}`;
+                
+                const monthData = await new Promise(resolve => {
+                    const req = store.get(monthKey);
+                    req.onsuccess = () => resolve(req.result);
+                    req.onerror = () => resolve(null);
+                });
+
+                if (monthData && monthData[dayKey]) {
+                    allData.push(...monthData[dayKey]);
+                }
+            }
+            return allData;
+        }
+
+        async function displayData() {
+            const startDate = document.getElementById('startDate').value;
+            const endDate = document.getElementById('endDate').value;
+            
+            if (!startDate || !endDate) return;
+
+            let allData = await getDataForDateRange(startDate, endDate);
+
+            // Get all filter values
+            const trackingFilter = document.getElementById('filterTracking').value.toLowerCase();
+            const driverFilter = document.getElementById('filterDriver').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const bulkyFilter = document.getElementById('filterBulky').value;
+            const barhalFilter = document.getElementById('filterBarhal').value;
+            const pickupTimeFilter = document.getElementById('filterPickupTime').value;
+            const deliveredTimeFilter = document.getElementById('filterDeliveredTime').value;
+            
+            currentFilteredData = allData.filter(row => {
+                const trackingMatch = trackingFilter ? (row['SPX Tracking Number'] || '').toLowerCase().includes(trackingFilter) : true;
+                const driverMatch = driverFilter ? (row['Nama Driver'] || '').toLowerCase().includes(driverFilter) : true;
+                const statusMatch = statusFilter ? (row['Order Status'] === statusFilter) : true;
+                const bulkyMatch = bulkyFilter ? (row['Bulky Type'] === bulkyFilter) : true;
+                const barhalMatch = barhalFilter ? (row['High Value / Barhal'] === barhalFilter) : true;
+                
+                const pickupDate = new Date(row['Pick Up Time']);
+                const pickupHourMatch = pickupTimeFilter ? (pickupDate.getHours() == pickupTimeFilter.split(':')[0]) : true;
+
+                const deliveredDate = row['Delivered Time'] ? new Date(row['Delivered Time']) : null;
+                let deliveredHourMatch = true;
+                if (deliveredTimeFilter) {
+                   deliveredHourMatch = deliveredDate ? (deliveredDate.getHours() == deliveredTimeFilter.split(':')[0]) : false;
+                }
+                
+                return trackingMatch && driverMatch && statusMatch && bulkyMatch && barhalMatch && pickupHourMatch && deliveredHourMatch;
+            });
+            
+            updateStats(allData);
+            renderTable(currentFilteredData);
+            renderPagination(currentFilteredData.length);
+        }
+
+        function renderTable(data) {
+            actionTableBody.innerHTML = '';
+            detailsTableBody.innerHTML = '';
+
+            if (data.length === 0) {
+                const emptyRow = `<tr><td colspan="20" class="text-center p-5">Tidak ada data untuk filter yang dipilih.</td></tr>`;
+                detailsTableBody.innerHTML = emptyRow;
+                return;
+            }
+
+            const start = (currentPage - 1) * rowsPerPage;
+            const end = start + rowsPerPage;
+            const paginatedData = data.slice(start, end);
+            
+            const formatDate = (dateValue) => {
+                if (!dateValue) return '-';
+                const date = new Date(dateValue);
+                if (isNaN(date) || date.getTime() < 1000) return '-';
+                return date.toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+            };
+
+            paginatedData.forEach(row => {
+                const trackingNumber = row['SPX Tracking Number'];
+                const rowHeight = '65px'; // Fixed height for rows
+                
+                // --- Action Row ---
+                const actionTr = document.createElement('tr');
+                actionTr.style.height = rowHeight;
+                actionTr.dataset.trackingNumber = trackingNumber;
+                actionTr.dataset.pickupTime = new Date(row['Pick Up Time']).toISOString();
+                actionTr.innerHTML = `
+                    <td>
+                        <select class="form-select form-select-sm status-select" style="min-width: 130px;">
+                            <option value="Delivering" ${row['Order Status'] === 'Delivering' ? 'selected' : ''}>Delivering</option>
+                            <option value="Delivered" ${row['Order Status'] === 'Delivered' ? 'selected' : ''}>Delivered</option>
+                            <option value="On-Hold" ${row['Order Status'] === 'On-Hold' ? 'selected' : ''}>On-Hold</option>
+                        </select>
+                    </td>
+                    <td>
+                        <div class="dropdown"><button class="btn btn-sm btn-outline-secondary dropdown-toggle w-100" type="button" data-bs-toggle="dropdown">Aksi</button><ul class="dropdown-menu dropdown-menu-end"><li><a class="dropdown-item" href="#"><i class="bi bi-whatsapp me-2"></i>Kirim WA</a></li></ul></div>
+                    </td>
+                `;
+                actionTableBody.appendChild(actionTr);
+
+                // --- Details Row ---
+                const detailTr = document.createElement('tr');
+                detailTr.style.height = rowHeight;
+                detailTr.innerHTML = `
+                    <td>${trackingNumber || '-'}</td>
+                    <td>${row['Order Account'] || '-'}</td>
+                    <td>${row['Order Direction'] || '-'}</td>
+                    <td>${row['Bulky Type'] || '-'}</td>
+                    <td>${row['Sort Code'] || '-'}</td>
+                    <td>${row['Nama Zona'] || '-'}</td>
+                    <td>${row['Location Type'] || '-'}</td>
+                    <td>${row['Current Station'] || '-'}</td>
+                    <td>${row['COD Cek Dulu'] || '-'}</td>
+                    <td>${row['High Value / Barhal'] || '-'}</td>
+                    <td>${row['Driver ID'] || '-'}</td>
+                    <td>${row['Nama Driver'] || '-'}</td>
+                    <td>${formatDate(row['Pick Up Time'])}</td>
+                    <td>${formatDate(row['Delivered Time'])}</td>
+                    <td>${row['Waktu Penjadwalan Ulang'] || '-'}</td>
+                    <td>${formatDate(row['On-Hold Time'])}</td>
+                    <td>${row['Alasan On Hold'] || '-'}</td>
+                    <td>${row['Total Waktu On Hold'] || '-'}</td>
+                    <td>${formatDate(row['Waktu Diterima di Station Saat Ini'])}</td>
+                    <td>${formatDate(row['Target Delivery Time'])}</td>
+                `;
+                detailsTableBody.appendChild(detailTr);
+            });
+        }
+        
+        function renderPagination(totalRows) {
+            const nav = document.getElementById('paginationNav');
+            nav.innerHTML = '';
+            const totalPages = Math.ceil(totalRows / rowsPerPage);
+
+            if (totalPages <= 1) {
+                document.getElementById('paginationControls').classList.add('d-none');
+                return;
+            }
+            document.getElementById('paginationControls').classList.remove('d-none');
+
+            const ul = document.createElement('ul');
+            ul.className = 'pagination mb-0';
+
+            const prevLi = document.createElement('li');
+            prevLi.className = `page-item ${currentPage === 1 ? 'disabled' : ''}`;
+            prevLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage - 1}">Previous</a>`;
+            ul.appendChild(prevLi);
+
+            for (let i = 1; i <= totalPages; i++) {
+                if(i === currentPage || i === 1 || i === totalPages || (i >= currentPage - 2 && i <= currentPage + 2)){
+                     const li = document.createElement('li');
+                    li.className = `page-item ${i === currentPage ? 'active' : ''}`;
+                    li.innerHTML = `<a class="page-link" href="#" data-page="${i}">${i}</a>`;
+                    ul.appendChild(li);
+                } else if (i === currentPage - 3 || i === currentPage + 3) {
+                     const li = document.createElement('li');
+                    li.className = `page-item disabled`;
+                    li.innerHTML = `<span class="page-link">...</span>`;
+                    ul.appendChild(li);
+                }
+            }
+
+            const nextLi = document.createElement('li');
+            nextLi.className = `page-item ${currentPage === totalPages ? 'disabled' : ''}`;
+            nextLi.innerHTML = `<a class="page-link" href="#" data-page="${currentPage + 1}">Next</a>`;
+            ul.appendChild(nextLi);
+
+            nav.appendChild(ul);
+        }
+        
+        document.getElementById('paginationNav').addEventListener('click', (e) => {
+            e.preventDefault();
+            if (e.target.tagName === 'A' && !e.target.parentElement.classList.contains('disabled')) {
+                currentPage = parseInt(e.target.dataset.page);
+                displayData();
+            }
+        });
+
+
+        function updateStats(data) {
+            let stats = { Delivering: 0, OnHold: 0, Delivered: 0, Bulky: 0, Barhal: 0 };
+            const activeCouriers = new Set();
+            data.forEach(row => {
+                if (row['Order Status'] === 'Delivering') stats.Delivering++;
+                else if (row['Order Status'] === 'On-Hold') stats.OnHold++;
+                else if (row['Order Status'] === 'Delivered') stats.Delivered++;
+                if (row['Bulky Type'] === 'Bulky') stats.Bulky++;
+                if (row['High Value / Barhal'] === 'Iya') stats.Barhal++;
+                if (row['Driver ID']) activeCouriers.add(row['Driver ID']);
+            });
+            document.getElementById('statDelivering').textContent = stats.Delivering;
+            document.getElementById('statOnHold').textContent = stats.OnHold;
+            document.getElementById('statDelivered').textContent = stats.Delivered;
+            document.getElementById('statBulky').textContent = stats.Bulky;
+            document.getElementById('statBarhal').textContent = stats.Barhal;
+            document.getElementById('statCourierActive').textContent = activeCouriers.size;
+        }
+
+        // --- SAVE CHANGES LOGIC ---
+        actionTableBody.addEventListener('change', (event) => {
+            if (event.target.classList.contains('status-select')) {
+                const row = event.target.closest('tr');
+                changesToSave[row.dataset.trackingNumber] = event.target.value;
+                saveChangesBtn.disabled = false;
+                saveStatus.innerHTML = `<span class="text-warning small">Perubahan belum disimpan...</span>`;
+            }
+        });
+
+        saveChangesBtn.addEventListener('click', async () => {
+             if (Object.keys(changesToSave).length === 0) return;
+            saveChangesBtn.disabled = true;
+            saveStatus.innerHTML = `<span class="text-info small">Menyimpan...</span>`;
+            const tx = db.transaction(STORE_NAME, 'readwrite');
+            const store = tx.objectStore(STORE_NAME);
+            const changesByMonth = {};
+            
+            const allChangedRows = Array.from(actionTableBody.querySelectorAll(`tr[data-tracking-number]`)).filter(tr => changesToSave[tr.dataset.trackingNumber]);
+
+            allChangedRows.forEach(row => {
+                const trackingNumber = row.dataset.trackingNumber;
+                if (changesToSave[trackingNumber]) {
+                    const pickupTime = new Date(row.dataset.pickupTime);
+                    const monthKey = `${pickupTime.getFullYear()}-${String(pickupTime.getMonth() + 1).padStart(2, '0')}`;
+                    if (!changesByMonth[monthKey]) changesByMonth[monthKey] = [];
+                    changesByMonth[monthKey].push({
+                        trackingNumber: trackingNumber,
+                        newStatus: changesToSave[trackingNumber],
+                        dayKey: `${monthKey}-${String(pickupTime.getDate()).padStart(2, '0')}`
+                    });
+                }
+            });
+
+            try {
+                for (const monthKey in changesByMonth) {
+                    const getRequest = store.get(monthKey);
+                    let monthData = await new Promise((resolve, reject) => {
+                        getRequest.onsuccess = () => resolve(getRequest.result);
+                        getRequest.onerror = () => reject(getRequest.error);
+                    });
+                    if (monthData) {
+                        changesByMonth[monthKey].forEach(change => {
+                            if (monthData[change.dayKey]) {
+                                const itemToUpdate = monthData[change.dayKey].find(item => item['SPX Tracking Number'] === change.trackingNumber);
+                                if (itemToUpdate) itemToUpdate['Order Status'] = change.newStatus;
+                            }
+                        });
+                        store.put(monthData, monthKey);
+                    }
+                }
+                await new Promise(resolve => tx.oncomplete = resolve);
+                saveStatus.innerHTML = `<span class="text-success small">Perubahan berhasil disimpan!</span>`;
+                changesToSave = {};
+                await displayData();
+            } catch (error) {
+                console.error("Save Error:", error);
+                saveStatus.innerHTML = `<span class="text-danger small">Gagal menyimpan!</span>`;
+                saveChangesBtn.disabled = false;
+            } finally {
+                 setTimeout(() => saveStatus.innerHTML = '', 4000);
+            }
+        });
+
+        // --- INITIALIZATION ---
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), delay);
+            };
+        }
+
+        let isSyncing = false;
+        function syncScroll(source, target) {
+            source.addEventListener('scroll', () => {
+                if (!isSyncing) {
+                    isSyncing = true;
+                    target.scrollTop = source.scrollTop;
+                    isSyncing = false;
+                }
+            });
+        }
+        syncScroll(actionTableContainer, detailsTableContainer);
+        syncScroll(detailsTableContainer, actionTableContainer);
+
+
+        async function initializeApp() {
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('startDate').value = today;
+            document.getElementById('endDate').value = today;
+            
+            await initDb();
+            await displayData();
+            
+            const handleFilterChange = () => {
+                currentPage = 1; 
+                displayData();
+            };
+
+            const debouncedFilterHandler = debounce(handleFilterChange, 300);
+
+            // Add event listeners for all filters
+            const filterInputs = ['startDate', 'endDate', 'filterStatus', 'filterBulky', 'filterBarhal'];
+            filterInputs.forEach(id => document.getElementById(id).addEventListener('change', handleFilterChange));
+
+            const debouncedInputs = ['filterTracking', 'filterDriver', 'filterPickupTime', 'filterDeliveredTime'];
+            debouncedInputs.forEach(id => document.getElementById(id).addEventListener('input', debouncedFilterHandler));
+            
+            rowsPerPageSelect.addEventListener('change', (e) => {
+                rowsPerPage = parseInt(e.target.value, 10);
+                handleFilterChange();
+            });
+
+            document.getElementById('resetFilterBtn').addEventListener('click', () => {
+                const today = new Date().toISOString().split('T')[0];
+                document.getElementById('startDate').value = today;
+                document.getElementById('endDate').value = today;
+                ['filterTracking', 'filterDriver', 'filterPickupTime', 'filterDeliveredTime'].forEach(id => document.getElementById(id).value = '');
+                ['filterStatus', 'filterBulky', 'filterBarhal'].forEach(id => document.getElementById(id).value = '');
+                rowsPerPageSelect.value = 24;
+                rowsPerPage = 24;
+                currentPage = 1;
+                displayData();
+            });
+            
+            exportBtn.addEventListener('click', () => {
+                if(currentFilteredData.length === 0){
+                    alert("Tidak ada data untuk diekspor.");
+                    return;
+                }
+                
+                const worksheet = XLSX.utils.json_to_sheet(currentFilteredData);
+                const workbook = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(workbook, worksheet, "Filtered Data");
+                XLSX.writeFile(workbook, "FilteredCourierData.xlsx");
+            });
+
+            document.getElementById('downloadTemplate').addEventListener('click', (e) => {
+                e.preventDefault();
+                const headers = ["SPX Tracking Number", "Order Account", "Order Direction", "Bulky Type", "Sort Code", "Nama Zona", "Location Type", "Current Station", "COD Cek Dulu", "High Value / Barhal", "Driver ID", "Nama Driver", "Pick Up Time", "Delivered Time", "Waktu Penjadwalan Ulang", "On-Hold Time", "Alasan On Hold", "Total Waktu On Hold", "Waktu Diterima di Station Saat Ini", "Target Delivery Time", "Order Status"];
+                const ws = XLSX.utils.aoa_to_sheet([headers]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Template");
+                XLSX.writeFile(wb, "Template_Laporan_Kurir.xlsx");
+            });
+        }
+
+        initializeApp();
+
+    });
+    </script>
+</body>
+</html>
