@@ -1,0 +1,804 @@
+<!doctype html>
+<html lang="id" data-bs-theme="light">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Admin - Manajemen Kurir</title>
+
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <!-- Bootstrap Icons -->
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+
+    <!-- Google Fonts: Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <!-- XLSX Library for Excel file reading -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+
+    <!-- Custom CSS -->
+    <style>
+        body {
+            background-color: var(--bs-body-bg);
+            font-family: 'Inter', sans-serif;
+            transition: background-color 0.3s ease;
+        }
+        .navbar-brand, .card-title {
+            font-weight: 600;
+        }
+        .card {
+            border: none;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            border-radius: 0.75rem;
+        }
+        .stat-card .stat-value {
+             font-size: 1.75rem;
+             font-weight: 700;
+        }
+        .stat-card p {
+            font-size: 0.9rem;
+            color: var(--bs-secondary-color);
+            font-weight: 500;
+        }
+        .table th, .table td {
+            white-space: nowrap;
+            vertical-align: middle;
+            padding: 0.9rem 0.75rem;
+        }
+        .table thead th {
+            position: -webkit-sticky;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            background-color: var(--bs-tertiary-bg);
+        }
+        
+        /* Two-Panel Table Layout */
+        .table-container {
+            display: flex;
+            border: 1px solid var(--bs-border-color);
+            border-radius: var(--bs-card-border-radius, .75rem);
+            overflow: hidden;
+        }
+
+        .details-panel {
+            flex-grow: 1;
+            overflow-x: auto; /* Allows horizontal scrolling for details */
+        }
+        
+        .action-panel {
+            flex-shrink: 0;
+            width: 280px; /* Adjusted width for new columns */
+        }
+
+        .details-panel .table-responsive,
+        .action-panel .table-responsive {
+            max-height: 65vh;
+            overflow: auto;
+            scrollbar-width: none; /* Firefox */
+            -ms-overflow-style: none;  /* IE and Edge */
+        }
+        .details-panel .table-responsive::-webkit-scrollbar,
+        .action-panel .table-responsive::-webkit-scrollbar {
+            display: none; /* WebKit browsers */
+        }
+
+        .action-panel .table-responsive {
+             overflow-x: hidden;
+        }
+        
+        .page-item.active .page-link {
+            z-index: 0;
+        }
+    </style>
+</head>
+<body class="bg-light-subtle">
+
+    <!-- NAVBAR -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm sticky-top">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="#">
+                <i class="bi bi-people-fill me-2"></i>Admin / Manajemen Kurir
+            </a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav mx-auto">
+                   <li class="nav-item d-flex align-items-center">
+                        <i class="bi bi-sun-fill me-2"></i>
+                        <div class="form-check form-switch">
+                            <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
+                            <label class="form-check-label" for="themeSwitch">
+                                <i class="bi bi-moon-stars-fill"></i>
+                            </label>
+                        </div>
+                   </li>
+                </ul>
+                <ul class="navbar-nav ms-auto align-items-center">
+                    <li class="nav-item me-2">
+                         <button class="btn btn-info" data-bs-toggle="modal" data-bs-target="#addCourierModal">
+                            <i class="bi bi-person-plus-fill me-1"></i> Tambah Kurir
+                        </button>
+                    </li>
+                    <li class="nav-item me-2">
+                        <button class="btn btn-primary" data-bs-toggle="modal" data-bs-target="#uploadModal">
+                            <i class="bi bi-cloud-arrow-up-fill me-1"></i> Impor Data
+                        </button>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <img src="https://i.pravatar.cc/40?u=admin" class="rounded-circle me-2" alt="Foto Profil" width="30" height="30">
+                            Admin
+                        </a>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-lg">
+                            <li><a class="dropdown-item" href="/package.html"><i class="bi bi-box-seam-fill me-2"></i>Manajemen Paket</a></li>
+                            <li><hr class="dropdown-divider"></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill me-2"></i>Pengaturan</a></li>
+                        </ul>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    
+    <!-- Modals (Add, Edit, Upload) -->
+    <!-- Add Courier Modal -->
+    <div class="modal fade" id="addCourierModal" tabindex="-1" aria-labelledby="addCourierModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="addCourierModalLabel">Tambah Data Kurir Baru</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="addCourierForm" class="row g-3"></form>
+                </div>
+                <div class="modal-footer">
+                    <div id="addCourierStatus" class="me-auto"></div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="submit" class="btn btn-primary" form="addCourierForm">Simpan Kurir</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Edit Courier Modal -->
+    <div class="modal fade" id="editCourierModal" tabindex="-1" aria-labelledby="editCourierModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="editCourierModalLabel">Edit Data Kurir</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="editCourierForm" class="row g-3"></form>
+                </div>
+                <div class="modal-footer">
+                    <div id="editCourierStatus" class="me-auto"></div>
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="submit" class="btn btn-primary" form="editCourierForm">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Upload Modal -->
+    <div class="modal fade" id="uploadModal" tabindex="-1" aria-labelledby="uploadModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h1 class="modal-title fs-5" id="uploadModalLabel">Impor Data Kurir</h1>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <p>Pilih file `.xlsx` atau `.csv`. Sistem akan menambahkan atau memperbarui data berdasarkan `Driver ID`.</p>
+                    <div class="mb-3">
+                        <label for="excelFile" class="form-label">File Excel/CSV</label>
+                        <input class="form-control" type="file" id="excelFile" accept=".xlsx, .xls, .csv">
+                    </div>
+                    <div class="text-center">
+                        <a href="#" id="downloadTemplate" class="link-primary small"><i class="bi bi-file-earmark-arrow-down-fill me-1"></i> Download Template</a>
+                    </div>
+                    <div class="progress mt-3 d-none" id="progressBarContainer">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated" role="progressbar" style="width: 0%;" aria-valuenow="0" aria-valuemin="0" aria-valuemax="100"></div>
+                    </div>
+                    <div id="uploadStatus" class="mt-2"></div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Tutup</button>
+                    <button type="button" class="btn btn-primary" id="uploadBtn">Upload dan Proses</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- HEADER & FILTERS -->
+    <div class="container-fluid mt-4">
+        <!-- Stats Cards -->
+        <div class="card mb-4">
+            <div class="card-body">
+                <h5 class="card-title mb-3">Tinjauan Armada Kurir</h5>
+                <div class="row text-center g-3">
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Total Kurir</p><h4 class="stat-value text-primary" id="statTotal">0</h4></div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Status Normal</p><h4 class="stat-value text-success" id="statNormal">0</h4></div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Lisensi Kedaluwarsa</p><h4 class="stat-value text-danger" id="statLicenseExpired">0</h4></div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Roda 2</p><h4 class="stat-value text-info" id="statMotorbike">0</h4></div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Roda 4</p><h4 class="stat-value text-secondary" id="statCar">0</h4></div>
+                    <div class="col-6 col-md-4 col-lg-2 stat-card"><p class="mb-1">Agensi</p><h4 class="stat-value text-warning" id="statAgency">0</h4></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Filters & Actions -->
+        <div class="card">
+            <div class="card-body">
+                <div class="row g-3 align-items-end">
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filterName" class="form-label">Nama Kurir atau ID</label>
+                        <input type="text" id="filterName" class="form-control" placeholder="Cari nama atau ID...">
+                    </div>
+                    <div class="col-lg-3 col-md-6">
+                        <label for="filterStatus" class="form-label">Status SPX</label>
+                        <select id="filterStatus" class="form-select"><option value="">Semua</option></select>
+                    </div>
+                    <div class="col-lg-2 col-md-4">
+                        <label for="filterVehicle" class="form-label">Jenis Kendaraan</label>
+                        <select id="filterVehicle" class="form-select"><option value="">Semua</option></select>
+                    </div>
+                     <div class="col-lg-2 col-md-4">
+                        <label for="filterAgency" class="form-label">Agensi</label>
+                        <select id="filterAgency" class="form-select"><option value="">Semua</option></select>
+                    </div>
+                     <div class="col-lg-2 col-md-4">
+                        <label for="filterZone" class="form-label">Zona</label>
+                         <select id="filterZone" class="form-select"><option value="">Semua</option></select>
+                    </div>
+                    <div class="col-12 mt-3">
+                         <div class="d-flex gap-2 w-100 justify-content-end">
+                            <button class="btn btn-outline-secondary" id="resetFilterBtn" title="Reset Filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+                            <button class="btn btn-success" id="exportBtn"><i class="bi bi-file-earmark-excel-fill"></i> Export Excel</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+
+    <!-- MAIN TABLE -->
+    <main class="container-fluid my-4">
+        <div class="card">
+            <div class="card-body">
+                 <div class="table-container">
+                    <!-- Details Panel (Left) -->
+                    <div class="details-panel">
+                        <div class="table-responsive" id="detailsTableContainer">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th>Driver ID</th>
+                                        <th>Nama Driver</th>
+                                        <th>Status SPX</th>
+                                        <th>Jenis Kendaraan</th>
+                                        <th>Tipe Kontrak</th>
+                                        <th>Agensi</th>
+                                        <th>Tgl. Bergabung</th>
+                                        <th>Tgl. Akhir Kontrak</th>
+                                        <th>Lisensi Kedaluwarsa</th>
+                                        <th>Domisili</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="detailsTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Action Panel (Right) -->
+                    <div class="action-panel">
+                        <div class="table-responsive" id="actionTableContainer">
+                            <table class="table table-hover table-bordered mb-0">
+                                <thead>
+                                    <tr class="table-light">
+                                        <th>Nama Zona</th>
+                                        <th>Aksi</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="actionTableBody"></tbody>
+                            </table>
+                        </div>
+                    </div>
+                 </div>
+
+                 <!-- Pagination -->
+                <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-3">
+                    <div class="d-flex align-items-center">
+                        <label for="rowsPerPageSelect" class="form-label me-2 mb-0 text-nowrap">Baris per halaman:</label>
+                        <select class="form-select form-select-sm" id="rowsPerPageSelect" style="width: auto;">
+                            <option value="15" selected>15</option>
+                            <option value="30">30</option>
+                            <option value="50">50</option>
+                            <option value="100">100</option>
+                        </select>
+                    </div>
+                    <nav id="paginationNav"></nav>
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <!-- FOOTER -->
+    <footer class="bg-body-tertiary mt-auto py-3">
+        <div class="container text-center">
+            <p class="mb-0 small text-muted">&copy; 2025 Tondano Selatan Hub. All Rights Reserved.</p>
+        </div>
+    </footer>
+
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+    <!-- Custom JavaScript -->
+    <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+        
+        // --- GLOBAL VARIABLES & CONFIG ---
+        const DB_NAME = 'CourierDB';
+        const COURIER_STORE = 'courierData';
+        const ZONE_STORE = 'zoneCodes';
+        const DB_VERSION = 3; 
+        let db;
+        let currentPage = 1;
+        let rowsPerPage = 15;
+        let fullData = [];
+        let currentFilteredData = [];
+        
+        const courierKeyMap = {
+            "Driver ID": "driverId", "Driver Name": "driverName", "Gender": "gender",
+            "National ID": "nationalId", "Vehicle Type": "vehicleType", "License Type": "licenseType",
+            "License Number": "licenseNumber", "Create Time": "createTime", "Modify Time": "modifyTime",
+            "Driver License Expiry Date": "driverLicenseExpiryDate", "Contract Type": "contractType",
+            "Joined Date": "joinedDate", "Last Date": "lastDate", "Agency": "agency",
+            "SPX Status": "spxStatus", "Religion": "religion", "Domisili": "domisili",
+            "Nama Zona": "namaZona"
+        };
+        const reverseKeyMap = Object.fromEntries(Object.entries(courierKeyMap).map(([k, v]) => [v, k]));
+        
+        // --- UI ELEMENTS ---
+        const addCourierModal = new bootstrap.Modal(document.getElementById('addCourierModal'));
+        const editCourierModal = new bootstrap.Modal(document.getElementById('editCourierModal'));
+        const addCourierFormEl = document.getElementById('addCourierForm');
+        const editCourierFormEl = document.getElementById('editCourierForm');
+
+        // --- THEME SWITCHER ---
+        const themeSwitch = document.getElementById('themeSwitch');
+        const htmlElement = document.documentElement;
+        themeSwitch.addEventListener('change', () => {
+            const theme = themeSwitch.checked ? 'dark' : 'light';
+            htmlElement.setAttribute('data-bs-theme', theme);
+            localStorage.setItem('theme', theme);
+        });
+        const savedTheme = localStorage.getItem('theme');
+        if (savedTheme) {
+            htmlElement.setAttribute('data-bs-theme', savedTheme);
+            themeSwitch.checked = savedTheme === 'dark';
+        }
+
+        // --- DATABASE ---
+        function initDb() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = e => reject('Error opening DB: ' + e.target.errorCode);
+                request.onsuccess = e => { 
+                    db = e.target.result; 
+                    resolve(db); 
+                };
+                request.onupgradeneeded = e => {
+                    const dbInstance = e.target.result;
+                    if (!dbInstance.objectStoreNames.contains(COURIER_STORE)) {
+                        const courierStore = dbInstance.createObjectStore(COURIER_STORE, { keyPath: 'driverId' });
+                        courierStore.createIndex('by_name', 'driverName', { unique: false });
+                    }
+                    if (!dbInstance.objectStoreNames.contains(ZONE_STORE)) {
+                        dbInstance.createObjectStore(ZONE_STORE, { keyPath: 'name' });
+                    }
+                };
+            });
+        }
+        
+        // --- FORM GENERATION ---
+        function generateFormFields(formElement) {
+            const fields = [
+                { id: 'driverId', label: 'Driver ID', size: 6, required: true },
+                { id: 'driverName', label: 'Nama Driver', size: 6, required: true },
+                { id: 'gender', label: 'Gender', type: 'select', options: ['Male', 'Female'], size: 6 },
+                { id: 'spxStatus', label: 'Status SPX', type: 'select', options: ['Normal', 'Banned', 'Resign', 'Blacklisted', 'Freeze'], size: 6 },
+                { id: 'vehicleType', label: 'Jenis Kendaraan', size: 6 },
+                { id: 'agency', label: 'Agensi', size: 6 },
+                { id: 'contractType', label: 'Tipe Kontrak', size: 12 },
+                { id: 'joinedDate', label: 'Tgl Bergabung', type: 'date', size: 6 },
+                { id: 'lastDate', label: 'Tgl Akhir Kontrak', type: 'date', size: 6 },
+                { id: 'licenseType', label: 'Tipe Lisensi', size: 4 },
+                { id: 'licenseNumber', label: 'Nomor Lisensi/Telepon', size: 4, placeholder: '628xxxxxxxxxx' },
+                { id: 'driverLicenseExpiryDate', label: 'Lisensi Kedaluwarsa', type: 'date', size: 4 },
+                { id: 'domisili', label: 'Domisili', size: 6 },
+                { id: 'namaZona', label: 'Nama Zona', size: 6 }
+            ];
+            
+            let formHTML = '';
+            fields.forEach(field => {
+                formHTML += `<div class="col-md-${field.size}">
+                    <label for="${formElement.id}-${field.id}" class="form-label">${field.label}</label>`;
+                if (field.type === 'select') {
+                    formHTML += `<select id="${formElement.id}-${field.id}" data-key="${field.id}" class="form-select">
+                        <option value="">Pilih...</option>
+                        ${field.options.map(o => `<option value="${o}">${o}</option>`).join('')}
+                    </select>`;
+                } else {
+                    formHTML += `<input type="${field.type || 'text'}" class="form-control" id="${formElement.id}-${field.id}" data-key="${field.id}" 
+                        ${field.required ? 'required' : ''} placeholder="${field.placeholder || ''}">`;
+                }
+                formHTML += `</div>`;
+            });
+            formElement.innerHTML = formHTML;
+        }
+
+        // --- DATA HANDLING & MAPPING ---
+        function mapRowToCamelCase(row) {
+            const newRow = {};
+            for (const key in row) newRow[courierKeyMap[key] || key] = row[key];
+            return newRow;
+        }
+
+        function parseDate(dateValue) {
+            if (!dateValue) return null;
+            if (dateValue instanceof Date) return dateValue.toISOString().split('T')[0];
+            if (typeof dateValue === 'number' && dateValue > 25569) {
+                 const excelEpoch = new Date(1899, 11, 30);
+                 return new Date(excelEpoch.getTime() + (dateValue - 1) * 86400000).toISOString().split('T')[0];
+            }
+            if (typeof dateValue === 'string') {
+                try { return new Date(dateValue).toISOString().split('T')[0]; } catch(e) { return null; }
+            }
+            return null;
+        }
+
+        // --- UI ACTIONS (MODALS, CHAT) ---
+        function getFormData(formElement) {
+            const data = {};
+            formElement.querySelectorAll('input, select').forEach(input => {
+                data[input.dataset.key] = input.value.trim();
+            });
+            return data;
+        }
+        
+        function populateForm(formElement, data) {
+            formElement.querySelectorAll('input, select').forEach(input => {
+                input.value = data[input.dataset.key] || '';
+            });
+        }
+        
+        function chatViaWA(phoneNumber) {
+            if (!phoneNumber) {
+                alert('Nomor telepon tidak tersedia untuk kurir ini.');
+                return;
+            }
+            let cleanNumber = phoneNumber.toString().replace(/[^0-9]/g, '');
+            if (cleanNumber.startsWith('0')) {
+                cleanNumber = '62' + cleanNumber.substring(1);
+            } else if (!cleanNumber.startsWith('62')) {
+                cleanNumber = '62' + cleanNumber;
+            }
+            window.open(`https://wa.me/${cleanNumber}`, '_blank');
+        }
+        
+        function openEditModal(driverId) {
+            const courier = fullData.find(c => c.driverId === driverId);
+            if (courier) {
+                document.getElementById('editCourierModalLabel').textContent = `Edit Data - ${courier.driverName}`;
+                populateForm(editCourierFormEl, courier);
+                editCourierFormEl.dataset.editingId = driverId;
+                editCourierModal.show();
+            }
+        }
+        
+        // --- EVENT HANDLERS ---
+        function setupEventListeners() {
+            addCourierFormEl.addEventListener('submit', handleAddCourier);
+            editCourierFormEl.addEventListener('submit', handleEditCourier);
+            document.getElementById('uploadBtn').addEventListener('click', handleUpload);
+
+            const debouncedFilter = debounce(applyFilters, 300);
+            document.getElementById('filterName').addEventListener('input', debouncedFilter);
+            ['filterStatus', 'filterVehicle', 'filterAgency', 'filterZone'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
+            document.getElementById('rowsPerPageSelect').addEventListener('change', (e) => { rowsPerPage = parseInt(e.target.value, 10); applyFilters(); });
+            document.getElementById('resetFilterBtn').addEventListener('click', () => {
+                document.getElementById('filterName').value = '';
+                ['filterStatus', 'filterVehicle', 'filterAgency', 'filterZone'].forEach(id => document.getElementById(id).selectedIndex = 0);
+                applyFilters();
+            });
+            
+            document.getElementById('actionTableBody').addEventListener('click', e => {
+                const chatBtn = e.target.closest('.chat-btn');
+                const editBtn = e.target.closest('.edit-btn');
+                if (chatBtn) chatViaWA(chatBtn.dataset.phone);
+                if (editBtn) openEditModal(editBtn.dataset.id);
+            });
+            
+            document.getElementById('paginationNav').addEventListener('click', e => {
+                e.preventDefault();
+                const link = e.target.closest('a');
+                if (link && !link.parentElement.classList.contains('disabled')) {
+                    currentPage = parseInt(link.dataset.page);
+                    renderTable(); renderPagination();
+                }
+            });
+
+            document.getElementById('downloadTemplate').addEventListener('click', e => {
+                e.preventDefault();
+                const headers = Object.keys(courierKeyMap);
+                const ws = XLSX.utils.aoa_to_sheet([headers]);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Template");
+                XLSX.writeFile(wb, "Template_Data_Kurir.xlsx");
+            });
+            
+            let isSyncing = false;
+            const syncScroll = (s, t) => s.addEventListener('scroll', () => { if (!isSyncing) { isSyncing = true; t.scrollTop = s.scrollTop; isSyncing = false; }});
+            syncScroll(document.getElementById('detailsTableContainer'), document.getElementById('actionTableContainer'));
+            syncScroll(document.getElementById('actionTableContainer'), document.getElementById('detailsTableContainer'));
+        }
+
+        // --- FORM SUBMISSION HANDLERS ---
+        async function handleAddCourier(e) {
+            e.preventDefault();
+            const newCourier = getFormData(addCourierFormEl);
+            if (!newCourier.driverId || !newCourier.driverName) {
+                document.getElementById('addCourierStatus').innerHTML = `<span class="text-danger small">Driver ID dan Nama wajib diisi.</span>`;
+                return;
+            }
+            const tx = db.transaction(COURIER_STORE, 'readwrite');
+            const request = tx.objectStore(COURIER_STORE).add(newCourier);
+            request.onsuccess = () => {
+                document.getElementById('addCourierStatus').innerHTML = `<span class="text-success small">Kurir berhasil ditambahkan!</span>`;
+                addCourierFormEl.reset();
+                setTimeout(async () => { addCourierModal.hide(); await loadDataFromDB(); applyFilters(); }, 1000);
+            };
+            request.onerror = (e) => {
+                 document.getElementById('addCourierStatus').innerHTML = `<span class="text-danger small">${e.target.error.name === 'ConstraintError' ? 'Driver ID sudah ada.' : 'Gagal menyimpan.'}</span>`;
+            };
+        }
+
+        async function handleEditCourier(e) {
+            e.preventDefault();
+            const updatedCourier = getFormData(editCourierFormEl);
+            updatedCourier.driverId = editCourierFormEl.dataset.editingId;
+            const tx = db.transaction(COURIER_STORE, 'readwrite');
+            const request = tx.objectStore(COURIER_STORE).put(updatedCourier);
+            const statusEl = document.getElementById('editCourierStatus');
+            request.onsuccess = () => {
+                statusEl.innerHTML = `<span class="text-success small">Perubahan berhasil disimpan!</span>`;
+                setTimeout(async () => { editCourierModal.hide(); await loadDataFromDB(); applyFilters(); }, 1000);
+            };
+            request.onerror = () => { statusEl.innerHTML = `<span class="text-danger small">Gagal menyimpan perubahan.</span>`; };
+        }
+
+        async function handleUpload() {
+            const fileInput = document.getElementById('excelFile');
+            if (fileInput.files.length === 0) return alert('Pilih file terlebih dahulu.');
+
+            const file = fileInput.files[0];
+            const statusEl = document.getElementById('uploadStatus');
+            const progressContainer = document.getElementById('progressBarContainer');
+            const progressBar = document.getElementById('progressBar');
+            statusEl.innerHTML = ''; progressContainer.classList.remove('d-none'); progressBar.style.width = '0%';
+            
+            try {
+                const reader = new FileReader();
+                const jsonData = await new Promise((resolve, reject) => {
+                    reader.onload = e => {
+                        try {
+                            const workbook = XLSX.read(e.target.result, { type: 'array', cellDates: true });
+                            resolve(XLSX.utils.sheet_to_json(workbook.Sheets[workbook.SheetNames[0]], { defval: "" }));
+                        } catch (err) { reject(new Error('Gagal memproses file.')); }
+                    };
+                    reader.onerror = () => reject(new Error('Gagal membaca file.'));
+                    reader.readAsArrayBuffer(file);
+                });
+
+                const courierTx = db.transaction(COURIER_STORE, 'readwrite');
+                const zoneSet = new Set();
+                for (let i = 0; i < jsonData.length; i++) {
+                    const mappedRow = mapRowToCamelCase(jsonData[i]);
+                    if (mappedRow.driverId) {
+                        ['joinedDate', 'lastDate', 'driverLicenseExpiryDate'].forEach(d => mappedRow[d] = parseDate(mappedRow[d]));
+                        courierTx.objectStore(COURIER_STORE).put(mappedRow);
+                        if(mappedRow.namaZona) zoneSet.add(mappedRow.namaZona);
+                    }
+                    progressBar.style.width = `${((i + 1) / jsonData.length) * 100}%`;
+                }
+                await new Promise((res, rej) => { courierTx.oncomplete = res; courierTx.onerror = e => rej(e.target.error); });
+                
+                const zoneTx = db.transaction(ZONE_STORE, 'readwrite');
+                zoneTx.objectStore(ZONE_STORE).clear();
+                zoneSet.forEach(zoneName => zoneTx.objectStore(ZONE_STORE).add({ name: zoneName }));
+                await new Promise((res, rej) => { zoneTx.oncomplete = res; zoneTx.onerror = e => rej(e.target.error); });
+
+                statusEl.innerHTML = `<div class="alert alert-success">Sukses! Data kurir & zona telah diperbarui.</div>`;
+                await loadDataFromDB(); applyFilters();
+            } catch (error) {
+                statusEl.innerHTML = `<div class="alert alert-danger">${error.message}</div>`;
+            } finally {
+                 setTimeout(() => progressContainer.classList.add('d-none'), 3000);
+            }
+        }
+
+        // --- DISPLAY, FILTER, PAGINATION ---
+        async function loadDataFromDB() {
+            const tx = db.transaction(COURIER_STORE, 'readonly');
+            const request = tx.objectStore(COURIER_STORE).getAll();
+            fullData = await new Promise((resolve, reject) => {
+                request.onsuccess = () => resolve(request.result);
+                request.onerror = e => reject(e.target.error);
+            });
+            populateFilterDropdowns(fullData);
+        }
+
+        function applyFilters() {
+            const filters = {
+                name: document.getElementById('filterName').value.toLowerCase(),
+                status: document.getElementById('filterStatus').value,
+                vehicle: document.getElementById('filterVehicle').value,
+                agency: document.getElementById('filterAgency').value,
+                zone: document.getElementById('filterZone').value,
+            };
+
+            currentFilteredData = fullData.filter(c => 
+                (filters.name ? (c.driverName || '').toLowerCase().includes(filters.name) || (c.driverId || '').toString().toLowerCase().includes(filters.name) : true) &&
+                (filters.status ? c.spxStatus === filters.status : true) &&
+                (filters.vehicle ? c.vehicleType === filters.vehicle : true) &&
+                (filters.agency ? c.agency === filters.agency : true) &&
+                (filters.zone ? c.namaZona === filters.zone : true)
+            );
+            
+            currentPage = 1;
+            updateStats(fullData); renderTable(); renderPagination();
+        }
+
+        function renderTable() {
+            const actionTbody = document.getElementById('actionTableBody');
+            const detailsTbody = document.getElementById('detailsTableBody');
+            actionTbody.innerHTML = ''; detailsTbody.innerHTML = '';
+            
+            if (currentFilteredData.length === 0) {
+                detailsTbody.innerHTML = `<tr><td colspan="10" class="text-center p-5">Tidak ada data.</td></tr>`;
+                actionTbody.innerHTML = `<tr><td colspan="2" class="text-center p-5">Tidak ada data.</td></tr>`;
+                return;
+            }
+
+            const paginatedData = currentFilteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
+            
+            paginatedData.forEach(c => {
+                const rowHeight = '65px';
+                const detailTr = document.createElement('tr');
+                detailTr.style.height = rowHeight;
+                detailTr.innerHTML = `
+                    <td>${c.driverId || '-'}</td> <td>${c.driverName || '-'}</td>
+                    <td>${c.spxStatus || '-'}</td> <td>${c.vehicleType || '-'}</td>
+                    <td>${c.contractType || '-'}</td> <td>${c.agency || '-'}</td>
+                    <td>${c.joinedDate || '-'}</td> <td>${c.lastDate || '-'}</td>
+                    <td>${c.driverLicenseExpiryDate || '-'}</td> <td>${c.domisili || '-'}</td>`;
+                detailsTbody.appendChild(detailTr);
+
+                const actionTr = document.createElement('tr');
+                actionTr.style.height = rowHeight;
+                actionTr.innerHTML = `
+                    <td>${c.namaZona || '-'}</td>
+                    <td>
+                        <div class="btn-group">
+                            <button class="btn btn-sm btn-outline-success chat-btn" title="Chat WA" data-phone="${c.licenseNumber}"><i class="bi bi-whatsapp"></i></button>
+                            <button class="btn btn-sm btn-outline-primary edit-btn" title="Edit Data" data-id="${c.driverId}"><i class="bi bi-pencil-square"></i></button>
+                        </div>
+                    </td>`;
+                actionTbody.appendChild(actionTr);
+                
+                const expiryDate = c.driverLicenseExpiryDate ? new Date(c.driverLicenseExpiryDate) : null;
+                if (expiryDate && expiryDate <= new Date(new Date().setDate(new Date().getDate() + 30))) {
+                    detailTr.classList.add('table-warning');
+                    actionTr.classList.add('table-warning');
+                }
+            });
+        }
+        
+        function renderPagination() {
+            const nav = document.getElementById('paginationNav');
+            const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
+            nav.innerHTML = '';
+            if (totalPages <= 1) { document.getElementById('paginationControls').style.visibility = 'hidden'; return; }
+            document.getElementById('paginationControls').style.visibility = 'visible';
+            
+            let html = `<ul class="pagination mb-0">
+                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a></li>`;
+            let start = Math.max(1, currentPage - 2), end = Math.min(totalPages, currentPage + 2);
+            for (let i = start; i <= end; i++) html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
+            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a></li></ul>`;
+            nav.innerHTML = html;
+        }
+
+        // --- STATS & FILTER POPULATION ---
+        function updateStats(data) {
+            const stats = { total: 0, normal: 0, licenseExpired: 0, motorbike: 0, car: 0, agencies: new Set()};
+            const thirtyDaysFromNow = new Date(new Date().setDate(new Date().getDate() + 30));
+            data.forEach(c => {
+                stats.total++;
+                if (c.spxStatus?.toLowerCase() === 'normal') stats.normal++;
+                if (c.vehicleType?.toLowerCase().includes('motor')) stats.motorbike++;
+                if (c.vehicleType?.toLowerCase().includes('car')) stats.car++;
+                if (c.agency) stats.agencies.add(c.agency);
+                if (new Date(c.driverLicenseExpiryDate) <= thirtyDaysFromNow) stats.licenseExpired++;
+            });
+            Object.keys(stats).forEach(key => {
+                const el = document.getElementById(`stat${key.charAt(0).toUpperCase() + key.slice(1)}`);
+                if (el) el.textContent = (key === 'agencies') ? stats[key].size : stats[key];
+            });
+        }
+        
+        function populateFilterDropdowns(data) {
+            const filters = { status: new Set(), vehicle: new Set(), agency: new Set(), zone: new Set() };
+            data.forEach(c => {
+                if(c.spxStatus) filters.status.add(c.spxStatus);
+                if(c.vehicleType) filters.vehicle.add(c.vehicleType);
+                if(c.agency) filters.agency.add(c.agency);
+                if(c.namaZona) filters.zone.add(c.namaZona);
+            });
+            const populate = (id, values) => {
+                const select = document.getElementById(id);
+                select.innerHTML = '<option value="">Semua</option>';
+                [...values].sort().forEach(val => select.add(new Option(val, val)));
+            };
+            populate('filterStatus', filters.status);
+            populate('filterVehicle', filters.vehicle);
+            populate('filterAgency', filters.agency);
+            populate('filterZone', filters.zone);
+        }
+
+        // --- EVENT BINDING & INITIALIZATION ---
+        function debounce(func, delay) {
+            let timeout;
+            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
+        }
+
+        // The main function that starts the application
+        async function main() {
+            try {
+                // First, ensure all static UI elements are ready
+                generateFormFields(addCourierFormEl);
+                generateFormFields(editCourierFormEl);
+                
+                // Then, establish the database connection and wait for it
+                await initDb();
+                
+                // Once the DB is ready, load the initial data
+                await loadDataFromDB();
+                
+                // After data is loaded, apply filters and render the initial view
+                applyFilters();
+                
+                // Finally, set up all event listeners for user interaction
+                setupEventListeners();
+
+            } catch (error) {
+                console.error("Initialization failed:", error);
+                document.body.innerHTML = `<div class="alert alert-danger m-5">Gagal memuat aplikasi. Error: ${error}</div>`;
+            }
+        }
+        
+        main();
+    });
+    </script>
+</body>
+</html>
