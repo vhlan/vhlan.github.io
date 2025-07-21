@@ -1,570 +1,310 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="id" data-bs-theme="light">
 <head>
-    <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <title>Admin - Manajemen Kurir</title>
-
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Leaderboard Kurir - Tondano Selatan Hub</title>
+    
+    <!-- Bootstrap CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
-
+    <!-- Bootstrap Icons -->
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    
+    <!-- Google Fonts: Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-    
+
     <style>
+        /* Menggunakan font Inter untuk seluruh halaman */
         body {
-            background-color: var(--bs-body-bg);
             font-family: 'Inter', sans-serif;
-            transition: background-color 0.3s ease;
-        }
-        .navbar-brand, .card-title {
-            font-weight: 600;
-        }
-        .card {
-            border: none;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
-            border-radius: 0.75rem;
-        }
-        .stat-card .stat-value {
-             font-size: 1.75rem;
-             font-weight: 700;
-        }
-        .stat-card p {
-            font-size: 0.9rem;
-            color: var(--bs-secondary-color);
-            font-weight: 500;
-        }
-        .table th, .table td {
-            white-space: nowrap;
-            vertical-align: middle;
-            padding: 0.9rem 0.75rem;
-        }
-        .table thead th {
-            position: -webkit-sticky;
-            position: sticky;
-            top: 0;
-            z-index: 2;
-            background-color: var(--bs-tertiary-bg);
-        }
-        
-        /* Two-Panel Table Layout */
-        .table-container {
-            display: flex;
-            border: 1px solid var(--bs-border-color);
-            border-radius: var(--bs-card-border-radius, .75rem);
-            overflow: hidden;
+            background-color: var(--bs-body-bg);
         }
 
-        .details-panel {
-            flex-grow: 1;
-            overflow-x: auto; /* Allows horizontal scrolling for details */
+        /* Kustomisasi warna untuk peringkat di tabel */
+        .rank-gold {
+            background-color: rgba(255, 215, 0, 0.2) !important;
+            --bs-table-accent-bg: rgba(255, 215, 0, 0.2) !important;
+        }
+        .rank-silver {
+            background-color: rgba(192, 192, 192, 0.3) !important;
+            --bs-table-accent-bg: rgba(192, 192, 192, 0.3) !important;
+        }
+        .rank-bronze {
+            background-color: rgba(205, 127, 50, 0.3) !important;
+            --bs-table-accent-bg: rgba(205, 127, 50, 0.3) !important;
+        }
+        .good-performance {
+            background-color: rgba(40, 167, 69, 0.15) !important;
+            --bs-table-accent-bg: rgba(40, 167, 69, 0.15) !important;
+        }
+        .low-performance {
+            background-color: rgba(220, 53, 69, 0.15) !important;
+            --bs-table-accent-bg: rgba(220, 53, 69, 0.15) !important;
         }
         
-        .action-panel {
-            flex-shrink: 0;
-            width: 150px; /* Adjusted width for action columns */
-        }
-
-        .details-panel .table-responsive,
-        .action-panel .table-responsive {
-            max-height: 65vh;
-            overflow: auto;
-            scrollbar-width: none; /* Firefox */
-            -ms-overflow-style: none;  /* IE and Edge */
-        }
-        .details-panel .table-responsive::-webkit-scrollbar,
-        .action-panel .table-responsive::-webkit-scrollbar {
-            display: none; /* WebKit browsers */
-        }
-
-        .action-panel .table-responsive {
-             overflow-x: hidden;
-        }
-        
-        .page-item.active .page-link {
-            z-index: 0;
+        /* Membuat transisi warna lebih halus saat berganti tema */
+        body, .navbar, .card, .table, .form-control, .btn, .dropdown-menu {
+            transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
         }
     </style>
 </head>
-<body class="bg-light-subtle">
+<body class="d-flex flex-column min-vh-100">
 
-    <nav class="navbar navbar-expand-lg bg-body-tertiary shadow-sm sticky-top">
+    <!-- Navbar -->
+    <nav class="navbar navbar-expand-lg bg-body-tertiary border-bottom shadow-sm">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-people-fill me-2"></i>Admin / Manajemen Kurir
-            </a>
+            <a class="navbar-brand fw-bold" href="#">Tondano Selatan Hub</a>
+            <div class="ms-3 d-flex align-items-center">
+                <i class="bi bi-sun-fill me-2"></i>
+                <div class="form-check form-switch">
+                    <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
+                </div>
+                <i class="bi bi-moon-fill"></i>
+            </div>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav" aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav mx-auto">
-                   <li class="nav-item d-flex align-items-center">
-                        <i class="bi bi-sun-fill me-2"></i>
-                        <div class="form-check form-switch">
-                            <input class="form-check-input" type="checkbox" role="switch" id="themeSwitch">
-                            <label class="form-check-label" for="themeSwitch">
-                                <i class="bi bi-moon-stars-fill"></i>
-                            </label>
-                        </div>
-                   </li>
-                </ul>
-                <ul class="navbar-nav ms-auto align-items-center">
+                <ul class="navbar-nav ms-auto">
                     <li class="nav-item dropdown">
                         <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
-                            <img src="https://i.pravatar.cc/40?u=admin" class="rounded-circle me-2" alt="Foto Profil" width="30" height="30">
+                            <img src="https://placehold.co/40x40/6667aa/white?text=A" class="rounded-circle me-2" alt="Profile Picture">
                             Admin
                         </a>
-                        <ul class="dropdown-menu dropdown-menu-end shadow-lg">
-                            <li><a class="dropdown-item" href="/package.html"><i class="bi bi-box-seam-fill me-2"></i>Manajemen Paket</a></li>
+                        <ul class="dropdown-menu dropdown-menu-end">
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear me-2"></i>Settings</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-box-seam me-2"></i>Aksi Paket</a></li>
+                            <li><a class="dropdown-item" href="#"><i class="bi bi-file-earmark-bar-graph me-2"></i>Laporan Kinerja</a></li>
                             <li><hr class="dropdown-divider"></li>
-                            <li><a class="dropdown-item" href="#"><i class="bi bi-gear-fill me-2"></i>Pengaturan</a></li>
+                            <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right me-2"></i>Logout</a></li>
                         </ul>
                     </li>
                 </ul>
             </div>
         </div>
     </nav>
-    
+
+    <!-- Main Content -->
     <div class="container-fluid mt-4">
-        <div class="card mb-4">
-            <div class="card-body">
-                <h5 class="card-title mb-3">Tinjauan Armada Kurir</h5>
-                <div class="row text-center g-3">
-                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Total Kurir</p><h4 class="stat-value text-primary" id="statTotal">0</h4></div>
-                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Status Normal</p><h4 class="stat-value text-success" id="statNormal">0</h4></div>
-                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Lisensi Kedaluwarsa</p><h4 class="stat-value text-danger" id="statLicenseExpired">0</h4></div>
-                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Roda 2</p><h4 class="stat-value text-info" id="statMotorbike">0</h4></div>
-                    <div class="col-6 col-md-4 col-lg-2 stat-card border-end"><p class="mb-1">Roda 4</p><h4 class="stat-value text-secondary" id="statCar">0</h4></div>
-                    <div class="col-6 col-md-4 col-lg-2 stat-card"><p class="mb-1">Agensi</p><h4 class="stat-value text-warning" id="statAgency">0</h4></div>
+        <!-- Header Section -->
+        <header>
+            <!-- Baris 1: Filter & Performa Hub -->
+            <div class="row g-4 mb-4">
+                <!-- Kolom Kiri: Filter Tanggal -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                            <h5 class="card-title mb-3">Filter Periode</h5>
+                            <div class="btn-group w-100 mb-3" role="group" aria-label="Filter Periode">
+                                <button type="button" class="btn btn-outline-primary active" id="btnDaily">Harian</button>
+                                <button type="button" class="btn btn-outline-primary" id="btnWeekly">Mingguan</button>
+                                <button type="button" class="btn btn-outline-primary" id="btnMonthly">Bulanan</button>
+                            </div>
+                            
+                            <!-- Input Harian -->
+                            <div id="dailyInput">
+                                <label for="dailyDate" class="form-label">Pilih Tanggal</label>
+                                <input type="date" class="form-control" id="dailyDate">
+                            </div>
+
+                            <!-- Input Mingguan -->
+                            <div id="weeklyInput" class="d-none">
+                                <label class="form-label">Pilih Rentang Tanggal (Maks. 7 Hari)</label>
+                                <div class="input-group">
+                                    <input type="date" class="form-control" id="weeklyStartDate">
+                                    <span class="input-group-text">s/d</span>
+                                    <input type="date" class="form-control" id="weeklyEndDate">
+                                </div>
+                            </div>
+                            
+                            <!-- Input Bulanan -->
+                            <div id="monthlyInput" class="d-none">
+                                <label for="monthlyMonth" class="form-label">Pilih Bulan</label>
+                                <input type="month" class="form-control" id="monthlyMonth">
+                            </div>
+                        </div>
+                    </div>
                 </div>
-            </div>
-        </div>
-        
-        <div class="card">
-            <div class="card-body">
-                <div class="row g-3 align-items-end">
-                    <div class="col-lg-3 col-md-6">
-                        <label for="filterName" class="form-label">Nama Kurir atau ID</label>
-                        <input type="text" id="filterName" class="form-control" placeholder="Cari nama atau ID...">
-                    </div>
-                    <div class="col-lg-3 col-md-6">
-                        <label for="filterStatus" class="form-label">Status SPX</label>
-                        <select id="filterStatus" class="form-select"><option value="">Semua</option></select>
-                    </div>
-                    <div class="col-lg-2 col-md-4">
-                        <label for="filterVehicle" class="form-label">Jenis Kendaraan</label>
-                        <select id="filterVehicle" class="form-select"><option value="">Semua</option></select>
-                    </div>
-                     <div class="col-lg-2 col-md-4">
-                        <label for="filterAgency" class="form-label">Agensi</label>
-                        <select id="filterAgency" class="form-select"><option value="">Semua</option></select>
-                    </div>
-                     <div class="col-lg-2 col-md-4">
-                        <label for="filterZone" class="form-label">Zona</label>
-                         <select id="filterZone" class="form-select"><option value="">Semua</option></select>
-                    </div>
-                    <div class="col-12 mt-3">
-                         <div class="d-flex gap-2 w-100 justify-content-end">
-                            <button class="btn btn-outline-secondary" id="resetFilterBtn" title="Reset Filter"><i class="bi bi-arrow-counterclockwise"></i> Reset</button>
+
+                <!-- Kolom Kanan: Performa Hub -->
+                <div class="col-lg-6">
+                    <div class="card h-100">
+                        <div class="card-body">
+                           <h5 class="card-title mb-3">Hub Performance</h5>
+                           <div class="row text-center">
+                               <div class="col-4">
+                                   <div class="p-3 border rounded">
+                                       <h6 class="text-muted">DSR</h6>
+                                       <h4 class="fw-bold text-success">98.5%</h4>
+                                   </div>
+                               </div>
+                               <div class="col-4">
+                                   <div class="p-3 border rounded">
+                                       <h6 class="text-muted">On-Hold</h6>
+                                       <h4 class="fw-bold text-warning">15</h4>
+                                   </div>
+                               </div>
+                               <div class="col-4">
+                                   <div class="p-3 border rounded">
+                                       <h6 class="text-muted">Delivered</h6>
+                                       <h4 class="fw-bold text-primary">1250</h4>
+                                   </div>
+                               </div>
+                           </div>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+
+            <!-- Baris 2: Pencarian & Ekspor -->
+            <div class="row g-4 mb-4">
+                <!-- Kolom Kiri: Pencarian -->
+                <div class="col-lg-8">
+                    <div class="input-group">
+                        <input type="text" class="form-control form-control-lg" placeholder="Cari data...">
+                        <select class="form-select flex-grow-0 w-auto">
+                            <option selected>Resi</option>
+                            <option value="1">Kurir</option>
+                        </select>
+                        <button class="btn btn-primary" type="button"><i class="bi bi-search"></i> Cari</button>
+                    </div>
+                </div>
+                <!-- Kolom Kanan: Ekspor -->
+                <div class="col-lg-4 d-flex justify-content-end">
+                    <button class="btn btn-success btn-lg"><i class="bi bi-file-earmark-excel me-2"></i>Export ke Excel</button>
+                </div>
+            </div>
+        </header>
+
+        <!-- Main Table Section -->
+        <main>
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="card-title mb-0">Leaderboard Kurir</h5>
+                </div>
+                <div class="table-responsive">
+                    <table class="table table-hover table-striped mb-0">
+                        <thead class="table-light">
+                            <tr>
+                                <th scope="col">#ID</th>
+                                <th scope="col">Nama Driver</th>
+                                <th scope="col">Delivered</th>
+                                <th scope="col">On-Hold</th>
+                                <th scope="col">Avg. Time</th>
+                                <th scope="col">Success Rate</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <!-- Data Dummy -->
+                            <tr class="rank-gold"><td>TNO001</td><td>🥇 Budi Santoso</td><td>150</td><td>2</td><td>2j 15m</td><td>98.7%</td></tr>
+                            <tr class="rank-silver"><td>TNO005</td><td>🥈 Eka Putri</td><td>148</td><td>1</td><td>2j 10m</td><td>99.3%</td></tr>
+                            <tr class="rank-bronze"><td>TNO012</td><td>🥉 Agus Wijaya</td><td>145</td><td>3</td><td>2j 25m</td><td>98.0%</td></tr>
+                            <tr class="good-performance"><td>TNO003</td><td>Rina Marlina</td><td>142</td><td>4</td><td>2j 30m</td><td>97.3%</td></tr>
+                            <tr class="good-performance"><td>TNO007</td><td>Joko Susilo</td><td>140</td><td>3</td><td>2j 28m</td><td>97.9%</td></tr>
+                            <tr class="good-performance"><td>TNO015</td><td>Siti Aminah</td><td>138</td><td>2</td><td>2j 20m</td><td>98.6%</td></tr>
+                            <tr class="good-performance"><td>TNO002</td><td>Dewi Lestari</td><td>135</td><td>5</td><td>2j 40m</td><td>96.4%</td></tr>
+                            <tr class="good-performance"><td>TNO009</td><td>Hendra Gunawan</td><td>133</td><td>4</td><td>2j 35m</td><td>97.1%</td></tr>
+                            <tr class="good-performance"><td>TNO011</td><td>Linda Wati</td><td>131</td><td>3</td><td>2j 33m</td><td>97.8%</td></tr>
+                            <tr class="good-performance"><td>TNO004</td><td>Iwan Setiawan</td><td>130</td><td>6</td><td>2j 45m</td><td>95.6%</td></tr>
+                            <tr><td>TNO018</td><td>Ahmad Yani</td><td>128</td><td>7</td><td>2j 50m</td><td>94.8%</td></tr>
+                            <tr><td>TNO006</td><td>Fitri Handayani</td><td>125</td><td>5</td><td>2j 48m</td><td>96.2%</td></tr>
+                            <tr><td>TNO013</td><td>Rudi Hartono</td><td>122</td><td>8</td><td>2j 55m</td><td>93.8%</td></tr>
+                            <tr><td>TNO019</td><td>Putu Gede</td><td>120</td><td>6</td><td>2j 52m</td><td>95.2%</td></tr>
+                            <tr><td>TNO008</td><td>Sri Rahayu</td><td>118</td><td>9</td><td>3j 05m</td><td>92.9%</td></tr>
+                            <tr><td>TNO016</td><td>Bambang Pamungkas</td><td>115</td><td>7</td><td>3j 00m</td><td>94.3%</td></tr>
+                            <tr><td>TNO010</td><td>Yusuf Ibrahim</td><td>112</td><td>10</td><td>3j 10m</td><td>91.8%</td></tr>
+                            <tr class="low-performance"><td>TNO014</td><td>Dian Permata</td><td>105</td><td>12</td><td>3j 20m</td><td>89.7%</td></tr>
+                            <tr class="low-performance"><td>TNO020</td><td>Udin Syamsudin</td><td>101</td><td>15</td><td>3j 30m</td><td>87.1%</td></tr>
+                            <tr class="low-performance"><td>TNO017</td><td>Wawan Kurniawan</td><td>98</td><td>11</td><td>3j 25m</td><td>89.9%</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-footer bg-transparent">
+                    <p class="text-muted small mb-0">
+                        <strong>Keterangan:</strong> DSR: Delivery Success Rate | On-Hold: Paket tertahan | Delivered: Paket terkirim | AT: Average Time (Rata-rata waktu pengantaran per paket)
+                    </p>
+                </div>
+            </div>
+        </main>
     </div>
 
-
-    <main class="container-fluid my-4">
-        <div class="card">
-            <div class="card-body">
-                 <div id="loadingIndicator" class="text-center p-5">
-                    <div class="spinner-border text-primary" role="status">
-                        <span class="visually-hidden">Loading...</span>
-                    </div>
-                    <p class="mt-2">Memuat data kurir...</p>
-                 </div>
-                 <div class="table-container d-none" id="tableWrapper">
-                    <div class="details-panel">
-                        <div class="table-responsive" id="detailsTableContainer">
-                            <table class="table table-hover table-bordered mb-0">
-                                <thead>
-                                    <tr class="table-light">
-                                        <th>Driver ID</th>
-                                        <th>Nama Driver</th>
-                                        <th>Status SPX</th>
-                                        <th>Jenis Kendaraan</th>
-                                        <th>Tipe Kontrak</th>
-                                        <th>Agensi</th>
-                                        <th>Tgl. Bergabung</th>
-                                        <th>Tgl. Akhir Kontrak</th>
-                                        <th>Lisensi Kedaluwarsa</th>
-                                        <th>Domisili</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="detailsTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-
-                    <div class="action-panel">
-                        <div class="table-responsive" id="actionTableContainer">
-                            <table class="table table-hover table-bordered mb-0">
-                                <thead>
-                                    <tr class="table-light">
-                                        <th>Nama Zona</th>
-                                        <th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="actionTableBody"></tbody>
-                            </table>
-                        </div>
-                    </div>
-                 </div>
-
-                 <div id="paginationControls" class="d-flex justify-content-between align-items-center mt-3" style="visibility: hidden;">
-                    <div class="d-flex align-items-center">
-                        <label for="rowsPerPageSelect" class="form-label me-2 mb-0 text-nowrap">Baris per halaman:</label>
-                        <select class="form-select form-select-sm" id="rowsPerPageSelect" style="width: auto;">
-                            <option value="15" selected>15</option>
-                            <option value="30">30</option>
-                            <option value="50">50</option>
-                            <option value="100">100</option>
-                        </select>
-                    </div>
-                    <nav id="paginationNav"></nav>
+    <!-- Footer -->
+    <footer class="footer mt-auto py-3 bg-body-tertiary border-top">
+        <div class="container-fluid">
+            <div class="d-flex justify-content-between align-items-center">
+                <span class="text-muted">&copy; 2024 Tondano Selatan Hub. All rights reserved.</span>
+                <div>
+                    <a href="#" class="text-muted text-decoration-none me-3">Privacy Policy</a>
+                    <a href="#" class="text-muted text-decoration-none">Terms of Service</a>
                 </div>
             </div>
-        </div>
-    </main>
-
-    <footer class="bg-body-tertiary mt-auto py-3">
-        <div class="container text-center">
-            <p class="mb-0 small text-muted">&copy; 2025 Tondano Selatan Hub. All Rights Reserved.</p>
         </div>
     </footer>
 
-
+    <!-- Bootstrap JS Bundle -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    
     <script>
-    document.addEventListener('DOMContentLoaded', function () {
-        
-        // --- GLOBAL VARIABLES & CONFIG ---
-        const JSON_DATA_URL = 'https://script.google.com/macros/s/AKfycbz38wAsQqwUvAQAXe41w-DYAtKEWaEiIk6mD9-KsAH6NZxXTSkxaS94Zcj3fcxXkCB1Jg/exec?path=Sheet1&action=read';
-        let currentPage = 1;
-        let rowsPerPage = 15;
-        let fullData = [];
-        let currentFilteredData = [];
-        
-        const courierKeyMap = {
-            "Driver ID": "driverId", "Driver Name": "driverName", "Gender": "gender",
-            "National ID": "nationalId", "Vehicle Type": "vehicleType", "License Type": "licenseType",
-            "License Number": "licenseNumber", "Create Time": "createTime", "Modify Time": "modifyTime",
-            "Driver License Expiry Date": "driverLicenseExpiryDate", "Contract Type": "contractType",
-            "Joined Date": "joinedDate", "Last Date": "lastDate", "Agency": "agency",
-            "SPX Status": "spxStatus", "Religion": "religion", "Domisili": "domisili",
-            "Nama Zona": "namaZona", "Phone Number": "licenseNumber" // Assuming Phone Number maps to licenseNumber for WA chat
-        };
+        document.addEventListener('DOMContentLoaded', function () {
+            // --- Skrip untuk Dark/Light Mode Switch ---
+            const themeSwitch = document.getElementById('themeSwitch');
+            const htmlElement = document.documentElement;
 
-        // --- THEME SWITCHER ---
-        const themeSwitch = document.getElementById('themeSwitch');
-        const htmlElement = document.documentElement;
-        themeSwitch.addEventListener('change', () => {
-            const theme = themeSwitch.checked ? 'dark' : 'light';
-            htmlElement.setAttribute('data-bs-theme', theme);
-            localStorage.setItem('theme', theme);
-        });
-        const savedTheme = localStorage.getItem('theme');
-        if (savedTheme) {
-            htmlElement.setAttribute('data-bs-theme', savedTheme);
-            themeSwitch.checked = savedTheme === 'dark';
-        }
-
-        // --- DATA HANDLING & MAPPING ---
-        function mapRowToCamelCase(row) {
-            const newRow = {};
-            for (const key in row) {
-                const camelCaseKey = courierKeyMap[key.trim()] || key.trim();
-                newRow[camelCaseKey] = row[key];
-            }
-            return newRow;
-        }
-
-        function parseDate(dateValue) {
-            if (!dateValue) return null;
-            if (dateValue instanceof Date) return dateValue.toISOString().split('T')[0];
-            // Handles dates from JSON (likely ISO strings)
-            if (typeof dateValue === 'string') {
-                const parsedDate = new Date(dateValue);
-                if (!isNaN(parsedDate)) {
-                    return parsedDate.toISOString().split('T')[0];
-                }
-            }
-             // Handles Excel-style serial numbers if they still appear
-            if (typeof dateValue === 'number' && dateValue > 25569) {
-                 const excelEpoch = new Date(1899, 11, 30);
-                 return new Date(excelEpoch.getTime() + (dateValue - 1) * 86400000).toISOString().split('T')[0];
-            }
-            return null; // Return null for invalid formats
-        }
-
-        // --- UI ACTIONS ---
-        function chatViaWA(phoneNumber) {
-            if (!phoneNumber) {
-                alert('Nomor telepon tidak tersedia untuk kurir ini.');
-                return;
-            }
-            let cleanNumber = phoneNumber.toString().replace(/[^0-9]/g, '');
-            if (cleanNumber.startsWith('0')) {
-                cleanNumber = '62' + cleanNumber.substring(1);
-            } else if (!cleanNumber.startsWith('62')) {
-                cleanNumber = '62' + cleanNumber;
-            }
-            window.open(`https://wa.me/${cleanNumber}`, '_blank');
-        }
-        
-        // --- EVENT HANDLERS ---
-        function setupEventListeners() {
-            const debouncedFilter = debounce(applyFilters, 300);
-            document.getElementById('filterName').addEventListener('input', debouncedFilter);
-            ['filterStatus', 'filterVehicle', 'filterAgency', 'filterZone'].forEach(id => document.getElementById(id).addEventListener('change', applyFilters));
-            document.getElementById('rowsPerPageSelect').addEventListener('change', (e) => { rowsPerPage = parseInt(e.target.value, 10); applyFilters(); });
-            document.getElementById('resetFilterBtn').addEventListener('click', () => {
-                document.getElementById('filterName').value = '';
-                ['filterStatus', 'filterVehicle', 'filterAgency', 'filterZone'].forEach(id => document.getElementById(id).selectedIndex = 0);
-                applyFilters();
-            });
-            
-            document.getElementById('actionTableBody').addEventListener('click', e => {
-                const chatBtn = e.target.closest('.chat-btn');
-                if (chatBtn) chatViaWA(chatBtn.dataset.phone);
-            });
-            
-            document.getElementById('paginationNav').addEventListener('click', e => {
-                e.preventDefault();
-                const link = e.target.closest('a');
-                if (link && !link.parentElement.classList.contains('disabled')) {
-                    currentPage = parseInt(link.dataset.page);
-                    renderTable(); renderPagination();
-                }
-            });
-            
-            let isSyncing = false;
-            const syncScroll = (s, t) => s.addEventListener('scroll', () => { if (!isSyncing) { isSyncing = true; t.scrollTop = s.scrollTop; isSyncing = false; }});
-            syncScroll(document.getElementById('detailsTableContainer'), document.getElementById('actionTableContainer'));
-            syncScroll(document.getElementById('actionTableContainer'), document.getElementById('detailsTableContainer'));
-        }
-        
-        // --- DISPLAY, FILTER, PAGINATION ---
-        async function fetchDataFromUrl() {
-            try {
-                const response = await fetch(JSON_DATA_URL);
-                if (!response.ok) {
-                    throw new Error(`Network response was not ok: ${response.statusText}`);
-                }
-                const jsonData = await response.json();
-                
-                // Assuming the JSON structure is { "data": [...] } or just [...]
-                const dataArray = jsonData.data || jsonData;
-
-                if (!Array.isArray(dataArray)) {
-                     throw new Error('Fetched data is not an array.');
-                }
-                
-                fullData = dataArray.map(row => {
-                    const mappedRow = mapRowToCamelCase(row);
-                    // Standardize dates
-                    ['joinedDate', 'lastDate', 'driverLicenseExpiryDate'].forEach(d => {
-                        mappedRow[d] = parseDate(mappedRow[d]);
-                    });
-                    return mappedRow;
-                });
-                
-                populateFilterDropdowns(fullData);
-                document.getElementById('loadingIndicator').classList.add('d-none');
-                document.getElementById('tableWrapper').classList.remove('d-none');
-            } catch (error) {
-                console.error("Failed to fetch or process data:", error);
-                document.getElementById('loadingIndicator').innerHTML = `<div class="alert alert-danger">Gagal memuat data. Silakan coba muat ulang halaman. Error: ${error.message}</div>`;
-            }
-        }
-
-        function applyFilters() {
-            const filters = {
-                name: document.getElementById('filterName').value.toLowerCase(),
-                status: document.getElementById('filterStatus').value,
-                vehicle: document.getElementById('filterVehicle').value,
-                agency: document.getElementById('filterAgency').value,
-                zone: document.getElementById('filterZone').value,
-            };
-
-            currentFilteredData = fullData.filter(c => 
-                (filters.name ? (c.driverName || '').toLowerCase().includes(filters.name) || (c.driverId || '').toString().toLowerCase().includes(filters.name) : true) &&
-                (filters.status ? c.spxStatus === filters.status : true) &&
-                (filters.vehicle ? c.vehicleType === filters.vehicle : true) &&
-                (filters.agency ? c.agency === filters.agency : true) &&
-                (filters.zone ? c.namaZona === filters.zone : true)
-            );
-            
-            currentPage = 1;
-            updateStats(fullData); // Stats should reflect the total, not the filtered view
-            renderTable(); 
-            renderPagination();
-        }
-
-        function renderTable() {
-            const actionTbody = document.getElementById('actionTableBody');
-            const detailsTbody = document.getElementById('detailsTableBody');
-            actionTbody.innerHTML = ''; detailsTbody.innerHTML = '';
-            
-            if (currentFilteredData.length === 0) {
-                const colspanDetails = 10;
-                const colspanActions = 2;
-                detailsTbody.innerHTML = `<tr><td colspan="${colspanDetails}" class="text-center p-5">Tidak ada data yang cocok dengan filter.</td></tr>`;
-                actionTbody.innerHTML = `<tr><td colspan="${colspanActions}" class="text-center p-5">Tidak ada data.</td></tr>`;
-                return;
+            // Cek tema yang tersimpan di localStorage (jika ada)
+            const currentTheme = localStorage.getItem('theme') || 'light';
+            htmlElement.setAttribute('data-bs-theme', currentTheme);
+            if (currentTheme === 'dark') {
+                themeSwitch.checked = true;
             }
 
-            const paginatedData = currentFilteredData.slice((currentPage - 1) * rowsPerPage, currentPage * rowsPerPage);
-            
-            paginatedData.forEach(c => {
-                const rowHeight = '65px'; // Fixed row height for scroll sync
-                const detailTr = document.createElement('tr');
-                detailTr.style.height = rowHeight;
-                detailTr.innerHTML = `
-                    <td>${c.driverId || '-'}</td> <td>${c.driverName || '-'}</td>
-                    <td>${c.spxStatus || '-'}</td> <td>${c.vehicleType || '-'}</td>
-                    <td>${c.contractType || '-'}</td> <td>${c.agency || '-'}</td>
-                    <td>${c.joinedDate || '-'}</td> <td>${c.lastDate || '-'}</td>
-                    <td>${c.driverLicenseExpiryDate || '-'}</td> <td>${c.domisili || '-'}</td>`;
-                detailsTbody.appendChild(detailTr);
-
-                const actionTr = document.createElement('tr');
-                actionTr.style.height = rowHeight;
-                actionTr.innerHTML = `
-                    <td>${c.namaZona || '-'}</td>
-                    <td>
-                        <button class="btn btn-sm btn-outline-success chat-btn" title="Chat WA" data-phone="${c.licenseNumber}">
-                           <i class="bi bi-whatsapp"></i>
-                        </button>
-                    </td>`;
-                actionTbody.appendChild(actionTr);
-                
-                const expiryDate = c.driverLicenseExpiryDate ? new Date(c.driverLicenseExpiryDate) : null;
-                const today = new Date();
-                today.setHours(0,0,0,0); // Normalize today's date
-                if (expiryDate && expiryDate <= today) {
-                    // Expired (red)
-                    detailTr.classList.add('table-danger');
-                    actionTr.classList.add('table-danger');
-                } else if (expiryDate && expiryDate <= new Date(today.setDate(today.getDate() + 30))) {
-                    // Expiring within 30 days (yellow)
-                    detailTr.classList.add('table-warning');
-                    actionTr.classList.add('table-warning');
-                }
-            });
-        }
-        
-        function renderPagination() {
-            const nav = document.getElementById('paginationNav');
-            const totalPages = Math.ceil(currentFilteredData.length / rowsPerPage);
-            nav.innerHTML = '';
-            if (totalPages <= 1) { 
-                document.getElementById('paginationControls').style.visibility = 'hidden'; 
-                return; 
-            }
-            document.getElementById('paginationControls').style.visibility = 'visible';
-            
-            let html = `<ul class="pagination mb-0">
-                <li class="page-item ${currentPage === 1 ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage - 1}">&laquo;</a></li>`;
-            
-            // Pagination logic with ellipses
-            const maxPagesToShow = 5;
-            let startPage, endPage;
-            if (totalPages <= maxPagesToShow) {
-                startPage = 1; endPage = totalPages;
-            } else {
-                const maxPagesBeforeCurrent = Math.floor(maxPagesToShow / 2);
-                const maxPagesAfterCurrent = Math.ceil(maxPagesToShow / 2) - 1;
-                if (currentPage <= maxPagesBeforeCurrent) {
-                    startPage = 1; endPage = maxPagesToShow;
-                } else if (currentPage + maxPagesAfterCurrent >= totalPages) {
-                    startPage = totalPages - maxPagesToShow + 1; endPage = totalPages;
+            themeSwitch.addEventListener('change', function () {
+                if (this.checked) {
+                    htmlElement.setAttribute('data-bs-theme', 'dark');
+                    localStorage.setItem('theme', 'dark');
                 } else {
-                    startPage = currentPage - maxPagesBeforeCurrent; endPage = currentPage + maxPagesAfterCurrent;
+                    htmlElement.setAttribute('data-bs-theme', 'light');
+                    localStorage.setItem('theme', 'light');
                 }
+            });
+
+            // --- Skrip untuk Filter Periode ---
+            const btnDaily = document.getElementById('btnDaily');
+            const btnWeekly = document.getElementById('btnWeekly');
+            const btnMonthly = document.getElementById('btnMonthly');
+
+            const dailyInput = document.getElementById('dailyInput');
+            const weeklyInput = document.getElementById('weeklyInput');
+            const monthlyInput = document.getElementById('monthlyInput');
+            
+            const allInputs = [dailyInput, weeklyInput, monthlyInput];
+            const allButtons = [btnDaily, btnWeekly, btnMonthly];
+
+            function setActiveFilter(activeButton, activeInput) {
+                // Sembunyikan semua input
+                allInputs.forEach(input => input.classList.add('d-none'));
+                // Hapus kelas 'active' dari semua tombol
+                allButtons.forEach(button => button.classList.remove('active'));
+                
+                // Tampilkan input yang aktif
+                activeInput.classList.remove('d-none');
+                // Tambahkan kelas 'active' ke tombol yang aktif
+                activeButton.classList.add('active');
             }
 
-            for (let i = startPage; i <= endPage; i++) {
-                html += `<li class="page-item ${i === currentPage ? 'active' : ''}"><a class="page-link" href="#" data-page="${i}">${i}</a></li>`;
-            }
+            btnDaily.addEventListener('click', () => setActiveFilter(btnDaily, dailyInput));
+            btnWeekly.addEventListener('click', () => setActiveFilter(btnWeekly, weeklyInput));
+            btnMonthly.addEventListener('click', () => setActiveFilter(btnMonthly, monthlyInput));
 
-            html += `<li class="page-item ${currentPage === totalPages ? 'disabled' : ''}"><a class="page-link" href="#" data-page="${currentPage + 1}">&raquo;</a></li></ul>`;
-            nav.innerHTML = html;
-        }
-
-        // --- STATS & FILTER POPULATION ---
-        function updateStats(data) {
-            const stats = { total: 0, normal: 0, licenseExpired: 0, motorbike: 0, car: 0, agencies: new Set()};
+            // --- Set Default Value untuk Input Tanggal Harian ---
+            const dailyDateInput = document.getElementById('dailyDate');
             const today = new Date();
-            today.setHours(0,0,0,0);
-
-            data.forEach(c => {
-                stats.total++;
-                if (c.spxStatus?.toLowerCase() === 'normal') stats.normal++;
-                if (c.vehicleType?.toLowerCase().includes('motor')) stats.motorbike++;
-                if (c.vehicleType?.toLowerCase().includes('car')) stats.car++;
-                if (c.agency) stats.agencies.add(c.agency);
-                const expiryDate = c.driverLicenseExpiryDate ? new Date(c.driverLicenseExpiryDate) : null;
-                if (expiryDate && expiryDate <= today) {
-                    stats.licenseExpired++;
-                }
-            });
-            document.getElementById('statTotal').textContent = stats.total;
-            document.getElementById('statNormal').textContent = stats.normal;
-            document.getElementById('statLicenseExpired').textContent = stats.licenseExpired;
-            document.getElementById('statMotorbike').textContent = stats.motorbike;
-            document.getElementById('statCar').textContent = stats.car;
-            document.getElementById('statAgency').textContent = stats.agencies.size;
-        }
-        
-        function populateFilterDropdowns(data) {
-            const filters = { status: new Set(), vehicle: new Set(), agency: new Set(), zone: new Set() };
-            data.forEach(c => {
-                if(c.spxStatus) filters.status.add(c.spxStatus);
-                if(c.vehicleType) filters.vehicle.add(c.vehicleType);
-                if(c.agency) filters.agency.add(c.agency);
-                if(c.namaZona) filters.zone.add(c.namaZona);
-            });
-            const populate = (id, values) => {
-                const select = document.getElementById(id);
-                select.innerHTML = '<option value="">Semua</option>';
-                [...values].sort().forEach(val => select.add(new Option(val, val)));
-            };
-            populate('filterStatus', filters.status);
-            populate('filterVehicle', filters.vehicle);
-            populate('filterAgency', filters.agency);
-            populate('filterZone', filters.zone);
-        }
-
-        // --- UTILITY ---
-        function debounce(func, delay) {
-            let timeout;
-            return function(...args) { clearTimeout(timeout); timeout = setTimeout(() => func.apply(this, args), delay); };
-        }
-
-        // --- INITIALIZATION ---
-        async function main() {
-            setupEventListeners();
-            await fetchDataFromUrl();
-            // Initial data render
-            applyFilters();
-        }
-        
-        main();
-    });
+            const yyyy = today.getFullYear();
+            const mm = String(today.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+            const dd = String(today.getDate()).padStart(2, '0');
+            dailyDateInput.value = `${yyyy}-${mm}-${dd}`;
+        });
     </script>
 </body>
 </html>
