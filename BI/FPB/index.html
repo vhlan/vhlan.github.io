@@ -45,6 +45,10 @@
         .autocomplete-suggestions li:hover {
             background-color: #f3f4f6;
         }
+        #csvOutput {
+            white-space: pre;
+            font-family: monospace;
+        }
     </style>
 </head>
 <body class="bg-gray-100 font-sans">
@@ -106,10 +110,14 @@
         <section id="reportPage" class="hidden">
              <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
                 <button id="backToListFromReportBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">&larr; Back to List</button>
-                <div class="flex gap-2">
-                    <button id="shareBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                <div class="flex flex-wrap gap-2">
+                    <button id="shareBtn" class="bg-teal-600 hover:bg-teal-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M15 8a3 3 0 10-2.977-2.63l-4.94 2.47a3 3 0 100 4.319l4.94 2.47a3 3 0 10.895-1.789l-4.94-2.47a3.027 3.027 0 000-.74l4.94-2.47C13.456 7.68 14.19 8 15 8z" /></svg>
                         Share / Save
+                    </button>
+                    <button id="exportExcelBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
+                        Export Excel
                     </button>
                     <button id="deleteEventBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Delete Task</button>
                 </div>
@@ -464,10 +472,11 @@
         const diffColor = qtyDiff === 0 ? 'text-gray-500' : (qtyDiff > 0 ? 'text-green-600' : 'text-red-600');
         const diffSign = qtyDiff > 0 ? '+' : '';
         const binBox = item.actual.kodeBinBox ?? (item.original?.kodeBinBox || '');
-        const cardBg = isManual ? 'bg-blue-50 border-blue-200' : 'bg-white';
+        const cardBg = isManual ? 'bg-blue-50' : 'bg-white';
+        const borderColor = isValidated ? 'border-green-500' : (isManual ? 'border-blue-200' : 'border-gray-200');
 
         return `
-        <div class="accordion-item ${cardBg} rounded-lg border shadow-sm" data-item-id="${item.itemId}">
+        <div class="accordion-item ${cardBg} ${borderColor} rounded-lg border-2 shadow-sm" data-item-id="${item.itemId}">
             <div class="accordion-header w-full flex justify-between items-center p-3 text-left cursor-pointer">
                 <div class="flex-grow">
                     <p class="text-xs text-gray-500">${item.original?.kodeProduk || item.actual.kodeProduk}</p>
@@ -764,6 +773,10 @@
             handleShare();
             return;
         }
+        if (target.id === 'exportExcelBtn') {
+            handleExportExcel();
+            return;
+        }
         if (target.id === 'closeExportFallbackModalBtn') {
             exportFallbackModal.classList.add('hidden');
             return;
@@ -873,6 +886,26 @@
             const csvString = XLSX.utils.sheet_to_csv(worksheet);
             document.getElementById('csvOutput').value = csvString;
             exportFallbackModal.classList.remove('hidden');
+        }
+    }
+    
+    async function handleExportExcel() {
+        try {
+            const data = await getExportData();
+            if (!data) return;
+            
+            const event = await getEvent(currentEventId);
+            const filename = `Count_Result_${event.area}_${event.date}.xlsx`;
+
+            const worksheet = XLSX.utils.json_to_sheet(data);
+            const workbook = XLSX.utils.book_new();
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Count Result");
+            
+            XLSX.writeFile(workbook, filename);
+
+        } catch (error) {
+            console.error("Failed to export Excel file:", error);
+            alert("An error occurred during export.");
         }
     }
 
