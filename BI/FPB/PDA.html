@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Warehouse Packing Scanner</title>
+    <!-- Memuat Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Memuat Library Barcode Scanner (ZXing) -->
+    <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
+    <!-- Memuat Library untuk membaca file XLSX (SheetJS) -->
+    <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
+    <!-- Memuat Font Inter -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        body { font-family: 'Inter', sans-serif; }
+        ::placeholder { color: #9ca3af; }
+        input[type=number]::-webkit-inner-spin-button,
+        input[type=number]::-webkit-outer-spin-button {
+            -webkit-appearance: none; margin: 0;
+        }
+        input[type=number] { -moz-appearance: textfield; }
+        /* Style untuk overlay kamera */
+        #camera-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.8);
+            display: none; /* Defaultnya tersembunyi */
+            align-items: center;
+            justify-content: center;
+            z-index: 50;
+        }
+        #camera-feed {
+            width: 90%;
+            max-width: 500px;
+            border: 3px solid #4f46e5;
+            border-radius: 1rem;
+        }
+    </style>
+</head>
+<body class="bg-gray-100">
+
+    <!-- Kontainer Aplikasi Utama -->
+    <div id="appContainer" class="w-full max-w-md mx-auto bg-white rounded-b-2xl shadow-lg min-h-screen">
+        <div class="p-6 space-y-6">
+            <!-- Judul Aplikasi -->
+            <div class="text-center">
+                <h1 class="text-2xl font-bold text-gray-800">Packing Scanner</h1>
+                <p class="text-sm text-gray-500">Unggah database, scan barcode & input kuantitas</p>
+            </div>
+
+            <!-- Bagian Upload Database -->
+            <div class="p-4 border border-dashed rounded-lg bg-gray-50">
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">1. Unggah Database Barang</h2>
+                <p class="text-xs text-gray-500 mb-3">Unggah file `.xlsx` dengan header kolom: `Kode` dan `Nama`.</p>
+                <input type="file" id="dbUploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="block w-full text-sm text-gray-500
+                    file:mr-4 file:py-2 file:px-4
+                    file:rounded-full file:border-0
+                    file:text-sm file:font-semibold
+                    file:bg-indigo-50 file:text-indigo-700
+                    hover:file:bg-indigo-100
+                "/>
+                <p id="uploadStatus" class="text-xs text-green-600 mt-2 font-medium"></p>
+            </div>
+
+
+            <!-- Form Input Scanner -->
+            <div class="space-y-4">
+                 <h2 class="text-lg font-semibold text-gray-700">2. Scan Barang</h2>
+                <div>
+                    <label for="kodeInput" class="block text-sm font-medium text-gray-700">Kode Barang (Barcode)</label>
+                    <div class="mt-1 flex rounded-md shadow-sm">
+                        <input type="text" id="kodeInput" placeholder="Hasil scan..." class="flex-1 block w-full px-4 py-3 bg-gray-50 border-gray-300 rounded-none rounded-l-md focus:ring-indigo-500 focus:border-indigo-500">
+                        <button id="startScanBtn" type="button" class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
+                                <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM2 12a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2z" />
+                            </svg>
+                            <span>Scan</span>
+                        </button>
+                    </div>
+                </div>
+                <div>
+                    <label for="qtyInput" class="block text-sm font-medium text-gray-700">Kuantitas (Qty)</label>
+                    <input type="number" id="qtyInput" placeholder="Contoh: 10" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                <button id="addItemBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                    Tambah ke Daftar
+                </button>
+            </div>
+
+            <!-- Tabel Hasil Scan -->
+            <div>
+                <h2 class="text-lg font-semibold text-gray-700 mb-2">Hasil Scan</h2>
+                <div class="overflow-x-auto rounded-lg border border-gray-200 max-h-96">
+                    <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
+                        <thead class="bg-gray-50 sticky top-0">
+                            <tr>
+                                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Kode</th>
+                                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Nama</th>
+                                <th class="whitespace-nowrap px-4 py-2 font-medium text-left text-gray-900">Qty</th>
+                                <th class="px-4 py-2"></th>
+                            </tr>
+                        </thead>
+                        <tbody id="scanTableBody" class="divide-y divide-gray-200"></tbody>
+                    </table>
+                </div>
+                <p id="emptyTableMessage" class="text-center text-sm text-gray-500 py-8">Belum ada barang yang di-scan.</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container untuk Kamera -->
+    <div id="camera-container">
+        <div class="relative w-full max-w-md p-4">
+            <video id="camera-feed"></video>
+            <button id="stopScanBtn" class="absolute top-6 right-6 bg-white rounded-full p-2 shadow-lg">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-red-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+                </svg>
+            </button>
+            <p class="text-white text-center mt-4 bg-black bg-opacity-50 rounded-md p-2">Arahkan kamera ke barcode</p>
+        </div>
+    </div>
+
+    <!-- Toast Notification -->
+    <div id="toast" class="fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-opacity duration-300 opacity-0 z-50">
+        <p id="toastMessage"></p>
+    </div>
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    // --- DOM Element References ---
+    const kodeInput = document.getElementById('kodeInput');
+    const qtyInput = document.getElementById('qtyInput');
+    const addItemBtn = document.getElementById('addItemBtn');
+    const scanTableBody = document.getElementById('scanTableBody');
+    const emptyTableMessage = document.getElementById('emptyTableMessage');
+    const toast = document.getElementById('toast');
+    const toastMessage = document.getElementById('toastMessage');
+
+    // Database Uploader Elements
+    const dbUploader = document.getElementById('dbUploader');
+    const uploadStatus = document.getElementById('uploadStatus');
+
+    // Barcode Scanner Elements
+    const startScanBtn = document.getElementById('startScanBtn');
+    const stopScanBtn = document.getElementById('stopScanBtn');
+    const cameraContainer = document.getElementById('camera-container');
+    const cameraFeed = document.getElementById('camera-feed');
+    
+    // --- State ---
+    let itemDatabase = {};
+    const codeReader = new ZXing.BrowserMultiFormatReader();
+
+    // --- Functions ---
+
+    // Menampilkan notifikasi toast
+    function showToast(message, type = 'success') {
+        toastMessage.textContent = message;
+        toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-all duration-300 opacity-100 shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
+        setTimeout(() => { toast.style.opacity = '0'; }, 3000);
+    }
+
+    // --- Database Upload Function for XLSX ---
+    function handleFileUpload(event) {
+        const file = event.target.files[0];
+        if (!file) {
+            return;
+        }
+
+        const reader = new FileReader();
+        reader.onload = function(e) {
+            try {
+                const data = new Uint8Array(e.target.result);
+                const workbook = XLSX.read(data, { type: 'array' });
+
+                const firstSheetName = workbook.SheetNames[0];
+                const worksheet = workbook.Sheets[firstSheetName];
+
+                // Konversi sheet menjadi JSON. Library akan otomatis mendeteksi baris pertama sebagai header.
+                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+
+                itemDatabase = {}; // Kosongkan database lama
+                let loadedCount = 0;
+
+                jsonData.forEach(item => {
+                    // Cari nama kolom 'Kode' dan 'Nama' (tidak case-sensitive)
+                    const codeKey = Object.keys(item).find(k => k.toLowerCase() === 'kode');
+                    const nameKey = Object.keys(item).find(k => k.toLowerCase() === 'nama');
+
+                    if (item[codeKey] && item[nameKey]) {
+                        const code = String(item[codeKey]).trim();
+                        const name = String(item[nameKey]).trim();
+                        if (code) {
+                           itemDatabase[code] = name;
+                           loadedCount++;
+                        }
+                    }
+                });
+
+                if (loadedCount > 0) {
+                    uploadStatus.textContent = `${loadedCount} item berhasil dimuat dari file XLSX.`;
+                    showToast('Database berhasil dimuat!', 'success');
+                } else {
+                    throw new Error("File tidak mengandung kolom 'Kode' dan 'Nama', atau file kosong.");
+                }
+
+            } catch (error) {
+                console.error("Error parsing XLSX file:", error);
+                showToast('Gagal memproses file XLSX. Pastikan format benar.', 'error');
+                uploadStatus.textContent = 'Gagal memuat file. Cek format.';
+            }
+        };
+
+        reader.onerror = function() {
+            showToast('Gagal membaca file.', 'error');
+            uploadStatus.textContent = 'Gagal memuat file.';
+        }
+
+        reader.readAsArrayBuffer(file); // Baca file sebagai ArrayBuffer untuk diproses SheetJS
+    }
+
+
+    // --- Barcode Scanner Functions ---
+    function startScanning() {
+        cameraContainer.style.display = 'flex';
+        codeReader.decodeFromVideoDevice(undefined, 'camera-feed', (result, err) => {
+            if (result) {
+                console.log(result);
+                kodeInput.value = result.text;
+                stopScanning();
+                showToast('Barcode terdeteksi!', 'success');
+                try { navigator.vibrate(100); } catch (e) {} // Vibrate on success
+                qtyInput.focus();
+            }
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+                console.error(err);
+                showToast('Gagal memulai kamera.', 'error');
+                stopScanning();
+            }
+        });
+    }
+
+    function stopScanning() {
+        codeReader.reset();
+        cameraContainer.style.display = 'none';
+    }
+
+    // --- Main App Functions ---
+    function addItemToTable() {
+        const kode = kodeInput.value.trim();
+        const qty = qtyInput.value.trim();
+
+        if (!kode || !qty || parseInt(qty) <= 0) {
+            showToast('Kode dan Kuantitas harus diisi dengan benar.', 'error');
+            return;
+        }
+        
+        if (Object.keys(itemDatabase).length === 0) {
+            showToast('Harap unggah database barang terlebih dahulu.', 'error');
+            return;
+        }
+
+        const namaBarang = itemDatabase[kode];
+        if (!namaBarang) {
+            showToast(`Kode "${kode}" tidak ditemukan di database.`, 'error');
+            return;
+        }
+
+        emptyTableMessage.style.display = 'none';
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">${kode}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">${namaBarang}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700">${qty}</td>
+            <td class="whitespace-nowrap px-4 py-2">
+                <button class="inline-block rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 delete-btn">Hapus</button>
+            </td>
+        `;
+        scanTableBody.prepend(newRow);
+        showToast(`"${namaBarang}" berhasil ditambahkan.`, 'success');
+        kodeInput.value = '';
+        qtyInput.value = '';
+        kodeInput.focus();
+    }
+
+    function deleteRow(event) {
+        if (event.target.classList.contains('delete-btn')) {
+            event.target.closest('tr').remove();
+            showToast('Item dihapus dari daftar.', 'success');
+            if (scanTableBody.rows.length === 0) {
+                emptyTableMessage.style.display = 'block';
+            }
+        }
+    }
+
+    // --- Event Listeners ---
+    dbUploader.addEventListener('change', handleFileUpload);
+    
+    // Scanner listeners
+    startScanBtn.addEventListener('click', startScanning);
+    stopScanBtn.addEventListener('click', stopScanning);
+
+    // Main app listeners
+    addItemBtn.addEventListener('click', addItemToTable);
+    qtyInput.addEventListener('keypress', e => { if (e.key === 'Enter') addItemToTable(); });
+    scanTableBody.addEventListener('click', deleteRow);
+});
+</script>
+
+</body>
+</html>
