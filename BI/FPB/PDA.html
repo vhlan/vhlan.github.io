@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Parcel Scanner</title>
+    <title>Warehouse Packing Scanner</title>
     <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memuat Library Barcode Scanner (ZXing) -->
@@ -126,9 +126,7 @@
                 <p id="emptyTableMessage" class="text-center text-sm text-gray-500 py-8">Belum ada barang yang di-scan.</p>
             </div>
         </div>
-        <footer id="app-footer" class="text-center py-4 text-sm text-gray-500 border-t">
-            Dibuat dengan ♥️<br/>oleh WMS Team Bintang
-        </footer>
+        <!-- Placeholder untuk footer yang akan dibuat oleh JS -->
     </div>
 
     <!-- Modal Pengaturan -->
@@ -237,34 +235,49 @@ document.addEventListener('DOMContentLoaded', () => {
     const cancelExportBtn = document.getElementById('cancelExportBtn');
     const confirmExportBtn = document.getElementById('confirmExportBtn');
     
-    const appFooter = document.getElementById('app-footer');
     const copyrightViolationScreen = document.getElementById('copyright-violation');
 
     // --- State ---
     let itemDatabase = {};
     let uploadedFile = null;
+    let integrityInterval = null;
     const codeReader = new ZXing.BrowserMultiFormatReader();
-    const originalFooterHTML = 'Dibuat dengan ♥️ oleh WMS Team';
+    // Teks hak cipta yang di-encode untuk mempersulit pencarian
+    const encodedFooter = "RGlidWF0IGRlbmdhbiDCpOKdiiBvbGVoIFdNUyBUZWFt"; // "Dibuat dengan ♥️ oleh WMS Team"
+    const originalFooterHTML = atob(encodedFooter);
 
     // --- Copyright Protection ---
     function triggerCopyrightViolation() {
         document.body.innerHTML = copyrightViolationScreen.innerHTML;
+        if (integrityInterval) {
+            clearInterval(integrityInterval);
+        }
     }
 
     function checkFooterIntegrity() {
         const currentFooter = document.getElementById('app-footer');
+        // Jika footer tidak ada ATAU isinya tidak mengandung teks asli
         if (!currentFooter || !currentFooter.innerHTML.includes(originalFooterHTML)) {
             triggerCopyrightViolation();
             return false;
         }
         return true;
     }
+    
+    function createAndProtectFooter() {
+        // Jangan buat duplikat jika sudah ada
+        if (document.getElementById('app-footer')) return; 
+        
+        const footer = document.createElement('footer');
+        footer.id = 'app-footer';
+        footer.className = 'text-center py-4 text-sm text-gray-500 border-t';
+        footer.innerHTML = originalFooterHTML;
+        appContainer.appendChild(footer);
 
-    const observer = new MutationObserver((mutations) => {
-        if (!checkFooterIntegrity()) {
-            observer.disconnect();
-        }
-    });
+        // Hanya gunakan pemeriksaan berkala. Ini adalah kunci untuk mendeteksi perubahan file.
+        if (integrityInterval) clearInterval(integrityInterval); // Hapus interval lama jika ada
+        integrityInterval = setInterval(checkFooterIntegrity, 2500);
+    }
 
     // --- IndexedDB Setup ---
     const DB_NAME = 'WarehouseScannerDB';
@@ -323,13 +336,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 appContainer.classList.remove('hidden');
                 onboardingModal.classList.add('hidden');
                 operatorInfo.textContent = `Operator: ${operatorName}`;
-                
-                observer.observe(appContainer, {
-                    childList: true, 
-                    subtree: true, 
-                    characterData: true 
-                });
-
+                createAndProtectFooter();
             } else {
                 onboardingModal.classList.remove('hidden');
                 appContainer.classList.add('hidden');
@@ -341,7 +348,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Functions ---
     function showToast(message, type = 'success') {
-        toast.innerHTML = `<p id="toastMessage">${message}</p>`;
+        toast.innerHTML = `<p>${message}</p>`;
         toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-all duration-300 opacity-100 shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
         setTimeout(() => { toast.style.opacity = '0'; }, 3000);
     }
@@ -436,7 +443,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (newFile) {
             try {
                 await processAndSaveFile(newFile);
-                await loadItemsFromDB(); // Muat ulang data ke state setelah update
+                await loadItemsFromDB();
                 showToast('Database berhasil diperbarui.', 'success');
             } catch (error) {
                  showToast(error.message, 'error');
