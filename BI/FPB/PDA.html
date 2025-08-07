@@ -74,7 +74,7 @@
                     <h1 class="text-2xl font-bold text-gray-800">Packing Scanner</h1>
                     <p id="operatorInfo" class="text-sm text-gray-500">Operator: -</p>
                  </div>
-                 <button id="settingsBtn" title="Pengaturan" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition">
+                 <button id="settingsBtn" title="Pengaturan" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition z-10">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                       <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" />
                       <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
@@ -150,6 +150,32 @@
         </div>
     </div>
 
+    <!-- Modal Input Manual -->
+    <div id="manualInputModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-40 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div class="p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-800">Input Manual</h2>
+                <p class="text-sm text-gray-500">Kode ini tidak ditemukan. Silakan masukkan detail barang secara manual.</p>
+                <div>
+                    <label for="manualKodeInput" class="text-sm font-medium text-gray-600">Kode Barang</label>
+                    <input type="text" id="manualKodeInput" class="mt-1 w-full p-2 border rounded-md bg-gray-200" readonly>
+                </div>
+                <div>
+                    <label for="manualNamaInput" class="text-sm font-medium text-gray-600">Nama Barang</label>
+                    <input type="text" id="manualNamaInput" placeholder="Nama produk..." class="mt-1 w-full p-2 border rounded-md">
+                </div>
+                <div>
+                    <label for="manualQtyInput" class="text-sm font-medium text-gray-600">Kuantitas</label>
+                    <input type="number" id="manualQtyInput" placeholder="Jumlah..." class="mt-1 w-full p-2 border rounded-md">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button id="cancelManualInputBtn" class="w-full py-2 px-4 bg-gray-200 text-gray-800 font-semibold rounded-md hover:bg-gray-300">Batal</button>
+                    <button id="saveManualInputBtn" class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Simpan Manual</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Modal Export -->
     <div id="exportModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-40 hidden">
         <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
@@ -218,6 +244,13 @@ document.addEventListener('DOMContentLoaded', () => {
     const saveSettingsBtn = document.getElementById('saveSettingsBtn');
     const closeSettingsBtn = document.getElementById('closeSettingsBtn');
 
+    const manualInputModal = document.getElementById('manualInputModal');
+    const manualKodeInput = document.getElementById('manualKodeInput');
+    const manualNamaInput = document.getElementById('manualNamaInput');
+    const manualQtyInput = document.getElementById('manualQtyInput');
+    const saveManualInputBtn = document.getElementById('saveManualInputBtn');
+    const cancelManualInputBtn = document.getElementById('cancelManualInputBtn');
+
     const kodeInput = document.getElementById('kodeInput');
     const qtySection = document.getElementById('qtySection');
     const qtyInput = document.getElementById('qtyInput');
@@ -243,7 +276,7 @@ document.addEventListener('DOMContentLoaded', () => {
     let integrityInterval = null;
     const codeReader = new ZXing.BrowserMultiFormatReader();
     // Teks hak cipta yang di-encode untuk mempersulit pencarian
-    const encodedFooter = "RGlidWF0IGRlbmdhbiDCpOKdiiBvbGVoIFdNUyBUZWFt"; // "Dibuat dengan ♥️ oleh WMS Team"
+    const encodedFooter = "RGlidWF0IG9sZWg8YnI+V01TIFRlYW0="; // "Dibuat oleh<br>WMS Team"
     const originalFooterHTML = atob(encodedFooter);
 
     // --- Copyright Protection ---
@@ -256,7 +289,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     function checkFooterIntegrity() {
         const currentFooter = document.getElementById('app-footer');
-        // Jika footer tidak ada ATAU isinya tidak mengandung teks asli
         if (!currentFooter || !currentFooter.innerHTML.includes(originalFooterHTML)) {
             triggerCopyrightViolation();
             return false;
@@ -265,7 +297,6 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     
     function createAndProtectFooter() {
-        // Jangan buat duplikat jika sudah ada
         if (document.getElementById('app-footer')) return; 
         
         const footer = document.createElement('footer');
@@ -274,8 +305,7 @@ document.addEventListener('DOMContentLoaded', () => {
         footer.innerHTML = originalFooterHTML;
         appContainer.appendChild(footer);
 
-        // Hanya gunakan pemeriksaan berkala. Ini adalah kunci untuk mendeteksi perubahan file.
-        if (integrityInterval) clearInterval(integrityInterval); // Hapus interval lama jika ada
+        if (integrityInterval) clearInterval(integrityInterval);
         integrityInterval = setInterval(checkFooterIntegrity, 2500);
     }
 
@@ -390,6 +420,47 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    function handleItemLookup() {
+        const kode = kodeInput.value.trim();
+        if (!kode) {
+            qtySection.classList.add('hidden');
+            return;
+        }
+
+        if (itemDatabase[kode]) {
+            qtySection.classList.remove('hidden');
+            qtyInput.focus();
+        } else {
+            qtySection.classList.add('hidden');
+            showToast('Kode tidak ada di DB, input manual.', 'error');
+            manualInputModal.classList.remove('hidden');
+            manualKodeInput.value = kode;
+            manualNamaInput.focus();
+        }
+    }
+
+    function addItemToTable(kode, nama, qty) {
+        emptyTableMessage.style.display = 'none';
+        const newRow = document.createElement('tr');
+        newRow.innerHTML = `
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900" data-col="Kode">${kode}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Nama">${nama}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Qty">${qty}</td>
+            <td class="whitespace-nowrap px-4 py-2">
+                <button class="inline-block rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 delete-btn">Hapus</button>
+            </td>
+        `;
+        scanTableBody.prepend(newRow);
+        showToast(`"${nama}" berhasil ditambahkan.`, 'success');
+        
+        // Reset input fields
+        kodeInput.value = '';
+        qtyInput.value = '';
+        qtySection.classList.add('hidden');
+        kodeInput.focus();
+    }
+
+
     // --- Event Listeners ---
     onboardingDbUploader.addEventListener('change', (e) => {
         uploadedFile = e.target.files[0];
@@ -451,6 +522,40 @@ document.addEventListener('DOMContentLoaded', () => {
         }
         settingsModal.classList.add('hidden');
     });
+
+    kodeInput.addEventListener('change', handleItemLookup);
+
+    addItemBtn.addEventListener('click', () => {
+        const kode = kodeInput.value.trim();
+        const qty = qtyInput.value.trim();
+        if (!kode || !qty || parseInt(qty) <= 0) {
+            showToast('Kuantitas harus diisi dengan benar.', 'error');
+            return;
+        }
+        const namaBarang = itemDatabase[kode];
+        addItemToTable(kode, namaBarang, qty);
+    });
+
+    saveManualInputBtn.addEventListener('click', () => {
+        const kode = manualKodeInput.value.trim();
+        const nama = manualNamaInput.value.trim();
+        const qty = manualQtyInput.value.trim();
+
+        if (!nama || !qty || parseInt(qty) <= 0) {
+            showToast('Nama barang dan kuantitas harus diisi.', 'error');
+            return;
+        }
+        addItemToTable(kode, nama, qty);
+        manualInputModal.classList.add('hidden');
+        manualNamaInput.value = '';
+        manualQtyInput.value = '';
+    });
+    
+    cancelManualInputBtn.addEventListener('click', () => {
+        manualInputModal.classList.add('hidden');
+        kodeInput.value = '';
+        kodeInput.focus();
+    });
     
     function handleExport() {
         const operatorName = localStorage.getItem('warehouseOperatorName') || 'UnknownOperator';
@@ -479,15 +584,6 @@ document.addEventListener('DOMContentLoaded', () => {
         boxCodeInput.value = '';
     }
 
-    function showQtyInput() { 
-        const kode = kodeInput.value.trim();
-        if (itemDatabase[kode]) {
-            qtySection.classList.remove('hidden');
-            qtyInput.focus();
-        } else {
-            qtySection.classList.add('hidden');
-        }
-    }
     function startScanning() { 
         cameraContainer.style.display = 'flex';
         codeReader.decodeFromVideoDevice(undefined, 'camera-feed', (result, err) => {
@@ -496,7 +592,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 stopScanning();
                 showToast('Barcode terdeteksi!', 'success');
                 try { navigator.vibrate(100); } catch (e) {}
-                showQtyInput();
+                handleItemLookup();
             }
             if (err && !(err instanceof ZXing.NotFoundException)) {
                 showToast('Gagal memulai kamera.', 'error');
@@ -508,35 +604,7 @@ document.addEventListener('DOMContentLoaded', () => {
         codeReader.reset();
         cameraContainer.style.display = 'none';
     }
-    function addItemToTable() { 
-        const kode = kodeInput.value.trim();
-        const qty = qtyInput.value.trim();
-        if (!kode || !qty || parseInt(qty) <= 0) {
-            showToast('Kuantitas harus diisi dengan benar.', 'error');
-            return;
-        }
-        const namaBarang = itemDatabase[kode];
-        if (!namaBarang) {
-            showToast(`Kode "${kode}" tidak ditemukan di database.`, 'error');
-            return;
-        }
-        emptyTableMessage.style.display = 'none';
-        const newRow = document.createElement('tr');
-        newRow.innerHTML = `
-            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900" data-col="Kode">${kode}</td>
-            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Nama">${namaBarang}</td>
-            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Qty">${qty}</td>
-            <td class="whitespace-nowrap px-4 py-2">
-                <button class="inline-block rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 delete-btn">Hapus</button>
-            </td>
-        `;
-        scanTableBody.prepend(newRow);
-        showToast(`"${namaBarang}" berhasil ditambahkan.`, 'success');
-        kodeInput.value = '';
-        qtyInput.value = '';
-        qtySection.classList.add('hidden');
-        kodeInput.focus();
-    }
+    
     function deleteRow(event) { 
         if (event.target.classList.contains('delete-btn')) {
             event.target.closest('tr').remove();
@@ -548,9 +616,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     startScanBtn.addEventListener('click', startScanning);
     stopScanBtn.addEventListener('click', stopScanning);
-    kodeInput.addEventListener('input', showQtyInput);
-    addItemBtn.addEventListener('click', addItemToTable);
-    qtyInput.addEventListener('keypress', e => { if (e.key === 'Enter') addItemToTable(); });
+    qtyInput.addEventListener('keypress', e => { if (e.key === 'Enter') addItemBtn.click(); });
     scanTableBody.addEventListener('click', deleteRow);
     validateBtn.addEventListener('click', () => {
         if (scanTableBody.rows.length === 0) {
