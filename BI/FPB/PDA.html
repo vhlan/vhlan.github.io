@@ -3,12 +3,12 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Warehouse Packing Scanner</title>
+    <title>Parcel Scanner</title>
     <!-- Memuat Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Memuat Library Barcode Scanner (ZXing) -->
     <script type="text/javascript" src="https://unpkg.com/@zxing/library@latest/umd/index.min.js"></script>
-    <!-- Memuat Library untuk membaca file XLSX (SheetJS) -->
+    <!-- Memuat Library untuk membaca & menulis file XLSX (SheetJS) -->
     <script src="https://cdn.sheetjs.com/xlsx-latest/package/dist/xlsx.full.min.js"></script>
     <!-- Memuat Font Inter -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -22,80 +22,94 @@
             -webkit-appearance: none; margin: 0;
         }
         input[type=number] { -moz-appearance: textfield; }
-        /* Style untuk overlay kamera */
         #camera-container {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
             background-color: rgba(0, 0, 0, 0.8);
-            display: none; /* Defaultnya tersembunyi */
-            align-items: center;
-            justify-content: center;
-            z-index: 50;
+            display: none; align-items: center; justify-content: center; z-index: 50;
         }
         #camera-feed {
-            width: 90%;
-            max-width: 500px;
-            border: 3px solid #4f46e5;
-            border-radius: 1rem;
+            width: 90%; max-width: 500px; border: 3px solid #4f46e5; border-radius: 1rem;
+        }
+        /* Style untuk layar pelanggaran hak cipta */
+        .copyright-violation-screen {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            background-color: white;
+            color: #1f2937;
+            text-align: center;
+            padding: 2rem;
         }
     </style>
 </head>
 <body class="bg-gray-100">
 
-    <!-- Kontainer Aplikasi Utama -->
-    <div id="appContainer" class="w-full max-w-md mx-auto bg-white rounded-b-2xl shadow-lg min-h-screen">
-        <div class="p-6 space-y-6">
-            <!-- Judul Aplikasi -->
-            <div class="text-center">
-                <h1 class="text-2xl font-bold text-gray-800">Packing Scanner</h1>
-                <p class="text-sm text-gray-500">Unggah database, scan barcode & input kuantitas</p>
-            </div>
-
-            <!-- Bagian Upload Database -->
-            <div class="p-4 border border-dashed rounded-lg bg-gray-50">
-                <h2 class="text-lg font-semibold text-gray-700 mb-2">1. Unggah Database Barang</h2>
-                <p class="text-xs text-gray-500 mb-3">Unggah file `.xlsx` dengan header kolom: `Kode` dan `Nama`.</p>
-                <input type="file" id="dbUploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="block w-full text-sm text-gray-500
-                    file:mr-4 file:py-2 file:px-4
-                    file:rounded-full file:border-0
-                    file:text-sm file:font-semibold
-                    file:bg-indigo-50 file:text-indigo-700
-                    hover:file:bg-indigo-100
-                "/>
-                <p id="uploadStatus" class="text-xs text-green-600 mt-2 font-medium"></p>
-            </div>
-
-
-            <!-- Form Input Scanner -->
+    <!-- Modal Onboarding -->
+    <div id="onboardingModal" class="fixed inset-0 bg-white flex flex-col items-center justify-center p-8 z-40 hidden">
+        <div class="text-center max-w-sm w-full">
+            <h1 class="text-2xl font-bold text-gray-800">Pengaturan Awal</h1>
+            <p class="text-gray-600 mt-2 mb-6">Harap isi nama Anda dan unggah database barang untuk memulai. Pengaturan ini akan disimpan di perangkat.</p>
             <div class="space-y-4">
-                 <h2 class="text-lg font-semibold text-gray-700">2. Scan Barang</h2>
+                <div>
+                    <label for="onboardingOperatorNameInput" class="block text-sm font-medium text-left text-gray-700">Nama Operator</label>
+                    <input type="text" id="onboardingOperatorNameInput" placeholder="Masukkan nama Anda" class="mt-1 w-full p-3 border rounded-md bg-gray-50">
+                </div>
+                <div class="p-4 border-2 border-dashed rounded-xl bg-gray-50">
+                    <p class="text-sm text-gray-500 mb-3">Unggah file `.xlsx` (Header: Kode, Nama)</p>
+                    <input type="file" id="onboardingDbUploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"/>
+                </div>
+                 <button id="saveOnboardingBtn" class="w-full py-3 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700 disabled:bg-gray-400">Simpan & Mulai</button>
+            </div>
+            <p id="onboardingStatus" class="text-xs text-red-500 mt-3 font-medium"></p>
+        </div>
+    </div>
+
+    <!-- Kontainer Aplikasi Utama -->
+    <div id="appContainer" class="w-full max-w-md mx-auto bg-white rounded-b-2xl shadow-lg min-h-screen hidden">
+        <div class="p-6 space-y-6">
+            <div class="flex justify-between items-center">
+                 <div>
+                    <h1 class="text-2xl font-bold text-gray-800">Packing Scanner</h1>
+                    <p id="operatorInfo" class="text-sm text-gray-500">Operator: -</p>
+                 </div>
+                 <button id="settingsBtn" title="Pengaturan" class="p-2 rounded-full hover:bg-gray-200 text-gray-600 transition">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.096 2.572-1.065z" />
+                      <path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                    </svg>
+                 </button>
+            </div>
+            <div class="space-y-4">
+                 <h2 class="text-lg font-semibold text-gray-700">Scan Barang</h2>
                 <div>
                     <label for="kodeInput" class="block text-sm font-medium text-gray-700">Kode Barang (Barcode)</label>
                     <div class="mt-1 flex rounded-md shadow-sm">
-                        <input type="text" id="kodeInput" placeholder="Hasil scan..." class="flex-1 block w-full px-4 py-3 bg-gray-50 border-gray-300 rounded-none rounded-l-md focus:ring-indigo-500 focus:border-indigo-500">
+                        <input type="text" id="kodeInput" placeholder="Scan atau ketik manual..." class="flex-1 block w-full px-4 py-3 bg-gray-50 border-gray-300 rounded-none rounded-l-md focus:ring-indigo-500 focus:border-indigo-500">
                         <button id="startScanBtn" type="button" class="-ml-px relative inline-flex items-center space-x-2 px-4 py-2 border border-gray-300 text-sm font-medium rounded-r-md text-gray-700 bg-gray-50 hover:bg-gray-100 focus:outline-none focus:ring-1 focus:ring-indigo-500 focus:border-indigo-500">
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor">
-                                <path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM2 12a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2z" />
-                            </svg>
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 text-gray-500" viewBox="0 0 20 20" fill="currentColor"><path d="M2 6a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2V6zM2 12a2 2 0 012-2h12a2 2 0 012 2v2a2 2 0 01-2 2H4a2 2 0 01-2-2v-2z" /></svg>
                             <span>Scan</span>
                         </button>
                     </div>
                 </div>
-                <div>
-                    <label for="qtyInput" class="block text-sm font-medium text-gray-700">Kuantitas (Qty)</label>
-                    <input type="number" id="qtyInput" placeholder="Contoh: 10" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                <div id="qtySection" class="hidden space-y-4">
+                    <div>
+                        <label for="qtyInput" class="block text-sm font-medium text-gray-700">Kuantitas (Qty)</label>
+                        <input type="number" id="qtyInput" placeholder="Contoh: 10" class="mt-1 block w-full px-4 py-3 bg-gray-50 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500">
+                    </div>
+                    <button id="addItemBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
+                        Tambah ke Daftar
+                    </button>
                 </div>
-                <button id="addItemBtn" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-                    Tambah ke Daftar
-                </button>
             </div>
-
-            <!-- Tabel Hasil Scan -->
             <div>
-                <h2 class="text-lg font-semibold text-gray-700 mb-2">Hasil Scan</h2>
+                <div class="flex justify-between items-center mb-2">
+                    <h2 class="text-lg font-semibold text-gray-700">Hasil Scan</h2>
+                    <button id="validateBtn" class="px-4 py-2 bg-green-600 text-white text-sm font-semibold rounded-md hover:bg-green-700 shadow-sm">
+                        Validate & Export
+                    </button>
+                </div>
                 <div class="overflow-x-auto rounded-lg border border-gray-200 max-h-96">
                     <table class="min-w-full divide-y-2 divide-gray-200 bg-white text-sm">
                         <thead class="bg-gray-50 sticky top-0">
@@ -112,9 +126,51 @@
                 <p id="emptyTableMessage" class="text-center text-sm text-gray-500 py-8">Belum ada barang yang di-scan.</p>
             </div>
         </div>
+        <footer id="app-footer" class="text-center py-4 text-sm text-gray-500 border-t">
+            Dibuat dengan ♥️<br/>oleh WMS Team Bintang
+        </footer>
     </div>
 
-    <!-- Container untuk Kamera -->
+    <!-- Modal Pengaturan -->
+    <div id="settingsModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-40 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div class="p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-800">Pengaturan</h2>
+                <div>
+                    <label for="settingsOperatorNameInput" class="text-sm font-medium text-gray-600">Nama Operator</label>
+                    <input type="text" id="settingsOperatorNameInput" class="mt-1 w-full p-2 border rounded-md">
+                </div>
+                <div class="p-4 border-t">
+                    <p class="text-sm font-medium text-gray-600 mb-2">Perbarui Database</p>
+                    <input type="file" id="settingsDbUploader" accept=".xlsx, application/vnd.openxmlformats-officedocument.spreadsheetml.sheet" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-indigo-100 file:text-indigo-700 hover:file:bg-indigo-200 cursor-pointer"/>
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button id="closeSettingsBtn" class="w-full py-2 px-4 bg-gray-200 text-gray-800 font-semibold rounded-md hover:bg-gray-300">Tutup</button>
+                    <button id="saveSettingsBtn" class="w-full py-2 px-4 bg-indigo-600 text-white font-semibold rounded-md hover:bg-indigo-700">Simpan Perubahan</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Export -->
+    <div id="exportModal" class="fixed inset-0 bg-gray-800 bg-opacity-75 flex items-center justify-center p-4 z-40 hidden">
+        <div class="bg-white rounded-2xl shadow-xl w-full max-w-sm">
+            <div class="p-6 space-y-4">
+                <h2 class="text-xl font-bold text-gray-800">Export Data</h2>
+                <p class="text-sm text-gray-500">Masukkan Kode Box untuk nama file Excel.</p>
+                <div>
+                    <label for="boxCodeInput" class="text-sm font-medium text-gray-600">Kode Box</label>
+                    <input type="text" id="boxCodeInput" placeholder="Contoh: BOX-001" class="mt-1 w-full p-2 border rounded-md">
+                </div>
+                <div class="flex space-x-2 pt-2">
+                    <button id="cancelExportBtn" class="w-full py-2 px-4 bg-gray-200 text-gray-800 font-semibold rounded-md hover:bg-gray-300">Batal</button>
+                    <button id="confirmExportBtn" class="w-full py-2 px-4 bg-green-600 text-white font-semibold rounded-md hover:bg-green-700">Export ke XLSX</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Container Kamera & Toast -->
     <div id="camera-container">
         <div class="relative w-full max-w-md p-4">
             <video id="camera-feed"></video>
@@ -126,158 +182,343 @@
             <p class="text-white text-center mt-4 bg-black bg-opacity-50 rounded-md p-2">Arahkan kamera ke barcode</p>
         </div>
     </div>
-
-    <!-- Toast Notification -->
-    <div id="toast" class="fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-opacity duration-300 opacity-0 z-50">
-        <p id="toastMessage"></p>
+    <div id="toast" class="fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-opacity duration-300 opacity-0 z-50"></div>
+    
+    <!-- Layar Pelanggaran Hak Cipta (tersembunyi) -->
+    <div id="copyright-violation" style="display: none;">
+        <div class="copyright-violation-screen">
+            <h1 class="text-3xl font-bold mb-4 text-red-600">Pelanggaran Hak Cipta!</h1>
+            <div class="text-left">
+                <p class="text-lg font-semibold">Hak cipta sepenuhnya Oleh WMS Team:</p>
+                <ul class="list-disc list-inside mt-2 space-y-1">
+                    <li>Rilo Prabowo (Ketua Geng)</li>
+                    <li>Andi Dzamar Maulana</li>
+                    <li>Muh. Nur Ikhsan Basri</li>
+                    <li>Muh. Ahlan B</li>
+                </ul>
+            </div>
+        </div>
     </div>
+
 
 <script>
 document.addEventListener('DOMContentLoaded', () => {
     // --- DOM Element References ---
+    const onboardingModal = document.getElementById('onboardingModal');
+    const onboardingOperatorNameInput = document.getElementById('onboardingOperatorNameInput');
+    const onboardingDbUploader = document.getElementById('onboardingDbUploader');
+    const saveOnboardingBtn = document.getElementById('saveOnboardingBtn');
+    const onboardingStatus = document.getElementById('onboardingStatus');
+    
+    const appContainer = document.getElementById('appContainer');
+    const operatorInfo = document.getElementById('operatorInfo');
+    const settingsBtn = document.getElementById('settingsBtn');
+
+    const settingsModal = document.getElementById('settingsModal');
+    const settingsOperatorNameInput = document.getElementById('settingsOperatorNameInput');
+    const settingsDbUploader = document.getElementById('settingsDbUploader');
+    const saveSettingsBtn = document.getElementById('saveSettingsBtn');
+    const closeSettingsBtn = document.getElementById('closeSettingsBtn');
+
     const kodeInput = document.getElementById('kodeInput');
+    const qtySection = document.getElementById('qtySection');
     const qtyInput = document.getElementById('qtyInput');
     const addItemBtn = document.getElementById('addItemBtn');
     const scanTableBody = document.getElementById('scanTableBody');
     const emptyTableMessage = document.getElementById('emptyTableMessage');
     const toast = document.getElementById('toast');
-    const toastMessage = document.getElementById('toastMessage');
-
-    // Database Uploader Elements
-    const dbUploader = document.getElementById('dbUploader');
-    const uploadStatus = document.getElementById('uploadStatus');
-
-    // Barcode Scanner Elements
     const startScanBtn = document.getElementById('startScanBtn');
     const stopScanBtn = document.getElementById('stopScanBtn');
     const cameraContainer = document.getElementById('camera-container');
     const cameraFeed = document.getElementById('camera-feed');
+    const validateBtn = document.getElementById('validateBtn');
+    const exportModal = document.getElementById('exportModal');
+    const boxCodeInput = document.getElementById('boxCodeInput');
+    const cancelExportBtn = document.getElementById('cancelExportBtn');
+    const confirmExportBtn = document.getElementById('confirmExportBtn');
     
+    const appFooter = document.getElementById('app-footer');
+    const copyrightViolationScreen = document.getElementById('copyright-violation');
+
     // --- State ---
     let itemDatabase = {};
+    let uploadedFile = null;
     const codeReader = new ZXing.BrowserMultiFormatReader();
+    const originalFooterHTML = 'Dibuat dengan ♥️ oleh WMS Team';
+
+    // --- Copyright Protection ---
+    function triggerCopyrightViolation() {
+        document.body.innerHTML = copyrightViolationScreen.innerHTML;
+    }
+
+    function checkFooterIntegrity() {
+        const currentFooter = document.getElementById('app-footer');
+        if (!currentFooter || !currentFooter.innerHTML.includes(originalFooterHTML)) {
+            triggerCopyrightViolation();
+            return false;
+        }
+        return true;
+    }
+
+    const observer = new MutationObserver((mutations) => {
+        if (!checkFooterIntegrity()) {
+            observer.disconnect();
+        }
+    });
+
+    // --- IndexedDB Setup ---
+    const DB_NAME = 'WarehouseScannerDB';
+    const STORE_NAME = 'items';
+    let db;
+
+    function initDB() { 
+        return new Promise((resolve, reject) => {
+            const request = indexedDB.open(DB_NAME, 1);
+            request.onupgradeneeded = (event) => {
+                const db = event.target.result;
+                if (!db.objectStoreNames.contains(STORE_NAME)) {
+                    db.createObjectStore(STORE_NAME, { keyPath: 'kode' });
+                }
+            };
+            request.onsuccess = (event) => {
+                db = event.target.result;
+                resolve(db);
+            };
+            request.onerror = (event) => reject(event.target.error);
+        });
+    }
+    function saveItemsToDB(items) {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readwrite');
+            const store = transaction.objectStore(STORE_NAME);
+            store.clear();
+            items.forEach(item => store.put(item));
+            transaction.oncomplete = () => resolve();
+            transaction.onerror = (event) => reject(event.target.error);
+        });
+    }
+    function loadItemsFromDB() {
+        return new Promise((resolve, reject) => {
+            const transaction = db.transaction([STORE_NAME], 'readonly');
+            const store = transaction.objectStore(STORE_NAME);
+            const request = store.getAll();
+            request.onsuccess = () => {
+                const items = request.result;
+                itemDatabase = {};
+                items.forEach(item => itemDatabase[item.kode] = item.nama);
+                resolve(items.length > 0);
+            };
+            request.onerror = (event) => reject(event.target.error);
+        });
+    }
+    
+    // --- Main App Flow ---
+    async function startApp() {
+        try {
+            await initDB();
+            const dbHasData = await loadItemsFromDB();
+            const operatorName = localStorage.getItem('warehouseOperatorName');
+
+            if (dbHasData && operatorName) {
+                appContainer.classList.remove('hidden');
+                onboardingModal.classList.add('hidden');
+                operatorInfo.textContent = `Operator: ${operatorName}`;
+                
+                observer.observe(appContainer, {
+                    childList: true, 
+                    subtree: true, 
+                    characterData: true 
+                });
+
+            } else {
+                onboardingModal.classList.remove('hidden');
+                appContainer.classList.add('hidden');
+            }
+        } catch (error) {
+            showToast('Gagal menginisialisasi database.', 'error');
+        }
+    }
 
     // --- Functions ---
-
-    // Menampilkan notifikasi toast
     function showToast(message, type = 'success') {
-        toastMessage.textContent = message;
+        toast.innerHTML = `<p id="toastMessage">${message}</p>`;
         toast.className = `fixed top-5 right-5 px-6 py-3 rounded-lg text-white transition-all duration-300 opacity-100 shadow-lg z-50 ${type === 'success' ? 'bg-green-500' : 'bg-red-500'}`;
         setTimeout(() => { toast.style.opacity = '0'; }, 3000);
     }
 
-    // --- Database Upload Function for XLSX ---
-    function handleFileUpload(event) {
-        const file = event.target.files[0];
-        if (!file) {
+    async function processAndSaveFile(file) {
+        return new Promise((resolve, reject) => {
+            if (!file) {
+                reject(new Error("Tidak ada file yang dipilih."));
+                return;
+            }
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { type: 'array' });
+                    const worksheet = workbook.Sheets[workbook.SheetNames[0]];
+                    const jsonData = XLSX.utils.sheet_to_json(worksheet);
+                    
+                    const itemsToSave = [];
+                    jsonData.forEach(item => {
+                        const codeKey = Object.keys(item).find(k => k.toLowerCase() === 'kode');
+                        const nameKey = Object.keys(item).find(k => k.toLowerCase() === 'nama');
+                        if (item[codeKey] && item[nameKey]) {
+                            itemsToSave.push({ kode: String(item[codeKey]).trim(), nama: String(item[nameKey]).trim() });
+                        }
+                    });
+
+                    if (itemsToSave.length > 0) {
+                        await saveItemsToDB(itemsToSave);
+                        resolve();
+                    } else {
+                        reject(new Error("File tidak mengandung kolom 'Kode' dan 'Nama'."));
+                    }
+                } catch (error) {
+                    reject(error);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        });
+    }
+
+    // --- Event Listeners ---
+    onboardingDbUploader.addEventListener('change', (e) => {
+        uploadedFile = e.target.files[0];
+    });
+
+    saveOnboardingBtn.addEventListener('click', async () => {
+        const operatorName = onboardingOperatorNameInput.value.trim();
+        if (!operatorName) {
+            onboardingStatus.textContent = 'Nama Operator harus diisi.';
+            return;
+        }
+        if (!uploadedFile) {
+            onboardingStatus.textContent = 'File database harus diunggah.';
             return;
         }
 
-        const reader = new FileReader();
-        reader.onload = function(e) {
-            try {
-                const data = new Uint8Array(e.target.result);
-                const workbook = XLSX.read(data, { type: 'array' });
+        try {
+            saveOnboardingBtn.disabled = true;
+            saveOnboardingBtn.textContent = 'Menyimpan...';
+            await processAndSaveFile(uploadedFile);
+            localStorage.setItem('warehouseOperatorName', operatorName);
+            await startApp();
+        } catch (error) {
+            showToast(error.message, 'error');
+            onboardingStatus.textContent = error.message;
+        } finally {
+            saveOnboardingBtn.disabled = false;
+            saveOnboardingBtn.textContent = 'Simpan & Mulai';
+        }
+    });
 
-                const firstSheetName = workbook.SheetNames[0];
-                const worksheet = workbook.Sheets[firstSheetName];
+    settingsBtn.addEventListener('click', () => {
+        settingsOperatorNameInput.value = localStorage.getItem('warehouseOperatorName') || '';
+        settingsModal.classList.remove('hidden');
+    });
 
-                // Konversi sheet menjadi JSON. Library akan otomatis mendeteksi baris pertama sebagai header.
-                const jsonData = XLSX.utils.sheet_to_json(worksheet);
+    closeSettingsBtn.addEventListener('click', () => {
+        settingsModal.classList.add('hidden');
+    });
 
-                itemDatabase = {}; // Kosongkan database lama
-                let loadedCount = 0;
+    saveSettingsBtn.addEventListener('click', async () => {
+        const newOperatorName = settingsOperatorNameInput.value.trim();
+        const newFile = settingsDbUploader.files[0];
 
-                jsonData.forEach(item => {
-                    // Cari nama kolom 'Kode' dan 'Nama' (tidak case-sensitive)
-                    const codeKey = Object.keys(item).find(k => k.toLowerCase() === 'kode');
-                    const nameKey = Object.keys(item).find(k => k.toLowerCase() === 'nama');
-
-                    if (item[codeKey] && item[nameKey]) {
-                        const code = String(item[codeKey]).trim();
-                        const name = String(item[nameKey]).trim();
-                        if (code) {
-                           itemDatabase[code] = name;
-                           loadedCount++;
-                        }
-                    }
-                });
-
-                if (loadedCount > 0) {
-                    uploadStatus.textContent = `${loadedCount} item berhasil dimuat dari file XLSX.`;
-                    showToast('Database berhasil dimuat!', 'success');
-                } else {
-                    throw new Error("File tidak mengandung kolom 'Kode' dan 'Nama', atau file kosong.");
-                }
-
-            } catch (error) {
-                console.error("Error parsing XLSX file:", error);
-                showToast('Gagal memproses file XLSX. Pastikan format benar.', 'error');
-                uploadStatus.textContent = 'Gagal memuat file. Cek format.';
-            }
-        };
-
-        reader.onerror = function() {
-            showToast('Gagal membaca file.', 'error');
-            uploadStatus.textContent = 'Gagal memuat file.';
+        if (newOperatorName) {
+            localStorage.setItem('warehouseOperatorName', newOperatorName);
+            operatorInfo.textContent = `Operator: ${newOperatorName}`;
+            showToast('Nama Operator berhasil diperbarui.', 'success');
         }
 
-        reader.readAsArrayBuffer(file); // Baca file sebagai ArrayBuffer untuk diproses SheetJS
+        if (newFile) {
+            try {
+                await processAndSaveFile(newFile);
+                await loadItemsFromDB(); // Muat ulang data ke state setelah update
+                showToast('Database berhasil diperbarui.', 'success');
+            } catch (error) {
+                 showToast(error.message, 'error');
+            }
+        }
+        settingsModal.classList.add('hidden');
+    });
+    
+    function handleExport() {
+        const operatorName = localStorage.getItem('warehouseOperatorName') || 'UnknownOperator';
+        const boxCode = boxCodeInput.value.trim();
+        if (!boxCode) {
+            showToast('Kode Box harus diisi.', 'error');
+            return;
+        }
+        const dataToExport = [];
+        scanTableBody.querySelectorAll('tr').forEach(row => {
+            dataToExport.push({
+                Kode: row.querySelector('[data-col="Kode"]').textContent,
+                Nama: row.querySelector('[data-col="Nama"]').textContent,
+                Qty: parseInt(row.querySelector('[data-col="Qty"]').textContent)
+            });
+        });
+        const worksheet = XLSX.utils.json_to_sheet(dataToExport);
+        const workbook = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Hasil Scan');
+        const fileName = `${boxCode} - ${operatorName}.xlsx`;
+        XLSX.writeFile(workbook, fileName);
+        showToast('Data berhasil diexport!', 'success');
+        exportModal.classList.add('hidden');
+        scanTableBody.innerHTML = '';
+        emptyTableMessage.style.display = 'block';
+        boxCodeInput.value = '';
     }
 
-
-    // --- Barcode Scanner Functions ---
-    function startScanning() {
+    function showQtyInput() { 
+        const kode = kodeInput.value.trim();
+        if (itemDatabase[kode]) {
+            qtySection.classList.remove('hidden');
+            qtyInput.focus();
+        } else {
+            qtySection.classList.add('hidden');
+        }
+    }
+    function startScanning() { 
         cameraContainer.style.display = 'flex';
         codeReader.decodeFromVideoDevice(undefined, 'camera-feed', (result, err) => {
             if (result) {
-                console.log(result);
                 kodeInput.value = result.text;
                 stopScanning();
                 showToast('Barcode terdeteksi!', 'success');
-                try { navigator.vibrate(100); } catch (e) {} // Vibrate on success
-                qtyInput.focus();
+                try { navigator.vibrate(100); } catch (e) {}
+                showQtyInput();
             }
             if (err && !(err instanceof ZXing.NotFoundException)) {
-                console.error(err);
                 showToast('Gagal memulai kamera.', 'error');
                 stopScanning();
             }
         });
     }
-
-    function stopScanning() {
+    function stopScanning() { 
         codeReader.reset();
         cameraContainer.style.display = 'none';
     }
-
-    // --- Main App Functions ---
-    function addItemToTable() {
+    function addItemToTable() { 
         const kode = kodeInput.value.trim();
         const qty = qtyInput.value.trim();
-
         if (!kode || !qty || parseInt(qty) <= 0) {
-            showToast('Kode dan Kuantitas harus diisi dengan benar.', 'error');
+            showToast('Kuantitas harus diisi dengan benar.', 'error');
             return;
         }
-        
-        if (Object.keys(itemDatabase).length === 0) {
-            showToast('Harap unggah database barang terlebih dahulu.', 'error');
-            return;
-        }
-
         const namaBarang = itemDatabase[kode];
         if (!namaBarang) {
             showToast(`Kode "${kode}" tidak ditemukan di database.`, 'error');
             return;
         }
-
         emptyTableMessage.style.display = 'none';
         const newRow = document.createElement('tr');
         newRow.innerHTML = `
-            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900">${kode}</td>
-            <td class="whitespace-nowrap px-4 py-2 text-gray-700">${namaBarang}</td>
-            <td class="whitespace-nowrap px-4 py-2 text-gray-700">${qty}</td>
+            <td class="whitespace-nowrap px-4 py-2 font-medium text-gray-900" data-col="Kode">${kode}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Nama">${namaBarang}</td>
+            <td class="whitespace-nowrap px-4 py-2 text-gray-700" data-col="Qty">${qty}</td>
             <td class="whitespace-nowrap px-4 py-2">
                 <button class="inline-block rounded bg-red-600 px-3 py-2 text-xs font-medium text-white hover:bg-red-700 delete-btn">Hapus</button>
             </td>
@@ -286,10 +527,10 @@ document.addEventListener('DOMContentLoaded', () => {
         showToast(`"${namaBarang}" berhasil ditambahkan.`, 'success');
         kodeInput.value = '';
         qtyInput.value = '';
+        qtySection.classList.add('hidden');
         kodeInput.focus();
     }
-
-    function deleteRow(event) {
+    function deleteRow(event) { 
         if (event.target.classList.contains('delete-btn')) {
             event.target.closest('tr').remove();
             showToast('Item dihapus dari daftar.', 'success');
@@ -298,18 +539,24 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     }
-
-    // --- Event Listeners ---
-    dbUploader.addEventListener('change', handleFileUpload);
-    
-    // Scanner listeners
     startScanBtn.addEventListener('click', startScanning);
     stopScanBtn.addEventListener('click', stopScanning);
-
-    // Main app listeners
+    kodeInput.addEventListener('input', showQtyInput);
     addItemBtn.addEventListener('click', addItemToTable);
     qtyInput.addEventListener('keypress', e => { if (e.key === 'Enter') addItemToTable(); });
     scanTableBody.addEventListener('click', deleteRow);
+    validateBtn.addEventListener('click', () => {
+        if (scanTableBody.rows.length === 0) {
+            showToast('Tidak ada data untuk divalidasi.', 'error');
+            return;
+        }
+        exportModal.classList.remove('hidden');
+    });
+    cancelExportBtn.addEventListener('click', () => exportModal.classList.add('hidden'));
+    confirmExportBtn.addEventListener('click', handleExport);
+
+    // --- Start the application ---
+    startApp();
 });
 </script>
 
