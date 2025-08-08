@@ -467,7 +467,7 @@
         }
     }
     
-    // --- Function to render each item with new UI ---
+    // --- [MODIFIED] Function to render each item with new UI ---
     function renderWorkItem(item) {
         const isManual = !item.original;
         const isValidated = item.actual.isValidated;
@@ -481,7 +481,7 @@
         const displayVariance = variance !== null ? variance : '-';
         const varianceColor = variance === null || variance === 0 ? 'text-gray-700' : (variance > 0 ? 'text-green-600' : 'text-red-600');
         
-        const binBox = item.actual.kodeBinBox ?? (item.original?.kodeBinBox || '');
+        const binBox = item.actual.kodeBinBox ?? (item.original?.kodeBinBox || 'N/A');
         const cardBg = isManual ? 'bg-blue-50' : 'bg-white';
         const borderColor = isValidated ? 'border-green-500' : (isManual ? 'border-blue-200' : 'border-gray-200');
         const kodeProduk = item.original?.kodeProduk || item.actual.kodeProduk;
@@ -496,6 +496,7 @@
                     
                     <div class="text-sm text-gray-600 mt-2 pt-2 border-t">
                         <p class="font-mono">
+                            <span class="font-semibold text-gray-800" title="Bin Location">${binBox}</span> - 
                             <span title="System Quantity">${originalQty}</span> / 
                             <span title="Counted Quantity" class="font-bold text-blue-600">${displayCountedQty}</span> / 
                             <span title="Variance" class="font-bold ${varianceColor}">${displayVariance}</span>
@@ -517,7 +518,7 @@
                     </div>
                     <div class="mb-3 relative">
                         <label class="block text-sm font-medium text-gray-700">Bin Location</label>
-                        <input type="text" value="${binBox}" class="item-input mt-1 shadow-sm border-gray-300 rounded-md w-full" data-field="kodeBinBox" autocomplete="off" ${isDisabled}>
+                        <input type="text" value="${item.actual.kodeBinBox ?? (item.original?.kodeBinBox || '')}" class="item-input mt-1 shadow-sm border-gray-300 rounded-md w-full" data-field="kodeBinBox" autocomplete="off" ${isDisabled}>
                     </div>
                     <div class="mb-3">
                         <label class="block text-sm font-medium text-gray-700">Notes</label>
@@ -565,7 +566,7 @@
 
                 const changes = [];
                 if (newQty !== item.actual.countedQty) changes.push(`Qty: ${item.actual.countedQty ?? 'empty'} -> ${newQty ?? 'empty'}`);
-                if (newBinBox !== item.actual.kodeBinBox) changes.push(`Bin: '${item.actual.kodeBinBox}' -> '${newBinBox}'`);
+                if (newBinBox !== (item.actual.kodeBinBox ?? (item.original?.kodeBinBox || ''))) changes.push(`Bin: '${item.actual.kodeBinBox}' -> '${newBinBox}'`);
                 if (newNotes !== item.actual.notes) changes.push(`Notes added/changed`);
                 if (newBinNotEmpty !== item.actual.binWasNotEmpty) changes.push(`Bin Occupied: ${newBinNotEmpty}`);
 
@@ -914,7 +915,7 @@
         }
     });
 
-    // --- [MODIFIED] Export Logic ---
+    // --- Export Logic ---
     async function getExportData() {
         const event = await getEvent(currentEventId);
         if (!event) {
