@@ -1,0 +1,1554 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Manajer Keuangan</title>
+    <meta name="description" content="Aplikasi manajemen pengeluaran pribadi yang simpel dan modern.">
+
+    <style>
+        :root {
+            --bg-color: #F3F4F6; --card-bg: #FFFFFF; --text-primary: #1F2937; --text-secondary: #6B7280; --primary-color: #4F46E5; --primary-hover: #4338CA; --danger-color: #DC2626; --success-color: #16A34A; --border-color: #E5E7EB; --font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: var(--font-family); background-color: var(--bg-color); color: var(--text-primary); -webkit-tap-highlight-color: transparent; }
+        .container { max-width: 600px; margin: 0 auto; padding: 1rem; min-height: 100vh; }
+        .screen { display: none; flex-direction: column; gap: 1.5rem; height: 100%; }
+        .screen.active { display: flex; }
+        .card { background-color: var(--card-bg); border-radius: 0.75rem; padding: 1.25rem; box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1); }
+        .btn { display: inline-block; padding: 0.75rem 1rem; border: none; border-radius: 0.5rem; font-weight: 600; cursor: pointer; text-align: center; transition: background-color 0.2s ease, transform 0.1s ease; }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background-color: var(--primary-color); color: white; }
+        .btn-primary:hover { background-color: var(--primary-hover); }
+        .btn-danger { background-color: var(--danger-color); color: white; }
+        .btn-secondary { background-color: var(--border-color); color: var(--text-primary); }
+        .input-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .input-group label { font-weight: 500; color: var(--text-secondary); }
+        .input, select { width: 100%; padding: 0.75rem; border: 1px solid var(--border-color); border-radius: 0.5rem; font-size: 1rem; background-color: #F9FAFB; }
+        .input:focus, select:focus { outline: none; border-color: var(--primary-color); box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .header { display: flex; justify-content: space-between; align-items: center; }
+        .header h1 { font-size: 1.5rem; }
+        .header-actions { display: flex; align-items: center; gap: 0.5rem; }
+        .settings-btn, .back-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.5rem; font-size: 1.5rem; }
+        
+        /* Balance Display Update */
+        .balance-grid {
+            display: flex;
+            flex-direction: column;
+            gap: 0.75rem;
+        }
+        .balance-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .balance-item h2 {
+            font-size: clamp(0.9rem, 3vw, 1rem);
+            color: var(--text-secondary);
+        }
+        .balance-item p {
+            font-size: clamp(1.1rem, 5vw, 1.5rem);
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .balance-toggle-btn {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: var(--text-secondary);
+            padding: 0.25rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        /* Main Actions Buttons Update */
+        .main-actions-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 0.75rem; }
+        .action-btn-main { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 0.5rem; padding: 0.75rem; background-color: #EEF2FF; color: var(--primary-color); border-radius: 0.75rem; cursor: pointer; border: none; text-align: center; font-weight: 600; font-size: clamp(0.7rem, 2.2vw, 0.8rem); transition: background-color 0.2s; }
+        .action-btn-main:hover { background-color: #E0E7FF; }
+        .action-btn-main .icon { font-size: 1.5rem; }
+
+        .history-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 0.5rem; }
+        .history-header h2 { font-size: 1.25rem; }
+        .filter-btn { background: none; border: none; cursor: pointer; color: var(--primary-color); font-weight: 600; }
+        .history-filters { display: flex; gap: 0.5rem; margin-bottom: 1rem; flex-wrap: wrap; }
+        .history-filter-btn { background-color: var(--border-color); color: var(--text-secondary); border: none; padding: 0.5rem 0.75rem; border-radius: 1rem; font-size: 0.8rem; cursor: pointer; transition: background-color 0.2s, color 0.2s; }
+        .history-filter-btn.active { background-color: var(--primary-color); color: white; font-weight: 600; }
+        .total-summary-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; margin-bottom: 1rem; text-align: center; border-top: 1px solid var(--border-color); padding-top: 1rem; }
+        .total-summary-grid .summary-label { font-size: 0.8rem; color: var(--text-secondary); }
+        .total-summary-grid p { font-weight: 600; font-size: 1.1rem; }
+        .income-total { color: var(--success-color); }
+        .expense-total { color: var(--danger-color); }
+        .accordion-item { border-bottom: 1px solid var(--border-color); }
+        .accordion-item:last-child { border-bottom: none; }
+        .accordion-header { width: 100%; background: none; border: none; text-align: left; padding: 1rem 0; cursor: pointer; display: flex; justify-content: space-between; align-items: center; font-size: 1rem; }
+        .accordion-header-title { font-weight: 600; }
+        .accordion-totals { display: flex; flex-direction: column; align-items: flex-end; font-size: 0.8rem; }
+        .accordion-totals .income-total { color: var(--success-color); }
+        .accordion-totals .expense-total { color: var(--danger-color); }
+        .accordion-content { max-height: 0; overflow: hidden; transition: max-height 0.3s ease-out; }
+        .transaction-list { list-style: none; padding-bottom: 1rem; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: flex-start; padding: 0.75rem 0.5rem; border-radius: 0.25rem; }
+        .transaction-item:hover { background-color: var(--bg-color); }
+        .transaction-details { display: flex; align-items: flex-start; gap: 1rem; }
+        .transaction-icon { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; flex-shrink: 0; margin-top: 4px; }
+        .transaction-icon.expense { background-color: #FEE2E2; color: #B91C1C; }
+        .transaction-icon.transfer { background-color: #E0E7FF; color: #4F46E5; }
+        .transaction-icon.income { background-color: #D1FAE5; color: #047857; }
+        .transaction-icon.savings { background-color: #FEF3C7; color: #92400E; }
+        .transaction-info .kategori { font-weight: 600; }
+        .transaction-info .deskripsi { font-size: 0.9rem; color: var(--text-secondary); }
+        .transaction-amount { text-align: right; flex-shrink: 0; }
+        .transaction-amount p { font-weight: 600; color: var(--danger-color); }
+        .transaction-amount p.income { color: var(--success-color); }
+        .transaction-amount p.neutral { color: var(--text-secondary); }
+        .transaction-amount .timestamp { font-size: 0.75rem; color: var(--text-secondary); margin-top: 0.2rem; }
+        .transaction-actions { display: flex; gap: 0.5rem; margin-top: 0.25rem; }
+        .tx-action-btn { background: none; border: none; cursor: pointer; font-size: 0.75rem; padding: 0.2rem; }
+        .tx-action-btn.edit { color: var(--primary-color); }
+        .tx-action-btn.delete { color: var(--danger-color); }
+        
+        /* Savings Screen */
+        .savings-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 1rem; }
+        .distribution-summary { text-align: center; padding: 1rem; background-color: #EEF2FF; border-radius: 0.5rem; }
+        .distribution-summary p { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); }
+        .distribution-summary span { font-size: 0.9rem; color: var(--text-secondary); }
+        .undistributed-card { display: flex; justify-content: space-between; align-items: center; }
+        .undistributed-card h3 { font-size: 1rem; font-weight: 600; }
+        .undistributed-card p { font-size: 1.1rem; color: var(--text-secondary); }
+        .total-savings-card { text-align: center; }
+        .total-savings-card h3 { font-size: 1rem; font-weight: 600; color: var(--text-secondary); }
+        .total-savings-card p { font-size: 1.5rem; font-weight: 700; color: var(--success-color); }
+        .goal-list { display: flex; flex-direction: column; gap: 1rem; }
+        .goal-card { padding: 1rem; border-radius: 0.5rem; background-color: var(--card-bg); box-shadow: 0 2px 4px -2px rgba(0,0,0,0.1); }
+        .goal-header { display: flex; justify-content: space-between; align-items: flex-start; }
+        .goal-info { display: flex; align-items: center; gap: 1rem; }
+        .goal-icon { font-size: 1.5rem; }
+        .goal-details h4 { font-size: 1rem; font-weight: 600; }
+        .goal-details p { font-size: 0.9rem; color: var(--text-secondary); }
+        .goal-dist { text-align: right; }
+        .goal-dist p { font-size: 1.25rem; font-weight: 700; color: var(--primary-color); }
+        .goal-edit-btn { background: none; border: none; cursor: pointer; color: var(--text-secondary); padding: 0.5rem; }
+        .progress-bar-container { width: 100%; background-color: var(--border-color); border-radius: 1rem; height: 10px; margin-top: 0.75rem; overflow: hidden; }
+        .progress-bar { height: 100%; width: 0%; background-color: var(--success-color); border-radius: 1rem; transition: width 0.5s ease-in-out; }
+        .progress-text { text-align: right; font-size: 0.8rem; color: var(--text-secondary); margin-top: 0.25rem; }
+        .range-slider-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .range-slider-group .range-value { text-align: center; font-weight: 600; font-size: 1.1rem; color: var(--primary-color); }
+
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background-color: rgba(0, 0, 0, 0.5); display: none; justify-content: center; align-items: center; z-index: 1000; }
+        .modal-overlay.active { display: flex; }
+        .modal-content { background-color: var(--card-bg); padding: 1.5rem; border-radius: 0.75rem; width: 90%; max-width: 400px; display: flex; flex-direction: column; gap: 1rem; transform: scale(0.95); opacity: 0; transition: transform 0.2s ease, opacity 0.2s ease; }
+        .modal-overlay.active .modal-content { transform: scale(1); opacity: 1; }
+        .modal-header { display: flex; justify-content: space-between; align-items: center; }
+        .modal-header h3 { font-size: 1.25rem; }
+        .modal-close-btn { background: none; border: none; font-size: 1.5rem; cursor: pointer; color: var(--text-secondary); }
+        .modal-step { display: none; }
+        .modal-step.active { display: flex; flex-direction: column; gap: 1rem; }
+        .modal-error { color: var(--danger-color); font-size: 0.875rem; text-align: center; display: none; }
+        #toast { position: fixed; bottom: -100px; left: 50%; transform: translateX(-50%); background-color: var(--text-primary); color: white; padding: 0.75rem 1.5rem; border-radius: 2rem; font-weight: 500; box-shadow: 0 4px 10px rgba(0,0,0,0.2); transition: bottom 0.5s ease-in-out; z-index: 2000; }
+        #toast.show { bottom: 20px; }
+        .switch { position: relative; display: inline-block; width: 50px; height: 28px; }
+        .switch input { opacity: 0; width: 0; height: 0; }
+        .slider { position: absolute; cursor: pointer; top: 0; left: 0; right: 0; bottom: 0; background-color: #ccc; transition: .4s; border-radius: 34px; }
+        .slider:before { position: absolute; content: ""; height: 20px; width: 20px; left: 4px; bottom: 4px; background-color: white; transition: .4s; border-radius: 50%; }
+        input:checked + .slider { background-color: var(--primary-color); }
+        input:checked + .slider:before { transform: translateX(22px); }
+        .switch-container { display: flex; justify-content: space-between; align-items: center; }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- ===== SETUP SCREEN ===== -->
+        <div id="setup-screen" class="screen">
+            <div class="card">
+                <h1>Selamat Datang!</h1>
+                <p>Silakan atur akun Anda untuk memulai.</p>
+            </div>
+            <form id="setup-form" class="card" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-group"><label for="username">Nama Pengguna</label><input type="text" id="username" class="input" placeholder="Contoh: Budi" required></div>
+                <div class="input-group"><label for="rekening-awal">Saldo Rekening Awal</label><input type="text" id="rekening-awal" class="input currency-input" placeholder="Contoh: 5.000.000" required inputmode="numeric"></div>
+                <div class="input-group"><label for="dompet-awal">Saldo Dompet Awal</label><input type="text" id="dompet-awal" class="input currency-input" placeholder="Contoh: 200.000" required inputmode="numeric"></div>
+                <div class="input-group"><label for="password-setup">Password Aplikasi</label><input type="password" id="password-setup" class="input" placeholder="Buat password rahasia" required></div>
+                <button type="submit" class="btn btn-primary">Mulai</button>
+            </form>
+        </div>
+
+        <!-- ===== PASSWORD SCREEN ===== -->
+        <div id="password-screen" class="screen">
+            <div class="card" style="margin: auto;">
+                <form id="password-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <h2 style="text-align: center;">Masukkan Password</h2>
+                    <div class="input-group"><label for="password-login">Password</label><input type="password" id="password-login" class="input" placeholder="Masukkan password Anda" required></div>
+                    <button type="submit" class="btn btn-primary">Buka</button>
+                </form>
+            </div>
+        </div>
+
+        <!-- ===== MAIN APP SCREEN ===== -->
+        <div id="app-screen" class="screen">
+            <header class="header">
+                <div>
+                    <p class="text-secondary">Selamat datang,</p>
+                    <h1 id="user-greeting">Pengguna</h1>
+                </div>
+                <div class="header-actions">
+                    <button id="settings-btn" class="settings-btn" title="Pengaturan">⚙️</button>
+                </div>
+            </header>
+
+            <div class="card balance-grid">
+                <div class="balance-item">
+                    <h2>Rekening</h2>
+                    <p>
+                        <span id="rekening-balance">Rp ******</span>
+                        <button id="rekening-visibility-toggle" class="balance-toggle-btn" title="Tampilkan/Sembunyikan Saldo">
+                            <svg class="icon-eye" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M10.5 8a2.5 2.5 0 1 1-5 0 2.5 2.5 0 0 1 5 0z"/><path d="M0 8s3-5.5 8-5.5S16 8 16 8s-3 5.5-8 5.5S0 8 0 8zm8 3.5a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7z"/></svg>
+                            <svg class="icon-eye-slash" xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16" style="display: none;"><path d="m10.79 12.912-1.614-1.615a3.5 3.5 0 0 1-4.474-4.474l-2.06-2.06C.938 6.278 0 8 0 8s3 5.5 8 5.5a7.029 7.029 0 0 0 2.79-.588zM5.21 3.088A7.028 7.028 0 0 1 8 2.5c5 0 8 5.5 8 5.5s-.939 1.721-2.641 3.238l-2.062-2.062a3.5 3.5 0 0 0-4.474-4.474L5.21 3.089z"/><path d="M5.525 7.646a2.5 2.5 0 0 0 2.829 2.829l-2.83-2.829zm4.95.708-2.829-2.83a2.5 2.5 0 0 1 2.829 2.829zm3.171 6-12-12 .708-.708 12 12-.708.708z"/></svg>
+                        </button>
+                    </p>
+                </div>
+                <div class="balance-item">
+                    <h2>Dompet</h2>
+                    <p id="dompet-balance">Rp 0</p>
+                </div>
+                <div class="balance-item">
+                    <h2>Tabungan</h2>
+                    <p id="tabungan-balance">Rp 0</p>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="main-actions-grid">
+                    <button id="btn-tambah-pengeluaran" class="action-btn-main" title="Tambah Pengeluaran"><span class="icon">➕</span>Keluar</button>
+                    <button id="btn-tabungan" class="action-btn-main" title="Tabungan"><span class="icon">🏦</span>Tabungan</button>
+                    <button id="btn-tarik-tunai" class="action-btn-main" title="Tarik Tunai"><span class="icon">💸</span>Tarik</button>
+                    <button id="btn-tambah-saldo" class="action-btn-main" title="Tambah Saldo"><span class="icon">📥</span>Saldo</button>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="history-header">
+                    <h2>Transaksi</h2>
+                    <button id="btn-filter-date" class="filter-btn">Filter</button>
+                </div>
+                <div class="history-filters">
+                    <button class="history-filter-btn active" data-filter="all">Semua</button>
+                    <button class="history-filter-btn" data-filter="expense">Keluar</button>
+                    <button class="history-filter-btn" data-filter="income">Masuk</button>
+                    <button class="history-filter-btn" data-filter="savings">Tabungan</button>
+                </div>
+                <div id="total-summary" class="total-summary-grid">
+                    <div>
+                        <span class="summary-label">Pemasukan</span>
+                        <p id="total-pemasukan" class="income-total">Rp 0</p>
+                    </div>
+                    <div>
+                        <span class="summary-label">Pengeluaran</span>
+                        <p id="total-pengeluaran" class="expense-total">Rp 0</p>
+                    </div>
+                </div>
+                <div id="history-list"><p style="text-align: center; color: var(--text-secondary);">Belum ada transaksi.</p></div>
+            </div>
+        </div>
+
+        <!-- ===== SAVINGS SCREEN ===== -->
+        <div id="savings-screen" class="screen">
+            <header class="header">
+                <button id="savings-back-btn" class="back-btn" title="Kembali">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M11.354 1.646a.5.5 0 0 1 0 .708L5.707 8l5.647 5.646a.5.5 0 0 1-.708.708l-6-6a.5.5 0 0 1 0-.708l6-6a.5.5 0 0 1 .708 0z"/></svg>
+                </button>
+                <h1>Tabungan</h1>
+                <div style="width: 40px;"></div> <!-- Spacer -->
+            </header>
+
+            <div class="card">
+                <div class="savings-actions">
+                    <button id="btn-tambah-goal" class="btn btn-primary">🎯 Goal Baru</button>
+                    <button id="btn-tambah-tabungan" class="btn btn-secondary">💰 Nabung</button>
+                </div>
+            </div>
+
+            <div class="card total-savings-card">
+                <h3>Total Dana Goal</h3>
+                <p id="total-savings-balance">Rp 0</p>
+            </div>
+
+            <div class="card undistributed-card">
+                <div>
+                    <h3>Dana Siap Distribusi</h3>
+                    <p id="undistributed-balance">Rp 0</p>
+                </div>
+                <button id="btn-distribusi" class="btn btn-primary">Alokasikan</button>
+            </div>
+
+            <div class="card distribution-summary">
+                <p id="distribution-total">0% / 100%</p>
+                <span>Alokasi Goal</span>
+            </div>
+            
+            <div id="goal-list-container" class="goal-list">
+                <!-- Goal cards will be rendered here -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODALS -->
+    <div id="pengeluaran-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="pengeluaran-modal-title">Tambah Pengeluaran</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="pengeluaran-form">
+                <input type="hidden" id="pengeluaran-id">
+                <div id="pengeluaran-step-1" class="modal-step active">
+                    <div class="input-group"><label for="pengeluaran-nominal">Jumlah</label><input type="text" id="pengeluaran-nominal" class="input currency-input" placeholder="Contoh: 25.000" required inputmode="numeric"></div>
+                    <div class="input-group"><label for="pengeluaran-sumber">Sumber Dana</label>
+                        <select id="pengeluaran-sumber" class="input" required>
+                            <option value="Dompet">Dompet</option>
+                            <option value="Rekening">Rekening</option>
+                            <option value="Tabungan">Tabungan</option>
+                        </select>
+                    </div>
+                    <div class="input-group" id="pengeluaran-sumber-tabungan-group" style="display: none;">
+                        <label for="pengeluaran-sumber-tabungan">Pilih Goal</label>
+                        <select id="pengeluaran-sumber-tabungan" class="input"></select>
+                    </div>
+                    <button type="button" id="btn-pengeluaran-next" class="btn btn-primary">➡️</button>
+                </div>
+                <div id="pengeluaran-step-2" class="modal-step">
+                    <div class="input-group"><label for="pengeluaran-kategori">Kategori</label>
+                        <select id="pengeluaran-kategori" class="input" required>
+                            <option value="🍔 Makanan & Minuman">🍔 Makanan & Minuman</option>
+                            <option value="🚗 Transportasi">🚗 Transportasi</option>
+                            <option value="🧾 Tagihan">🧾 Tagihan</option>
+                            <option value="🛍️ Belanja">🛍️ Belanja</option>
+                            <option value="🎬 Hiburan">🎬 Hiburan</option>
+                            <option value="💊 Kesehatan">💊 Kesehatan</option>
+                            <option value="🎓 Pendidikan">🎓 Pendidikan</option>
+                            <option value="🎁 Hadiah & Donasi">🎁 Hadiah & Donasi</option>
+                            <option value="👨‍👩‍👧‍👦 Keluarga">👨‍👩‍👧‍👦 Keluarga</option>
+                            <option value="📦 Lainnya">📦 Lainnya</option>
+                        </select>
+                    </div>
+                    <div class="input-group"><label for="pengeluaran-deskripsi">Deskripsi (Opsional)</label><input type="text" id="pengeluaran-deskripsi" class="input" placeholder="Cth: Beli Kopi Susu"></div>
+                    <div style="display: flex; gap: 0.5rem;"><button type="button" id="btn-pengeluaran-back" class="btn btn-secondary" style="flex-grow: 1;">⬅️</button><button type="submit" class="btn btn-primary" style="flex-grow: 1;">Simpan</button></div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="tarik-tunai-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="tarik-tunai-modal-title">Tarik Tunai</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="tarik-tunai-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="tarik-tunai-id">
+                <div class="input-group"><label for="tarik-tunai-amount">Jumlah</label><input type="text" id="tarik-tunai-amount" class="input currency-input" placeholder="Contoh: 100.000" required inputmode="numeric"></div>
+                <p id="tarik-tunai-error" class="modal-error">Saldo rekening tidak cukup.</p>
+                <button type="submit" class="btn btn-primary">Tarik</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="tambah-saldo-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="tambah-saldo-modal-title">Tambah Saldo</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="tambah-saldo-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="tambah-saldo-id">
+                <div class="input-group"><label for="tambah-saldo-amount">Jumlah</label><input type="text" id="tambah-saldo-amount" class="input currency-input" placeholder="Contoh: 500.000" required inputmode="numeric"></div>
+                <div class="input-group"><label for="tambah-saldo-sumber">Sumber Dana</label>
+                    <select id="tambah-saldo-sumber" class="input">
+                        <option value="Lainnya">Pemasukan Baru</option>
+                        <option value="Dompet">Pindah dari Dompet</option>
+                    </select>
+                </div>
+                <div class="input-group" id="tambah-saldo-deskripsi-group" style="display: flex;"><label for="tambah-saldo-deskripsi">Deskripsi (Opsional)</label><input type="text" id="tambah-saldo-deskripsi" class="input" placeholder="Contoh: Gaji, Bonus"></div>
+                <div class="input-group"><label for="tambah-saldo-tujuan">Tujuan Saldo</label>
+                    <select id="tambah-saldo-tujuan" class="input">
+                        <option value="Rekening">Rekening</option>
+                        <option value="Dompet">Dompet</option>
+                    </select>
+                </div>
+                <p id="tambah-saldo-error" class="modal-error">Saldo dompet tidak cukup.</p>
+                <button type="submit" class="btn btn-primary">Tambah</button>
+            </form>
+        </div>
+    </div>
+    
+    <div id="goal-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="goal-modal-title">Goal Baru</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="goal-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <input type="hidden" id="goal-id">
+                <div class="input-group"><label for="goal-title">Nama Goal</label><input type="text" id="goal-title" class="input" placeholder="Contoh: Dana Darurat" required></div>
+                <div class="input-group"><label for="goal-target">Target Nominal</label><input type="text" id="goal-target" class="input currency-input" placeholder="Contoh: 1.000.000" required inputmode="numeric"></div>
+                <div class="input-group"><label for="goal-category">Kategori</label>
+                    <select id="goal-category" class="input" required>
+                        <option value="🚨 Keamanan">🚨 Keamanan</option>
+                        <option value="✈️ Liburan">✈️ Liburan</option>
+                        <option value="💻 Gadget">💻 Gadget</option>
+                        <option value="🏠 Rumah">🏠 Rumah</option>
+                        <option value="🚗 Kendaraan">🚗 Kendaraan</option>
+                        <option value="🎓 Pendidikan">🎓 Pendidikan</option>
+                        <option value="❤️ Pernikahan">❤️ Pernikahan</option>
+                        <option value="📦 Lainnya">📦 Lainnya</option>
+                    </select>
+                </div>
+                <div class="range-slider-group">
+                    <label for="goal-percentage">Alokasi Dana (%)</label>
+                    <input type="range" id="goal-percentage" min="0" max="100" value="0" class="input">
+                    <div class="range-value"><span id="goal-percentage-value">0</span>%</div>
+                </div>
+                <div style="display: flex; gap: 0.5rem;">
+                    <button type="button" id="btn-delete-goal" class="btn btn-danger" style="flex-grow: 1; display: none;">Hapus</button>
+                    <button type="submit" class="btn btn-primary" style="flex-grow: 1;">Simpan</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <div id="add-savings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Tambah Tabungan</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="add-savings-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-group"><label for="add-savings-amount">Jumlah</label><input type="text" id="add-savings-amount" class="input currency-input" placeholder="Contoh: 15.000" required inputmode="numeric"></div>
+                <div class="input-group"><label for="add-savings-sumber">Sumber Dana</label>
+                    <select id="add-savings-sumber" class="input" required>
+                        <option value="Rekening">Rekening</option>
+                        <option value="Dompet">Dompet</option>
+                    </select>
+                </div>
+                <p id="add-savings-error" class="modal-error">Saldo tidak cukup.</p>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="distribusi-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Pilih Metode Alokasi</h3><button class="modal-close-btn">&times;</button></div>
+            <div id="distribusi-step-1" class="modal-step active">
+                <button id="btn-distribusi-persen" class="btn btn-primary">Sesuai Persen</button>
+                <button id="btn-distribusi-langsung-choice" class="btn btn-secondary">Langsung ke Goal</button>
+            </div>
+            <div id="distribusi-step-2" class="modal-step">
+                <form id="distribusi-langsung-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                    <p>Pindahkan dana dari tabungan sementara langsung ke goal spesifik.</p>
+                    <div class="input-group">
+                        <label for="distribusi-langsung-goal">Pilih Goal Tujuan</label>
+                        <select id="distribusi-langsung-goal" class="input" required></select>
+                    </div>
+                    <div class="input-group">
+                        <label for="distribusi-langsung-amount">Jumlah</label>
+                        <input type="text" id="distribusi-langsung-amount" class="input currency-input" placeholder="Contoh: 10.000" required inputmode="numeric">
+                    </div>
+                    <div style="display: flex; gap: 0.5rem;">
+                        <button type="button" id="btn-distribusi-langsung-back" class="btn btn-secondary" style="flex-grow: 1;">⬅️</button>
+                        <button type="submit" class="btn btn-primary" style="flex-grow: 1;">Pindahkan</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div id="filter-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Filter Tanggal</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="filter-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-group"><label for="start-date">Tanggal Mulai</label><input type="date" id="start-date" class="input" required></div>
+                <div class="input-group"><label for="end-date">Tanggal Selesai</label><input type="date" id="end-date" class="input" required></div>
+                <div style="display: flex; gap: 0.5rem;"><button type="button" id="reset-filter-btn" class="btn btn-secondary" style="flex-grow: 1;">Ulang</button><button type="submit" class="btn btn-primary" style="flex-grow: 1;">OK</button></div>
+            </form>
+        </div>
+    </div>
+
+    <div id="settings-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Pengaturan</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="settings-form" style="display: flex; flex-direction: column; gap: 1.5rem;">
+                <div class="input-group"><label for="settings-username">Nama Pengguna</label><input type="text" id="settings-username" class="input" placeholder="Nama panggilan Anda" required></div>
+                <div class="input-group"><label for="settings-rekening">Saldo Rekening</label><input type="text" id="settings-rekening" class="input currency-input" placeholder="Saldo rekening saat ini" required inputmode="numeric"></div>
+                <div class="input-group"><label for="settings-dompet">Saldo Dompet</label><input type="text" id="settings-dompet" class="input currency-input" placeholder="Saldo dompet saat ini" required inputmode="numeric"></div>
+                <div class="switch-container">
+                    <label for="lock-switch">Kunci Aplikasi</label>
+                    <label class="switch">
+                        <input type="checkbox" id="lock-switch">
+                        <span class="slider"></span>
+                    </label>
+                </div>
+                <button type="submit" class="btn btn-primary">Simpan</button>
+            </form>
+            <div style="border-top: 1px solid var(--border-color); padding-top: 1rem; display: flex; flex-direction: column; gap: 0.75rem;">
+                <h4 style="text-align: center; color: var(--text-secondary);">Cadangkan & Pulihkan</h4>
+                <button id="btn-export" class="btn btn-secondary">📄 Ekspor Data</button>
+                <button id="btn-import" class="btn btn-secondary">📥 Impor Data</button>
+                <input type="file" id="import-file-input" accept=".json" style="display: none;">
+            </div>
+        </div>
+    </div>
+
+    <div id="password-prompt-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3>Masukkan Password</h3><button class="modal-close-btn">&times;</button></div>
+            <form id="password-prompt-form" style="display: flex; flex-direction: column; gap: 1rem;">
+                <div class="input-group"><label for="password-prompt-input">Password</label><input type="password" id="password-prompt-input" class="input" placeholder="Password Anda" required></div>
+                <p id="password-prompt-error" class="modal-error">Password salah.</p>
+                <button type="submit" class="btn btn-primary">Buka</button>
+            </form>
+        </div>
+    </div>
+
+    <div id="delete-confirm-modal" class="modal-overlay">
+        <div class="modal-content">
+            <div class="modal-header"><h3 id="confirm-title">Konfirmasi Hapus</h3><button class="modal-close-btn">&times;</button></div>
+            <p id="confirm-text">Anda yakin ingin menghapus ini? Tindakan ini tidak dapat diurungkan.</p>
+            <div style="display: flex; gap: 0.5rem; justify-content: flex-end;">
+                <button id="btn-cancel-confirm" class="btn btn-secondary">Batal</button>
+                <button id="btn-confirm-action" class="btn btn-danger">Ya, Hapus</button>
+            </div>
+        </div>
+    </div>
+    
+    <div id="toast"></div>
+
+    <script type="text/javascript">
+        document.addEventListener('DOMContentLoaded', () => {
+            const screens = { 
+                setup: document.getElementById('setup-screen'), 
+                password: document.getElementById('password-screen'), 
+                app: document.getElementById('app-screen'),
+                savings: document.getElementById('savings-screen')
+            };
+            const userGreeting = document.getElementById('user-greeting');
+            const rekeningBalanceEl = document.getElementById('rekening-balance');
+            const dompetBalanceEl = document.getElementById('dompet-balance');
+            const tabunganBalanceEl = document.getElementById('tabungan-balance');
+            const historyListEl = document.getElementById('history-list');
+            const totalPemasukanEl = document.getElementById('total-pemasukan');
+            const totalPengeluaranEl = document.getElementById('total-pengeluaran');
+            const modals = {
+                pengeluaran: document.getElementById('pengeluaran-modal'),
+                tarikTunai: document.getElementById('tarik-tunai-modal'),
+                tambahSaldo: document.getElementById('tambah-saldo-modal'),
+                filter: document.getElementById('filter-modal'),
+                settings: document.getElementById('settings-modal'),
+                passwordPrompt: document.getElementById('password-prompt-modal'),
+                deleteConfirm: document.getElementById('delete-confirm-modal'),
+                goal: document.getElementById('goal-modal'),
+                addSavings: document.getElementById('add-savings-modal'),
+                distribusi: document.getElementById('distribusi-modal')
+            };
+
+            let db, currentUser = {}, savingsGoals = [], passwordPromptCallback = null, currentHistoryFilter = 'all', transactionToDelete = null;
+
+            const DB_NAME = 'PengeluaranDB_v14', USER_STORE = 'user', TRANSAKSI_STORE = 'transaksi', GOAL_STORE = 'goals';
+            function initDB() {
+                return new Promise((resolve, reject) => {
+                    const request = indexedDB.open(DB_NAME, 1);
+                    request.onerror = e => reject('DB error: ' + e.target.errorCode);
+                    request.onupgradeneeded = e => {
+                        const db = e.target.result;
+                        if (!db.objectStoreNames.contains(USER_STORE)) db.createObjectStore(USER_STORE, { keyPath: 'id' });
+                        if (!db.objectStoreNames.contains(TRANSAKSI_STORE)) {
+                            const store = db.createObjectStore(TRANSAKSI_STORE, { keyPath: 'id', autoIncrement: true });
+                            store.createIndex('tanggal', 'tanggal', { unique: false });
+                        }
+                        if (!db.objectStoreNames.contains(GOAL_STORE)) {
+                            db.createObjectStore(GOAL_STORE, { keyPath: 'id', autoIncrement: true });
+                        }
+                    };
+                    request.onsuccess = e => { db = e.target.result; resolve(db); };
+                });
+            }
+
+            function dbAction(storeName, mode, action, data) {
+                return new Promise((resolve, reject) => {
+                    const tx = db.transaction(storeName, mode);
+                    const store = tx.objectStore(storeName);
+                    const request = store[action](data);
+                    request.onsuccess = () => resolve(request.result);
+                    request.onerror = e => reject(`Error ${action} data: ${e.target.errorCode}`);
+                });
+            }
+            const saveData = (store, data) => dbAction(store, 'readwrite', 'put', data);
+            const getData = (store, key) => dbAction(store, 'readonly', 'get', key);
+            const getAllData = (store) => dbAction(store, 'readonly', 'getAll');
+            const deleteData = (store, key) => dbAction(store, 'readwrite', 'delete', key);
+            
+            function getTransactions(startDate, endDate) {
+                return new Promise((resolve, reject) => {
+                    const store = db.transaction(TRANSAKSI_STORE, 'readonly').objectStore(TRANSAKSI_STORE);
+                    const index = store.index('tanggal');
+                    const range = (startDate && endDate) ? IDBKeyRange.bound(startDate, endDate) : null;
+                    const request = range ? index.getAll(range) : index.getAll();
+                    request.onsuccess = () => resolve(request.result.sort((a,b) => new Date(b.tanggal) - new Date(a.tanggal)));
+                    request.onerror = e => reject('Error getting transactions: ' + e.target.errorCode);
+                });
+            }
+
+            function showScreen(name) { Object.values(screens).forEach(s => s.classList.remove('active')); screens[name].classList.add('active'); }
+            function openModal(name) { modals[name].classList.add('active'); }
+            function closeModal(name) {
+                modals[name].classList.remove('active');
+                const errorEl = modals[name].querySelector('.modal-error');
+                if (errorEl) errorEl.style.display = 'none';
+            }
+            document.querySelectorAll('.modal-close-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('active')));
+
+            const formatCurrency = amount => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+            const formatNumber = number => new Intl.NumberFormat('id-ID').format(number);
+            const parseCurrencyValue = value => parseFloat(String(value).replace(/[^0-9]/g, '')) || 0;
+
+            function formatInputAsCurrency(inputEl) {
+                let value = inputEl.value.replace(/[^0-9]/g, '');
+                if (value) {
+                    const formattedValue = formatNumber(value);
+                    inputEl.value = formattedValue;
+                } else {
+                    inputEl.value = '';
+                }
+            }
+
+            function showToast(message) {
+                const toast = document.getElementById('toast');
+                toast.textContent = message; toast.classList.add('show');
+                setTimeout(() => toast.classList.remove('show'), 3000);
+            }
+            
+            function toggleRekeningVisibility(show) {
+                const toggleButton = document.getElementById('rekening-visibility-toggle');
+                const iconEye = toggleButton.querySelector('.icon-eye');
+                const iconEyeSlash = toggleButton.querySelector('.icon-eye-slash');
+                
+                if (show) {
+                    rekeningBalanceEl.textContent = formatCurrency(currentUser.rekening);
+                    iconEye.style.display = 'none';
+                    iconEyeSlash.style.display = 'inline-block';
+                } else {
+                    rekeningBalanceEl.textContent = 'Rp ******';
+                    iconEye.style.display = 'inline-block';
+                    iconEyeSlash.style.display = 'none';
+                }
+            }
+
+            function updateDashboard() {
+                if (!currentUser.name) return;
+                userGreeting.textContent = currentUser.name;
+                dompetBalanceEl.textContent = formatCurrency(currentUser.dompet);
+                const totalTabungan = savingsGoals.reduce((sum, goal) => sum + goal.amount, 0) + (currentUser.tabunganSementara || 0);
+                tabunganBalanceEl.textContent = formatCurrency(totalTabungan);
+                toggleRekeningVisibility(false);
+            }
+
+            function renderHistory(transactions) {
+                historyListEl.innerHTML = '';
+                if (transactions.length === 0) {
+                    historyListEl.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Tidak ada transaksi yang cocok.</p>'; return;
+                }
+                const grouped = transactions.reduce((acc, tx) => {
+                    const date = tx.tanggal.split('T')[0];
+                    if (!acc[date]) acc[date] = [];
+                    acc[date].push(tx); return acc;
+                }, {});
+                const today = new Date().toISOString().split('T')[0];
+                for (const date in grouped) {
+                    const dailyExpenses = grouped[date].filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + tx.nominal, 0);
+                    const dailyIncome = grouped[date].filter(tx => tx.type === 'income').reduce((sum, tx) => sum + tx.nominal, 0);
+
+                    const accordionItem = document.createElement('div');
+                    accordionItem.className = 'accordion-item';
+                    accordionItem.innerHTML = `
+                        <button class="accordion-header">
+                            <span class="accordion-header-title">${date === today ? 'Hari Ini' : formatDate(date)}</span>
+                            <div class="accordion-totals">
+                                ${dailyIncome > 0 ? `<span class="income-total">+${formatCurrency(dailyIncome)}</span>` : ''}
+                                ${dailyExpenses > 0 ? `<span class="expense-total">-${formatCurrency(dailyExpenses)}</span>` : ''}
+                            </div>
+                        </button>
+                        <div class="accordion-content"><ul class="transaction-list"></ul></div>`;
+
+                    const transactionList = accordionItem.querySelector('.transaction-list');
+                    grouped[date].forEach(tx => {
+                        const item = document.createElement('li');
+                        item.className = 'transaction-item';
+                        let icon = '📦', amountClass = 'income', sign = '+', mainText, subText, timeText, actionsHTML = '';
+                        
+                        let editButtonType = '';
+                        if (tx.type === 'expense') {
+                           icon = tx.kategori.split(' ')[0]; amountClass = 'expense'; sign = '-';
+                           mainText = tx.kategori; subText = tx.deskripsi || `Dari ${tx.sumber}`;
+                           editButtonType = 'expense';
+                        } else if (tx.type === 'income') {
+                           icon = '🏦'; amountClass = 'income'; sign = '+';
+                           mainText = tx.deskripsi; subText = tx.sumber;
+                           editButtonType = 'tambahSaldo';
+                        } else if (tx.type === 'transfer') {
+                           icon = '💸'; amountClass = 'neutral'; sign = '';
+                           mainText = tx.deskripsi; subText = tx.sumber;
+                           editButtonType = tx.deskripsi === 'Tarik Tunai' ? 'tarikTunai' : 'tambahSaldo';
+                        } else if (tx.type === 'savings') {
+                            icon = '💰'; amountClass = 'neutral'; sign = '';
+                            mainText = 'Menabung'; subText = `Dari ${tx.sumber}`;
+                        }
+                        timeText = formatTime(tx.tanggal);
+                        
+                        if (tx.type !== 'savings') {
+                            actionsHTML = `
+                                <div class="transaction-actions">
+                                    <button class="tx-action-btn edit" data-id="${tx.id}" data-type="${editButtonType}">Edit</button>
+                                    <button class="tx-action-btn delete" data-id="${tx.id}">Hapus</button>
+                                </div>`;
+                        }
+
+                        item.innerHTML = `
+                            <div class="transaction-details">
+                                <div class="transaction-icon ${tx.type}">${icon}</div>
+                                <div class="transaction-info">
+                                    <div class="kategori">${mainText}</div>
+                                    <div class="deskripsi">${subText}</div>
+                                </div>
+                            </div>
+                            <div class="transaction-amount">
+                                <p class="${amountClass}">${sign} ${formatCurrency(tx.nominal)}</p>
+                                <div class="timestamp">${timeText}</div>
+                                ${actionsHTML}
+                            </div>`;
+                        transactionList.appendChild(item);
+                    });
+                    historyListEl.appendChild(accordionItem);
+                    if (date === today) {
+                        const header = accordionItem.querySelector('.accordion-header');
+                        const content = accordionItem.querySelector('.accordion-content');
+                        content.style.maxHeight = content.scrollHeight + "px";
+                        header.classList.add('active');
+                    }
+                }
+                historyListEl.querySelectorAll('.accordion-header').forEach(h => h.addEventListener('click', () => {
+                    const c = h.nextElementSibling; h.classList.toggle('active');
+                    c.style.maxHeight = c.style.maxHeight ? null : c.scrollHeight + "px";
+                }));
+                
+                historyListEl.querySelectorAll('.tx-action-btn').forEach(btn => btn.addEventListener('click', e => {
+                    e.stopPropagation();
+                    const id = parseInt(e.target.dataset.id);
+                    const type = e.target.dataset.type;
+
+                    if (e.target.classList.contains('edit')) {
+                        if (type === 'expense') openPengeluaranModal('edit', id);
+                        else if (type === 'tarikTunai') openTarikTunaiModal('edit', id);
+                        else if (type === 'tambahSaldo') openTambahSaldoModal('edit', id);
+                    } else if (e.target.classList.contains('delete')) {
+                        transactionToDelete = id;
+                        showConfirmModal('Konfirmasi Hapus', 'Anda yakin ingin menghapus transaksi ini? Tindakan ini tidak dapat diurungkan.', deleteTransaction);
+                    }
+                }));
+            }
+            
+            async function refreshUI(startDate, endDate) {
+                const allTransactionsForPeriod = await getTransactions(startDate, endDate);
+                const totalExpense = allTransactionsForPeriod.filter(tx => tx.type === 'expense').reduce((sum, tx) => sum + tx.nominal, 0);
+                const totalIncome = allTransactionsForPeriod.filter(tx => tx.type === 'income').reduce((sum, tx) => sum + tx.nominal, 0);
+
+                totalPemasukanEl.textContent = formatCurrency(totalIncome);
+                totalPengeluaranEl.textContent = formatCurrency(totalExpense);
+
+                let transactionsToDisplay = allTransactionsForPeriod;
+                if (currentHistoryFilter !== 'all') {
+                    transactionsToDisplay = allTransactionsForPeriod.filter(tx => tx.type === currentHistoryFilter);
+                }
+
+                renderHistory(transactionsToDisplay);
+                updateDashboard();
+            }
+
+            function promptForPassword(onSuccess) {
+                passwordPromptCallback = onSuccess;
+                openModal('passwordPrompt');
+            }
+            
+            // --- SAVINGS SCREEN LOGIC ---
+            const goalListContainer = document.getElementById('goal-list-container');
+            const distributionTotalEl = document.getElementById('distribution-total');
+            const undistributedBalanceEl = document.getElementById('undistributed-balance');
+            const totalSavingsBalanceEl = document.getElementById('total-savings-balance');
+
+            function renderSavingsScreen() {
+                const totalPercentage = savingsGoals.reduce((sum, goal) => sum + goal.percentage, 0);
+                distributionTotalEl.textContent = `${totalPercentage}% / 100%`;
+                undistributedBalanceEl.textContent = formatCurrency(currentUser.tabunganSementara || 0);
+                const totalTerkumpul = savingsGoals.reduce((sum, goal) => sum + goal.amount, 0);
+                totalSavingsBalanceEl.textContent = formatCurrency(totalTerkumpul);
+                
+                goalListContainer.innerHTML = '';
+                if (savingsGoals.length === 0) {
+                    goalListContainer.innerHTML = '<p style="text-align: center; color: var(--text-secondary);">Belum ada goal tabungan. Mulai dengan menekan "Tambah Goal".</p>';
+                    return;
+                }
+
+                savingsGoals.forEach(goal => {
+                    const card = document.createElement('div');
+                    card.className = 'goal-card';
+                    const progress = goal.target > 0 ? (goal.amount / goal.target) * 100 : 0;
+                    
+                    card.innerHTML = `
+                        <div class="goal-header">
+                            <div class="goal-info">
+                                <span class="goal-icon">${goal.category.split(' ')[0]}</span>
+                                <div class="goal-details">
+                                    <h4>${goal.title}</h4>
+                                    <p>${formatCurrency(goal.amount)} / ${formatCurrency(goal.target)}</p>
+                                </div>
+                            </div>
+                            <div class="goal-dist">
+                                <p>${goal.percentage}%</p>
+                                <button class="goal-edit-btn" data-id="${goal.id}">
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" viewBox="0 0 16 16"><path d="M12.146.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1 0 .708l-10 10a.5.5 0 0 1-.168.11l-5 2a.5.5 0 0 1-.65-.65l2-5a.5.5 0 0 1 .11-.168l10-10zM11.207 2.5 13.5 4.793 14.793 3.5 12.5 1.207 11.207 2.5zm1.586 3L10.5 3.207 4 9.707V10h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.293l6.5-6.5zm-9.761 5.175-.106.106-1.528 3.821 3.821-1.528.106-.106A.5.5 0 0 1 5 12.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.468-.325z"/></svg>
+                                </button>
+                            </div>
+                        </div>
+                        <div class="progress-bar-container">
+                            <div class="progress-bar" style="width: ${progress > 100 ? 100 : progress}%"></div>
+                        </div>
+                        <p class="progress-text">${Math.round(progress)}% tercapai</p>
+                    `;
+                    card.querySelector('.goal-edit-btn').addEventListener('click', (e) => {
+                        openGoalModal('edit', parseInt(e.currentTarget.dataset.id));
+                    });
+                    goalListContainer.appendChild(card);
+                });
+            }
+
+            // --- Event Listeners & Modal Logic ---
+            document.getElementById('setup-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                currentUser = { 
+                    id: 1, 
+                    name: document.getElementById('username').value, 
+                    rekening: parseCurrencyValue(document.getElementById('rekening-awal').value), 
+                    dompet: parseCurrencyValue(document.getElementById('dompet-awal').value), 
+                    password: document.getElementById('password-setup').value, 
+                    isLockEnabled: true,
+                    tabunganSementara: 0
+                };
+                await saveData(USER_STORE, currentUser);
+                savingsGoals = await getAllData(GOAL_STORE);
+                showScreen('app'); await refreshUI();
+            });
+            document.getElementById('password-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                if (document.getElementById('password-login').value === currentUser.password) {
+                    savingsGoals = await getAllData(GOAL_STORE);
+                    showScreen('app'); await refreshUI();
+                } else showToast('Password salah!');
+            });
+            
+            document.getElementById('password-prompt-form').addEventListener('submit', e => {
+                e.preventDefault();
+                const pass = document.getElementById('password-prompt-input').value;
+                const errorEl = document.getElementById('password-prompt-error');
+                if (pass === currentUser.password) {
+                    if (passwordPromptCallback) passwordPromptCallback();
+                    closeModal('passwordPrompt'); e.target.reset(); errorEl.style.display = 'none';
+                    passwordPromptCallback = null;
+                } else {
+                    errorEl.style.display = 'block';
+                }
+            });
+
+            document.getElementById('rekening-visibility-toggle').addEventListener('click', () => {
+                const isCurrentlyVisible = rekeningBalanceEl.textContent !== 'Rp ******';
+                if (isCurrentlyVisible) {
+                    toggleRekeningVisibility(false);
+                } else {
+                    promptForPassword(() => toggleRekeningVisibility(true));
+                }
+            });
+
+            document.getElementById('settings-btn').addEventListener('click', () => {
+                promptForPassword(() => {
+                    document.getElementById('settings-username').value = currentUser.name;
+                    document.getElementById('settings-rekening').value = formatNumber(currentUser.rekening);
+                    document.getElementById('settings-dompet').value = formatNumber(currentUser.dompet);
+                    document.getElementById('lock-switch').checked = currentUser.isLockEnabled;
+                    openModal('settings');
+                });
+            });
+            document.getElementById('settings-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                currentUser.name = document.getElementById('settings-username').value;
+                currentUser.rekening = parseCurrencyValue(document.getElementById('settings-rekening').value);
+                currentUser.dompet = parseCurrencyValue(document.getElementById('settings-dompet').value);
+                currentUser.isLockEnabled = document.getElementById('lock-switch').checked;
+                await saveData(USER_STORE, currentUser);
+                await refreshUI();
+                closeModal('settings');
+                showToast('Pengaturan berhasil disimpan!');
+            });
+            
+            // Navigation Buttons
+            document.getElementById('btn-tabungan').addEventListener('click', () => {
+                renderSavingsScreen();
+                showScreen('savings');
+            });
+            document.getElementById('savings-back-btn').addEventListener('click', () => showScreen('app'));
+
+            // Pengeluaran Modal
+            const pengeluaranForm = document.getElementById('pengeluaran-form'), pengeluaranModalTitle = document.getElementById('pengeluaran-modal-title'),
+                  pengeluaranId = document.getElementById('pengeluaran-id'), pengeluaranNominal = document.getElementById('pengeluaran-nominal'),
+                  pengeluaranSumber = document.getElementById('pengeluaran-sumber'), pengeluaranSumberTabunganGroup = document.getElementById('pengeluaran-sumber-tabungan-group'),
+                  pengeluaranSumberTabungan = document.getElementById('pengeluaran-sumber-tabungan'),
+                  pengeluaranKategori = document.getElementById('pengeluaran-kategori'), pengeluaranDeskripsi = document.getElementById('pengeluaran-deskripsi'),
+                  pengeluaranStep1 = document.getElementById('pengeluaran-step-1'), pengeluaranStep2 = document.getElementById('pengeluaran-step-2');
+            
+            document.getElementById('btn-tambah-pengeluaran').addEventListener('click', () => openPengeluaranModal('add'));
+            
+            async function openPengeluaranModal(mode = 'add', id = null) {
+                pengeluaranForm.reset(); pengeluaranId.value = '';
+                pengeluaranStep1.classList.add('active'); pengeluaranStep2.classList.remove('active');
+                pengeluaranSumberTabunganGroup.style.display = 'none';
+
+                if (mode === 'edit') {
+                    pengeluaranModalTitle.textContent = 'Edit Pengeluaran';
+                    const tx = await getData(TRANSAKSI_STORE, id);
+                    if (tx) {
+                        pengeluaranId.value = tx.id; 
+                        pengeluaranNominal.value = formatNumber(tx.nominal);
+                        pengeluaranKategori.value = tx.kategori; 
+                        pengeluaranDeskripsi.value = tx.deskripsi;
+                        
+                        if (tx.sumber === 'Dompet' || tx.sumber === 'Rekening') {
+                            pengeluaranSumber.value = tx.sumber;
+                        } else {
+                            pengeluaranSumber.value = 'Tabungan';
+                            await populateSavingsGoalDropdown();
+                            pengeluaranSumberTabungan.value = tx.sumberId;
+                            pengeluaranSumberTabunganGroup.style.display = 'flex';
+                        }
+                    }
+                } else {
+                    pengeluaranModalTitle.textContent = 'Tambah Pengeluaran';
+                }
+                openModal('pengeluaran');
+            }
+            
+            async function populateSavingsGoalDropdown() {
+                pengeluaranSumberTabungan.innerHTML = '';
+                if (savingsGoals.length > 0) {
+                    savingsGoals.forEach(goal => {
+                        const option = document.createElement('option');
+                        option.value = goal.id;
+                        option.textContent = `${goal.title} - ${formatCurrency(goal.amount)}`;
+                        pengeluaranSumberTabungan.appendChild(option);
+                    });
+                } else {
+                    const option = document.createElement('option');
+                    option.textContent = 'Tidak ada goal tabungan';
+                    option.disabled = true;
+                    pengeluaranSumberTabungan.appendChild(option);
+                }
+            }
+
+            document.getElementById('btn-pengeluaran-next').addEventListener('click', () => {
+                if (pengeluaranNominal.value) { pengeluaranStep1.classList.remove('active'); pengeluaranStep2.classList.add('active'); }
+                else showToast('Harap isi jumlah pengeluaran.');
+            });
+            document.getElementById('btn-pengeluaran-back').addEventListener('click', () => { pengeluaranStep2.classList.remove('active'); pengeluaranStep1.classList.add('active'); });
+            
+            pengeluaranSumber.addEventListener('change', async () => {
+                if (pengeluaranSumber.value === 'Tabungan') {
+                    await populateSavingsGoalDropdown();
+                    pengeluaranSumberTabunganGroup.style.display = 'flex';
+                } else {
+                    pengeluaranSumberTabunganGroup.style.display = 'none';
+                }
+            });
+            
+            pengeluaranForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = pengeluaranId.value ? parseInt(pengeluaranId.value) : null;
+                const nominal = parseCurrencyValue(pengeluaranNominal.value);
+                let sumber = pengeluaranSumber.value;
+                let sumberId = null;
+                let txData;
+
+                if (id) {
+                    const oldTx = await getData(TRANSAKSI_STORE, id);
+                    if (oldTx.sumber === 'Rekening') currentUser.rekening += oldTx.nominal;
+                    else if (oldTx.sumber === 'Dompet') currentUser.dompet += oldTx.nominal;
+                    else {
+                        const oldGoal = await getData(GOAL_STORE, oldTx.sumberId);
+                        if(oldGoal) {
+                            oldGoal.amount += oldTx.nominal;
+                            await saveData(GOAL_STORE, oldGoal);
+                        }
+                    }
+                }
+
+                if (sumber === 'Rekening') {
+                    if (currentUser.rekening < nominal) { showToast('Saldo rekening tidak cukup!'); return; }
+                    currentUser.rekening -= nominal;
+                } else if (sumber === 'Dompet') {
+                    if (currentUser.dompet < nominal) { showToast('Saldo dompet tidak cukup!'); return; }
+                    currentUser.dompet -= nominal;
+                } else if (sumber === 'Tabungan') {
+                    sumberId = parseInt(pengeluaranSumberTabungan.value);
+                    const goal = await getData(GOAL_STORE, sumberId);
+                    if (!goal || goal.amount < nominal) { showToast('Saldo goal tabungan tidak cukup!'); return; }
+                    goal.amount -= nominal;
+                    sumber = goal.title;
+                    await saveData(GOAL_STORE, goal);
+                }
+
+                txData = { type: 'expense', nominal, sumber, sumberId, kategori: pengeluaranKategori.value, deskripsi: pengeluaranDeskripsi.value, tanggal: new Date().toISOString() };
+                if (id) txData.id = id;
+                
+                await saveData(TRANSAKSI_STORE, txData);
+                await saveData(USER_STORE, currentUser);
+                savingsGoals = await getAllData(GOAL_STORE);
+                closeModal('pengeluaran'); await refreshUI(); showToast('Transaksi disimpan!');
+            });
+
+            // Tarik Tunai
+            const tarikTunaiForm = document.getElementById('tarik-tunai-form');
+            const tarikTunaiModalTitle = document.getElementById('tarik-tunai-modal-title');
+            const tarikTunaiId = document.getElementById('tarik-tunai-id');
+            const tarikTunaiAmount = document.getElementById('tarik-tunai-amount');
+
+            document.getElementById('btn-tarik-tunai').addEventListener('click', () => openTarikTunaiModal('add'));
+
+            async function openTarikTunaiModal(mode = 'add', id = null) {
+                tarikTunaiForm.reset();
+                tarikTunaiId.value = '';
+                if (mode === 'edit') {
+                    tarikTunaiModalTitle.textContent = 'Edit Tarik Tunai';
+                    const tx = await getData(TRANSAKSI_STORE, id);
+                    if (tx) {
+                        tarikTunaiId.value = tx.id;
+                        tarikTunaiAmount.value = formatNumber(tx.nominal);
+                    }
+                } else {
+                    tarikTunaiModalTitle.textContent = 'Tarik Tunai';
+                }
+                openModal('tarikTunai');
+            }
+
+            tarikTunaiForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = tarikTunaiId.value ? parseInt(tarikTunaiId.value) : null;
+                const amount = parseCurrencyValue(tarikTunaiAmount.value);
+                const errorEl = document.getElementById('tarik-tunai-error');
+                
+                if (isNaN(amount) || amount <= 0) { showToast('Jumlah tidak valid.'); return; }
+
+                let rekeningSaatIni = currentUser.rekening;
+                let dompetSaatIni = currentUser.dompet;
+                
+                if (id) {
+                    const oldTx = await getData(TRANSAKSI_STORE, id);
+                    rekeningSaatIni += oldTx.nominal;
+                    dompetSaatIni -= oldTx.nominal;
+                }
+
+                if (rekeningSaatIni < amount) { errorEl.style.display = 'block'; return; }
+                
+                currentUser.rekening = rekeningSaatIni - amount;
+                currentUser.dompet = dompetSaatIni + amount;
+
+                const tx = { type: 'transfer', nominal: amount, deskripsi: 'Tarik Tunai', sumber: 'Rekening -> Dompet', tanggal: new Date().toISOString() };
+                if (id) tx.id = id;
+
+                await saveData(TRANSAKSI_STORE, tx);
+                await saveData(USER_STORE, currentUser);
+                await refreshUI();
+                closeModal('tarikTunai');
+                errorEl.style.display = 'none';
+                showToast(id ? 'Edit berhasil!' : 'Berhasil menarik tunai!');
+            });
+
+            // Tambah Saldo
+            const tambahSaldoForm = document.getElementById('tambah-saldo-form');
+            const tambahSaldoModalTitle = document.getElementById('tambah-saldo-modal-title');
+            const tambahSaldoId = document.getElementById('tambah-saldo-id');
+            const tambahSaldoAmount = document.getElementById('tambah-saldo-amount');
+            const tambahSaldoSumber = document.getElementById('tambah-saldo-sumber');
+            const tambahSaldoDeskripsiGroup = document.getElementById('tambah-saldo-deskripsi-group');
+            const tambahSaldoDeskripsi = document.getElementById('tambah-saldo-deskripsi');
+            const tambahSaldoTujuan = document.getElementById('tambah-saldo-tujuan');
+            
+            tambahSaldoSumber.addEventListener('change', () => {
+                const sumber = tambahSaldoSumber.value;
+                tambahSaldoTujuan.disabled = false;
+                if (sumber === 'Dompet') {
+                    tambahSaldoDeskripsiGroup.style.display = 'none';
+                    tambahSaldoTujuan.value = 'Rekening';
+                    tambahSaldoTujuan.disabled = true;
+                } else {
+                    tambahSaldoDeskripsiGroup.style.display = 'flex';
+                }
+            });
+
+            document.getElementById('btn-tambah-saldo').addEventListener('click', () => openTambahSaldoModal('add'));
+
+            async function openTambahSaldoModal(mode = 'add', id = null) {
+                tambahSaldoForm.reset();
+                tambahSaldoId.value = '';
+                tambahSaldoSumber.disabled = false;
+                tambahSaldoTujuan.disabled = false;
+                tambahSaldoDeskripsiGroup.style.display = 'flex';
+
+                if (mode === 'edit') {
+                    tambahSaldoModalTitle.textContent = 'Edit Transaksi';
+                    const tx = await getData(TRANSAKSI_STORE, id);
+                    if (tx) {
+                        tambahSaldoId.value = tx.id;
+                        tambahSaldoAmount.value = formatNumber(tx.nominal);
+
+                        if (tx.type === 'income') {
+                            tambahSaldoSumber.value = 'Lainnya';
+                            tambahSaldoDeskripsi.value = tx.deskripsi;
+                            tambahSaldoTujuan.value = tx.tujuan;
+                        } else if (tx.type === 'transfer') {
+                            tambahSaldoSumber.value = 'Dompet';
+                            tambahSaldoTujuan.value = 'Rekening';
+                            tambahSaldoTujuan.disabled = true;
+                            tambahSaldoDeskripsiGroup.style.display = 'none';
+                        }
+                        tambahSaldoSumber.disabled = true;
+                    }
+                } else {
+                    tambahSaldoModalTitle.textContent = 'Tambah Saldo';
+                }
+                openModal('tambahSaldo');
+            }
+
+            tambahSaldoForm.addEventListener('submit', async e => {
+                e.preventDefault();
+                const id = tambahSaldoId.value ? parseInt(tambahSaldoId.value) : null;
+                const amount = parseCurrencyValue(tambahSaldoAmount.value);
+                const sumber = tambahSaldoSumber.value;
+                const tujuan = tambahSaldoTujuan.value;
+                const deskripsi = tambahSaldoDeskripsi.value;
+                const errorEl = document.getElementById('tambah-saldo-error');
+
+                if (isNaN(amount) || amount <= 0) { showToast('Jumlah tidak valid.'); return; }
+
+                let txData;
+                if (id) {
+                    const oldTx = await getData(TRANSAKSI_STORE, id);
+                    if (oldTx.type === 'transfer') {
+                        currentUser.dompet += oldTx.nominal;
+                        currentUser.rekening -= oldTx.nominal;
+                    } else if (oldTx.type === 'income') {
+                        if (oldTx.tujuan === 'Rekening') currentUser.rekening -= oldTx.nominal;
+                        else currentUser.dompet -= oldTx.nominal;
+                    }
+                }
+
+                if (sumber === 'Dompet') {
+                    if (currentUser.dompet < amount) { errorEl.style.display = 'block'; return; }
+                    currentUser.dompet -= amount;
+                    currentUser.rekening += amount;
+                    txData = { type: 'transfer', nominal: amount, deskripsi: 'Pindah Dana ke Rekening', sumber: 'Dompet -> Rekening', tanggal: new Date().toISOString() };
+                } else {
+                    if (tujuan === 'Rekening') currentUser.rekening += amount; else currentUser.dompet += amount;
+                    txData = { type: 'income', nominal: amount, deskripsi: deskripsi || `Pemasukan ke ${tujuan}`, sumber: 'Pemasukan', tujuan: tujuan, tanggal: new Date().toISOString() };
+                }
+                if (id) txData.id = id;
+
+                await saveData(TRANSAKSI_STORE, txData);
+                await saveData(USER_STORE, currentUser);
+                await refreshUI();
+                closeModal('tambahSaldo');
+                errorEl.style.display = 'none';
+                showToast('Transaksi berhasil disimpan!');
+            });
+            
+            // Goal Modal
+            const goalForm = document.getElementById('goal-form');
+            const goalModalTitle = document.getElementById('goal-modal-title');
+            const goalId = document.getElementById('goal-id');
+            const goalTitle = document.getElementById('goal-title');
+            const goalTarget = document.getElementById('goal-target');
+            const goalCategory = document.getElementById('goal-category');
+            const goalPercentage = document.getElementById('goal-percentage');
+            const goalPercentageValue = document.getElementById('goal-percentage-value');
+            const btnDeleteGoal = document.getElementById('btn-delete-goal');
+
+            document.getElementById('btn-tambah-goal').addEventListener('click', () => openGoalModal('add'));
+
+            function openGoalModal(mode = 'add', id = null) {
+                goalForm.reset();
+                goalId.value = '';
+                btnDeleteGoal.style.display = 'none';
+
+                const currentTotalPercentage = savingsGoals.reduce((sum, g) => sum + g.percentage, 0);
+                let availablePercentage = 100 - currentTotalPercentage;
+
+                if (mode === 'edit') {
+                    goalModalTitle.textContent = 'Edit Goal';
+                    btnDeleteGoal.style.display = 'block';
+                    const goal = savingsGoals.find(g => g.id === id);
+                    if (goal) {
+                        goalId.value = goal.id;
+                        goalTitle.value = goal.title;
+                        goalTarget.value = formatNumber(goal.target);
+                        goalCategory.value = goal.category;
+                        goalPercentage.value = goal.percentage;
+                        goalPercentageValue.textContent = goal.percentage;
+                        availablePercentage += goal.percentage;
+                    }
+                } else {
+                    goalModalTitle.textContent = 'Goal Baru';
+                    goalPercentage.value = 0;
+                    goalPercentageValue.textContent = 0;
+                }
+                goalPercentage.max = availablePercentage > 100 ? 100 : availablePercentage;
+                openModal('goal');
+            }
+
+            goalPercentage.addEventListener('input', () => {
+                goalPercentageValue.textContent = goalPercentage.value;
+            });
+
+            goalForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const id = goalId.value ? parseInt(goalId.value) : null;
+                const currentGoal = id ? savingsGoals.find(g => g.id === id) : null;
+                const goalData = {
+                    title: goalTitle.value,
+                    target: parseCurrencyValue(goalTarget.value),
+                    category: goalCategory.value,
+                    percentage: parseInt(goalPercentage.value),
+                    amount: currentGoal ? currentGoal.amount : 0
+                };
+                if (id) goalData.id = id;
+                
+                await saveData(GOAL_STORE, goalData);
+                savingsGoals = await getAllData(GOAL_STORE);
+                renderSavingsScreen();
+                closeModal('goal');
+                showToast('Goal berhasil disimpan!');
+            });
+            
+            btnDeleteGoal.addEventListener('click', async () => {
+                const id = parseInt(goalId.value);
+                if (id) {
+                    const goalToDelete = await getData(GOAL_STORE, id);
+                    if (goalToDelete && goalToDelete.amount > 0) {
+                        currentUser.tabunganSementara = (currentUser.tabunganSementara || 0) + goalToDelete.amount;
+                        await saveData(USER_STORE, currentUser);
+                    }
+                    await deleteData(GOAL_STORE, id);
+                    savingsGoals = await getAllData(GOAL_STORE);
+                    renderSavingsScreen();
+                    closeModal('goal');
+                    showToast('Goal dihapus & dana dikembalikan.');
+                }
+            });
+
+            // Add Savings Modal
+            const addSavingsForm = document.getElementById('add-savings-form');
+            document.getElementById('btn-tambah-tabungan').addEventListener('click', () => {
+                addSavingsForm.reset();
+                openModal('addSavings');
+            });
+
+            addSavingsForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const amount = parseCurrencyValue(document.getElementById('add-savings-amount').value);
+                const sumber = document.getElementById('add-savings-sumber').value;
+                const errorEl = document.getElementById('add-savings-error');
+
+                if (isNaN(amount) || amount <= 0) { showToast('Jumlah tidak valid.'); return; }
+                if (sumber === 'Rekening' && currentUser.rekening < amount) { errorEl.style.display = 'block'; return; }
+                if (sumber === 'Dompet' && currentUser.dompet < amount) { errorEl.style.display = 'block'; return; }
+
+                if (sumber === 'Rekening') currentUser.rekening -= amount;
+                else currentUser.dompet -= amount;
+                
+                currentUser.tabunganSementara = (currentUser.tabunganSementara || 0) + amount;
+                
+                const tx = { type: 'savings', nominal: amount, sumber, tanggal: new Date().toISOString() };
+                await saveData(TRANSAKSI_STORE, tx);
+                await saveData(USER_STORE, currentUser);
+
+                renderSavingsScreen();
+                await refreshUI();
+                closeModal('addSavings');
+                showToast('Berhasil menabung!');
+            });
+            
+            // Distribusi Modal Logic
+            const distribusiStep1 = document.getElementById('distribusi-step-1');
+            const distribusiStep2 = document.getElementById('distribusi-step-2');
+            const distribusiLangsungForm = document.getElementById('distribusi-langsung-form');
+            const distribusiLangsungGoal = document.getElementById('distribusi-langsung-goal');
+            const distribusiLangsungAmount = document.getElementById('distribusi-langsung-amount');
+
+            document.getElementById('btn-distribusi').addEventListener('click', () => {
+                distribusiStep1.classList.add('active');
+                distribusiStep2.classList.remove('active');
+                openModal('distribusi');
+            });
+
+            document.getElementById('btn-distribusi-persen').addEventListener('click', async () => {
+                const amountToDistribute = currentUser.tabunganSementara || 0;
+                if (amountToDistribute <= 0) {
+                    showToast('Tidak ada dana untuk dialokasikan.');
+                    return;
+                }
+                const totalPercentage = savingsGoals.reduce((sum, g) => sum + g.percentage, 0);
+                if (totalPercentage === 0) {
+                    showToast('Atur persentase alokasi pada goal terlebih dahulu.');
+                    return;
+                }
+                
+                let distributedAmount = 0;
+                for (const goal of savingsGoals) {
+                    const amountToAdd = amountToDistribute * (goal.percentage / 100);
+                    goal.amount += amountToAdd;
+                    distributedAmount += amountToAdd;
+                    await saveData(GOAL_STORE, goal);
+                }
+
+                currentUser.tabunganSementara -= distributedAmount;
+                await saveData(USER_STORE, currentUser);
+                
+                savingsGoals = await getAllData(GOAL_STORE);
+                renderSavingsScreen();
+                await refreshUI();
+                closeModal('distribusi');
+                showToast('Dana berhasil dialokasikan!');
+            });
+
+            document.getElementById('btn-distribusi-langsung-choice').addEventListener('click', () => {
+                distribusiLangsungForm.reset();
+                distribusiLangsungGoal.innerHTML = '';
+                savingsGoals.forEach(goal => {
+                    const option = document.createElement('option');
+                    option.value = goal.id;
+                    option.textContent = `${goal.title} (${formatCurrency(goal.amount)})`;
+                    distribusiLangsungGoal.appendChild(option);
+                });
+                distribusiStep1.classList.remove('active');
+                distribusiStep2.classList.add('active');
+            });
+            
+            document.getElementById('btn-distribusi-langsung-back').addEventListener('click', () => {
+                distribusiStep2.classList.remove('active');
+                distribusiStep1.classList.add('active');
+            });
+
+            distribusiLangsungForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const goalId = parseInt(distribusiLangsungGoal.value);
+                const amount = parseCurrencyValue(distribusiLangsungAmount.value);
+
+                if (isNaN(amount) || amount <= 0) {
+                    showToast('Jumlah tidak valid.'); return;
+                }
+                if (amount > (currentUser.tabunganSementara || 0)) {
+                    showToast('Dana sementara tidak mencukupi.'); return;
+                }
+                if (!goalId) {
+                    showToast('Pilih goal tujuan.'); return;
+                }
+
+                const goal = await getData(GOAL_STORE, goalId);
+                goal.amount += amount;
+                currentUser.tabunganSementara -= amount;
+
+                await saveData(GOAL_STORE, goal);
+                await saveData(USER_STORE, currentUser);
+
+                savingsGoals = await getAllData(GOAL_STORE);
+                renderSavingsScreen();
+                await refreshUI();
+                closeModal('distribusi');
+                showToast('Dana berhasil dipindahkan.');
+            });
+
+            // Generic Confirmation Modal Logic
+            let confirmCallback = null;
+            const confirmModalTitle = document.getElementById('confirm-title');
+            const confirmModalText = document.getElementById('confirm-text');
+            
+            function showConfirmModal(title, text, onConfirm) {
+                confirmModalTitle.textContent = title;
+                confirmModalText.textContent = text;
+                confirmCallback = onConfirm;
+                openModal('deleteConfirm');
+            }
+
+            document.getElementById('btn-confirm-action').addEventListener('click', () => {
+                if (confirmCallback) {
+                    confirmCallback();
+                }
+                confirmCallback = null;
+                closeModal('deleteConfirm');
+            });
+
+            document.getElementById('btn-cancel-confirm').addEventListener('click', () => {
+                confirmCallback = null;
+                closeModal('deleteConfirm');
+            });
+
+            async function deleteTransaction() {
+                if (transactionToDelete === null) return;
+                const tx = await getData(TRANSAKSI_STORE, transactionToDelete);
+                
+                if (tx.type === 'expense') {
+                    if (tx.sumber === 'Rekening') currentUser.rekening += tx.nominal;
+                    else if (tx.sumber === 'Dompet') currentUser.dompet += tx.nominal;
+                    else {
+                        const goal = await getData(GOAL_STORE, tx.sumberId);
+                        if(goal) {
+                            goal.amount += tx.nominal;
+                            await saveData(GOAL_STORE, goal);
+                        }
+                    }
+                } else if (tx.type === 'income') {
+                    if (tx.tujuan === 'Rekening') currentUser.rekening -= tx.nominal;
+                    else if (tx.tujuan === 'Dompet') currentUser.dompet -= tx.nominal;
+                } else if (tx.type === 'transfer') {
+                    if (tx.deskripsi === 'Tarik Tunai') {
+                        currentUser.rekening += tx.nominal;
+                        currentUser.dompet -= tx.nominal;
+                    } else {
+                        currentUser.dompet += tx.nominal;
+                        currentUser.rekening -= tx.nominal;
+                    }
+                }
+
+                await deleteData(TRANSAKSI_STORE, transactionToDelete);
+                await saveData(USER_STORE, currentUser);
+                savingsGoals = await getAllData(GOAL_STORE);
+                transactionToDelete = null;
+                await refreshUI();
+                showToast('Transaksi berhasil dihapus.');
+            }
+
+            // Backup & Restore
+            document.getElementById('btn-export').addEventListener('click', async () => {
+                try {
+                    const userData = await getAllData(USER_STORE);
+                    const goalsData = await getAllData(GOAL_STORE);
+                    const transaksiData = await getAllData(TRANSAKSI_STORE);
+
+                    const backupData = { user: userData, goals: goalsData, transaksi: transaksiData };
+                    const jsonString = JSON.stringify(backupData, null, 2);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const date = new Date().toISOString().slice(0, 10);
+                    a.download = `manajer-keuangan-backup-${date}.json`;
+                    document.body.appendChild(a);
+                    a.click();
+                    document.body.removeChild(a);
+                    URL.revokeObjectURL(url);
+                    showToast('Data berhasil diekspor!');
+                } catch (error) {
+                    console.error('Gagal mengekspor data:', error);
+                    showToast('Gagal mengekspor data.');
+                }
+            });
+
+            const importFileInput = document.getElementById('import-file-input');
+            document.getElementById('btn-import').addEventListener('click', () => importFileInput.click());
+            importFileInput.addEventListener('change', (event) => {
+                const file = event.target.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    try {
+                        const backupData = JSON.parse(e.target.result);
+                        if (!backupData.user || !backupData.goals || !backupData.transaksi) {
+                            throw new Error('Format file backup tidak valid.');
+                        }
+                        showConfirmModal('Konfirmasi Impor', 'Ini akan menimpa semua data saat ini. Yakin?', async () => {
+                            try {
+                                const tx = db.transaction([USER_STORE, GOAL_STORE, TRANSAKSI_STORE], 'readwrite');
+                                await Promise.all([
+                                    tx.objectStore(USER_STORE).clear(),
+                                    tx.objectStore(GOAL_STORE).clear(),
+                                    tx.objectStore(TRANSAKSI_STORE).clear()
+                                ]);
+                                await Promise.all([
+                                    ...backupData.user.map(item => tx.objectStore(USER_STORE).put(item)),
+                                    ...backupData.goals.map(item => tx.objectStore(GOAL_STORE).put(item)),
+                                    ...backupData.transaksi.map(item => tx.objectStore(TRANSAKSI_STORE).put(item))
+                                ]);
+                                await tx.done;
+                                currentUser = await getData(USER_STORE, 1) || {};
+                                savingsGoals = await getAllData(GOAL_STORE);
+                                await refreshUI();
+                                closeModal('settings');
+                                showToast('Data berhasil diimpor!');
+                            } catch (dbError) {
+                                console.error('Gagal impor ke DB:', dbError);
+                                showToast('Gagal menyimpan data impor.');
+                            }
+                        });
+                    } catch (parseError) {
+                        console.error('Gagal membaca file:', parseError);
+                        showToast('Gagal membaca file. Pastikan file valid.');
+                    } finally {
+                        event.target.value = '';
+                    }
+                };
+                reader.readAsText(file);
+            });
+
+
+            // History Type Filter
+            document.querySelectorAll('.history-filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.history-filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentHistoryFilter = btn.dataset.filter;
+                    refreshUI();
+                });
+            });
+
+            // Date Filter
+            document.getElementById('btn-filter-date').addEventListener('click', () => openModal('filter'));
+            document.getElementById('filter-form').addEventListener('submit', async e => {
+                e.preventDefault();
+                const start = document.getElementById('start-date').value, end = document.getElementById('end-date').value;
+                if (start && end) { await refreshUI(start + 'T00:00:00.000Z', end + 'T23:59:59.999Z'); closeModal('filter'); }
+            });
+            document.getElementById('reset-filter-btn').addEventListener('click', async () => { document.getElementById('filter-form').reset(); await refreshUI(); closeModal('filter'); });
+
+            // --- App Initialization ---
+            async function main() {
+                try {
+                    await initDB();
+                    // Add event listeners for currency inputs
+                    document.querySelectorAll('.currency-input').forEach(input => {
+                        input.addEventListener('input', () => formatInputAsCurrency(input));
+                        input.addEventListener('blur', () => formatInputAsCurrency(input)); // Also format on blur
+                    });
+
+                    const user = await getData(USER_STORE, 1);
+                    if (user && user.password) { 
+                        currentUser = user;
+                        if (!currentUser.hasOwnProperty('tabunganSementara')) {
+                            currentUser.tabunganSementara = 0;
+                        }
+                        savingsGoals = await getAllData(GOAL_STORE);
+                        if (currentUser.isLockEnabled) {
+                            showScreen('password');
+                        } else {
+                            showScreen('app');
+                            await refreshUI();
+                        }
+                    } 
+                    else { showScreen('setup'); }
+                } catch (error) { console.error('Initialization failed:', error); showToast('Gagal memuat aplikasi.'); }
+            }
+            main();
+        });
+    </script>
+</body>
+</html>
