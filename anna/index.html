@@ -595,6 +595,8 @@
             document.querySelectorAll('.modal-close-btn').forEach(btn => btn.addEventListener('click', () => btn.closest('.modal-overlay').classList.remove('active')));
 
             const formatCurrency = amount => new Intl.NumberFormat('id-ID', { style: 'currency', currency: 'IDR', minimumFractionDigits: 0 }).format(amount);
+            const formatDate = dateStr => new Intl.DateTimeFormat('id-ID', { weekday: 'long', day: 'numeric', month: 'long' }).format(new Date(dateStr));
+            const formatTime = dateStr => new Date(dateStr).toLocaleTimeString('id-ID', { hour: '2-digit', minute: '2-digit' });
             const formatNumber = number => new Intl.NumberFormat('id-ID').format(number);
             const parseCurrencyValue = value => parseFloat(String(value).replace(/[^0-9]/g, '')) || 0;
 
