@@ -659,7 +659,7 @@
                 const workbook = XLSX.read(e.target.result, { type: 'array' });
                 const worksheet = workbook.Sheets[workbook.SheetNames[0]];
                 const customHeaders = ['kodeProduk', 'namaBarang', 'qty', 'unit', 'zonaLokasi', 'kodeBinBox', 'verifikasiOperator', 'namaOperatorExcel', 'checklistWMS', 'noKoli'];
-                const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 'B13:K42', header: customHeaders });
+                const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 'B13:K300', header: customHeaders });
 
                 const operatorName = document.getElementById('operatorName').value;
                 const newEvent = {
