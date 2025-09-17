@@ -73,26 +73,30 @@
 <body class="bg-gray-100 text-gray-800 p-4 md:p-8">
 
     <div class="max-w-7xl mx-auto bg-white rounded-2xl shadow-2xl overflow-hidden">
-        <!-- Header Aplikasi -->
         <header class="p-4 border-b bg-gray-50 flex justify-between items-center">
             <div>
                 <h1 class="text-xl font-bold text-gray-700">Panduan Spreadsheet Interaktif</h1>
                 <p class="text-sm text-gray-500">Klik pada elemen manapun untuk melihat penjelasannya.</p>
             </div>
-            <button id="glossary-btn" class="bg-green-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow hover:bg-green-700 transition flex items-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book-half" viewBox="0 0 16 16"><path d="M8.5 2.687c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388 1.175.885.652 1.498 1.48 1.498 2.311v7.812a.5.5 0 0 1-.854.353L12 14.118V2.887c-.835-.58-2.118-.926-3.357-.926-1.24 0-2.52.347-3.357.926v11.231L3.354 16.353A.5.5 0 0 1 3 15.812V4.923c0-.831.613-1.66 1.498-2.311.885-.652 2.154-1.05 3.388-1.175 1.33-.134 2.458.063 3.112.752zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.396A1.493 1.493 0 0 0 0 3.824V15.5a.5.5 0 0 0 .79.407L5 11.585V1.823c.84-.593 1.874-.92 2.712-.92.839 0 1.873.328 2.712.92v9.762L15.21 15.907a.5.5 0 0 0 .79-.407V3.824c0-1.143-1.57-2.067-3.287-2.346-1.354-.22-2.824-.086-3.923.617z"/></svg>
-                Glosarium
-            </button>
+            <div class="flex items-center gap-3">
+                 <a href="https://www.notion.so/271c043ca02f805d9403ff044a5f2262?v=271c043ca02f80318d7d000c30ebf436&source=copy_link" target="_blank" rel="noopener noreferrer" class="bg-gray-800 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow hover:bg-black transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-box-arrow-up-right" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8.636 3.5a.5.5 0 0 0-.5-.5H1.5A1.5 1.5 0 0 0 0 4.5v10A1.5 1.5 0 0 0 1.5 16h10a1.5 1.5 0 0 0 1.5-1.5V7.864a.5.5 0 0 0-1 0V14.5a.5.5 0 0 1-.5.5h-10a.5.5 0 0 1-.5-.5v-10a.5.5 0 0 1 .5-.5h6.636a.5.5 0 0 0 .5-.5z"/><path fill-rule="evenodd" d="M16 .5a.5.5 0 0 0-.5-.5h-5a.5.5 0 0 0 0 1h3.793L6.146 9.146a.5.5 0 1 0 .708.708L15 1.707V5.5a.5.5 0 0 0 1 0v-5z"/></svg>
+                    Notion
+                </a>
+                <button id="glossary-btn" class="bg-green-600 text-white font-semibold text-sm px-5 py-2.5 rounded-lg shadow hover:bg-green-700 transition flex items-center gap-2">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-book-half" viewBox="0 0 16 16"><path d="M8.5 2.687c.654-.689 1.782-.886 3.112-.752 1.234.124 2.503.523 3.388 1.175.885.652 1.498 1.48 1.498 2.311v7.812a.5.5 0 0 1-.854.353L12 14.118V2.887c-.835-.58-2.118-.926-3.357-.926-1.24 0-2.52.347-3.357.926v11.231L3.354 16.353A.5.5 0 0 1 3 15.812V4.923c0-.831.613-1.66 1.498-2.311.885-.652 2.154-1.05 3.388-1.175 1.33-.134 2.458.063 3.112.752zM8 1.783C7.015.936 5.587.81 4.287.94c-1.514.153-3.042.672-3.994 1.396A1.493 1.493 0 0 0 0 3.824V15.5a.5.5 0 0 0 .79.407L5 11.585V1.823c.84-.593 1.874-.92 2.712-.92.839 0 1.873.328 2.712.92v9.762L15.21 15.907a.5.5 0 0 0 .79-.407V3.824c0-1.143-1.57-2.067-3.287-2.346-1.354-.22-2.824-.086-3.923.617z"/></svg>
+                    Glosarium
+                </button>
+            </div>
         </header>
         
-        <!-- Top File Bar -->
         <div class="bg-white flex justify-between items-center px-4 py-2 border-b interactive-area" data-target="top-file-bar">
             <div class="flex items-center space-x-3">
                 <div class="interactive-area" data-target="file-icon"><img src="https://www.gstatic.com/images/branding/product/2x/sheets_2020q4_48dp.png" class="h-8 w-8" alt="Sheets Icon"></div>
                 <div>
-                    <div class="font-semibold text-gray-800 interactive-area" data-target="file-name">Laporan Penjualan Kuartal</div>
-                    <div class="flex items-center text-gray-500">
-                        <div class="p-1 rounded-full interactive-area" data-target="star-icon" title="Beri Bintang">
+                    <div class="flex items-center gap-2">
+                        <div class="font-semibold text-gray-800 interactive-area" data-target="file-name">Laporan Penjualan Kuartal</div>
+                        <div class="p-1 rounded-full text-gray-500 interactive-area" data-target="star-icon" title="Beri Bintang">
                             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-star" viewBox="0 0 16 16"><path d="M2.866 14.85c-.078.444.36.791.746.593l4.39-2.256 4.389 2.256c.386.198.824-.149.746-.593l-.83-4.73 3.522-3.356c.33-.314.16-.888-.282-.95l-4.898-.696L8.465.792a.513.513 0 0 0-.927 0L5.354 5.12l-4.898.696c-.441.062-.612.636-.283.95l3.523 3.356-.83 4.73zm4.905-2.767-3.686 1.894.694-3.957a.565.565 0 0 0-.163-.505L1.71 6.745l4.052-.576a.525.525 0 0 0 .393-.288L8 2.223l1.847 3.658a.525.525 0 0 0 .393.288l4.052.575-2.906 2.77a.565.565 0 0 0-.163.506l.694 3.957-3.686-1.894a.503.503 0 0 0-.461 0z"/></svg>
                         </div>
                     </div>
@@ -107,7 +111,6 @@
             </div>
         </div>
         
-        <!-- Menu Bar -->
         <div class="bg-white px-4 py-1.5 flex items-center space-x-1 text-sm border-b interactive-area" data-target="menu-bar">
             <span data-target="file-menu" class="interactive-area px-3 py-1">File</span>
             <span data-target="edit-menu" class="interactive-area px-3 py-1">Edit</span>
@@ -118,9 +121,7 @@
             <span data-target="tools-menu" class="interactive-area px-3 py-1">Alat</span>
         </div>
         
-        <!-- Toolbar -->
         <div class="bg-gray-50 px-2 py-1.5 flex items-center text-gray-700 text-sm border-b overflow-x-auto interactive-area" data-target="toolbar">
-            <!-- SVG icons for better visuals -->
             <div data-target="undo-icon" class="toolbar-icon interactive-area" title="Urungkan (Ctrl+Z)"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 1-4.546 2.914.5.5 0 0 0-.908-.417A6 6 0 1 0 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 0-.41-.192L5.23 2.19a.25.25 0 0 0 0 .384l2.36 1.846A.25.25 0 0 0 8 4.466z"/></svg></div>
             <div data-target="redo-icon" class="toolbar-icon interactive-area" title="Ulangi (Ctrl+Y)"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M8 3a5 5 0 1 0 4.546 2.914.5.5 0 0 1 .908-.417A6 6 0 1 1 8 2v1z"/><path d="M8 4.466V.534a.25.25 0 0 1 .41-.192l2.36 1.846a.25.25 0 0 1 0 .384L8.41 4.658A.25.25 0 0 1 8 4.466z"/></svg></div>
             <div data-target="print-icon" class="toolbar-icon interactive-area" title="Cetak (Ctrl+P)"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M2.5 8a.5.5 0 1 0 0-1 .5.5 0 0 0 0 1z"/><path d="M5 1a2 2 0 0 0-2 2v2H2a2 2 0 0 0-2 2v3a2 2 0 0 0 2 2h1v1a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2v-1h1a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2h-1V3a2 2 0 0 0-2-2H5zM4 3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1v2H4V3zm1 5a2 2 0 0 0-2 2v1H2a1 1 0 0 1-1-1V7a1 1 0 0 1 1-1h12a1 1 0 0 1 1 1v3a1 1 0 0 1-1 1h-1v-1a2 2 0 0 0-2-2H5zm7 2v3a1 1 0 0 1-1 1H5a1 1 0 0 1-1-1v-3a1 1 0 0 1 1-1h6a1 1 0 0 1 1 1z"/></svg></div>
@@ -140,10 +141,9 @@
             <div data-target="merge-cells-icon" class="toolbar-icon interactive-area" title="Gabungkan Sel"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M5.5 13a.5.5 0 0 0 .5.5h4a.5.5 0 0 0 .5-.5V3a.5.5 0 0 0-.5-.5h-4a.5.5 0 0 0-.5.5v10zM1 3v10a1 1 0 0 0 1 1h1.5v-11H2a1 1 0 0 0-1 1zm13 0a1 1 0 0 1 1 1v10a1 1 0 0 1-1 1h-1.5v-11H14z"/><path d="M10.854 8.646a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 1 1 .708-.708L7.5 11.293l2.646-2.647a.5.5 0 0 1 .708 0z"/></svg></div>
             <div class="toolbar-separator"></div>
             <div data-target="align-icon" class="toolbar-icon interactive-area" title="Perataan Horizontal"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path fill-rule="evenodd" d="M1 8a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 8zm0-3a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13A.5.5 0 0 1 1 5zm0 6a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5z"/></svg></div>
-            <div data-target="functions-icon" class="toolbar-icon interactive-area" title="Fungsi"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3.345a4.025 4.025 0 0 1-3.013 3.013A4.025 4.025 0 0 1 0 3.345V1a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v2.345zm1.5-1.551a2.525 2.525 0 0 0-1.849-1.849A2.525 2.525 0 0 0 3.449 0H1.5v1.204a2.513 2.513 0 0 0 1.204 1.204A2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.704 2.408 2.513 2.513 0 0 0 4 3.908V5.5H2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 0 3.092V1.5h1.204a2.513 2.513 0 0 0 1.204 1.204A2.513 2.513 0 0 0 3.612 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.704 2.408 2.513 2.513 0 0 0 4 3.908V5.5H2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 0 3.092V1.5h1.204A2.513 2.513 0 0 0 2.408 2.704 2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.408 2.704 2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0h-1.888A2.525 2.525 0 0 0 0 1.796v1.888A2.525 2.525 0 0 0 1.796 5.5h1.888A2.525 2.525 0 0 0 5.5 3.684V1.796A2.525 2.525 0 0 0 3.684 0h-1.888z"/></svg></div>
+            <div data-target="functions-icon" class="toolbar-icon interactive-area" title="Fungsi"><svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M6 3.345a4.025 4.025 0 0 1-3.013 3.013A4.025 4.025 0 0 1 0 3.345V1a1 1 0 0 1 1-1h5a1 1 0 0 1 1 1v2.345zm1.5-1.551a2.525 2.525 0 0 0-1.849-1.849A2.525 2.525 0 0 0 3.449 0H1.5v1.204a2.513 2.513 0 0 0 1.204 1.204A2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.704 2.408 2.513 2.513 0 0 0 4 3.908V5.5H2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 0 3.092V1.5h1.204a2.513 2.513 0 0 0 1.204 1.204A2.513 2.513 0 0 0 3.612 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.408 2.704 2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0H1.5v1.204A2.513 2.513 0 0 0 2.408 2.704 2.513 2.513 0 0 0 3.908 4H5.5V2.796a2.513 2.513 0 0 0-1.204-1.204A2.513 2.513 0 0 0 3.092 0h-1.888A2.525 2.525 0 0 0 0 1.796v1.888A2.525 2.525 0 0 0 1.796 5.5h1.888A2.525 2.525 0 0 0 5.5 3.684V1.796A2.525 2.525 0 0 0 3.684 0h-1.888z"/></svg></div>
         </div>
 
-        <!-- Name Box & Formula Bar -->
         <div class="flex items-center border-b interactive-area" data-target="name-formula-container">
             <div data-target="name-box" class="w-24 p-2 text-center bg-gray-50 border-r interactive-area font-mono">A1</div>
             <div data-target="formula-bar" class="flex-1 p-2 bg-white interactive-area flex items-center gap-2">
@@ -152,14 +152,11 @@
             </div>
         </div>
 
-        <!-- Grid -->
         <div class="overflow-auto interactive-area" data-target="grid">
             <div class="spreadsheet-grid">
-                <!-- Headers -->
                 <div class="grid-cell bg-gray-100" data-target="grid-container"></div>
                 <div class="col-header interactive-area" data-target="column">A</div><div class="col-header interactive-area" data-target="column">B</div><div class="col-header interactive-area" data-target="column">C</div><div class="col-header interactive-area" data-target="column">D</div><div class="col-header interactive-area" data-target="column">E</div><div class="col-header interactive-area" data-target="column">F</div><div class="col-header interactive-area" data-target="column">G</div><div class="col-header interactive-area" data-target="column">H</div><div class="col-header interactive-area" data-target="column">I</div><div class="col-header interactive-area" data-target="column">J</div>
                 
-                <!-- Rows with data -->
                 <div class="row-header interactive-area" data-target="row">1</div>
                 <div class="grid-cell interactive-area font-bold bg-gray-100" data-target="cell" data-address="A1" data-formula="Produk">Produk</div>
                 <div class="grid-cell interactive-area font-bold bg-gray-100" data-target="cell" data-address="B1" data-formula="Januari">Januari</div>
@@ -192,15 +189,13 @@
             </div>
         </div>
 
-        <!-- Sheet Tabs -->
-         <div class="bg-gray-100 px-4 py-1.5 flex items-center space-x-2 text-sm border-t interactive-area" data-target="sheet-tabs">
+        <div class="bg-gray-100 px-4 py-1.5 flex items-center space-x-2 text-sm border-t interactive-area" data-target="sheet-tabs">
             <span class="px-3 py-1 bg-white border-b-4 border-green-600 text-green-700 font-semibold interactive-area" data-target="sheet-tab-active">Sheet1</span>
             <span class="px-3 py-1 hover:bg-gray-200 rounded-md interactive-area" data-target="sheet-tab-inactive">Data 2024</span>
             <span class="text-xl font-light text-gray-600 hover:bg-gray-300 rounded-full w-7 h-7 flex items-center justify-center interactive-area" data-target="add-sheet-button" title="Tambah Sheet Baru">+</span>
         </div>
     </div>
 
-    <!-- Universal Modal -->
     <div id="info-modal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-4 opacity-0 invisible" aria-hidden="true" style="backdrop-filter: blur(4px);">
         <div class="modal-content-container bg-white rounded-2xl shadow-xl w-full max-w-2xl max-h-[90vh] flex flex-col transform scale-95">
             <div class="p-5 border-b flex justify-between items-center bg-gray-50 rounded-t-2xl">
@@ -208,8 +203,7 @@
                 <button id="close-modal" class="text-gray-500 hover:text-red-600 text-3xl font-light">&times;</button>
             </div>
             <div id="modal-body" class="p-6 overflow-y-auto">
-                <!-- Content will be injected here -->
-            </div>
+                </div>
         </div>
     </div>
     
@@ -261,18 +255,26 @@
     };
 
     const glossaryData = [
-        { term: 'Sel Aktif (Active Cell)', definition: 'Sel tunggal yang sedang dipilih atau disorot. Sel ini siap untuk menerima input data atau formula. Biasanya ditandai dengan batas yang lebih tebal.' },
+        { term: 'Referensi Absolut (Absolute Reference)', definition: 'Referensi sel dalam formula yang tidak berubah saat formula disalin ke sel lain. Ditandai dengan simbol dolar ($), contoh: $A$1.' },
+        { term: 'Referensi Relatif (Relative Reference)', definition: 'Referensi sel standar dalam formula yang secara otomatis disesuaikan saat formula disalin ke sel lain. Contoh: A1.' },
+        { term: 'Array Formula', definition: 'Formula yang dapat melakukan beberapa perhitungan pada satu atau lebih item dalam sebuah array (rentang data) dan dapat mengembalikan banyak hasil sekaligus.' },
         { term: 'Buku Kerja (Workbook)', definition: 'Sebutan lain untuk keseluruhan file spreadsheet Anda. Sebuah buku kerja berisi satu atau lebih lembar kerja (worksheet/sheet).' },
-        { term: 'Lembar Kerja (Worksheet/Sheet)', definition: 'Satu halaman atau tab di dalam sebuah buku kerja. Terdiri dari grid sel, kolom, dan baris.' },
-        { term: 'Rumus (Formula)', definition: 'Sebuah ekspresi yang melakukan perhitungan pada nilai-nilai di dalam sel. Selalu diawali dengan tanda sama dengan (=), contoh: =A1+B1.' },
-        { term: 'Fungsi (Function)', definition: 'Rumus yang sudah dibuat sebelumnya oleh aplikasi spreadsheet untuk melakukan perhitungan kompleks dengan lebih mudah. Contoh: SUM, AVERAGE, VLOOKUP.' },
-        { term: 'Rentang (Range)', definition: 'Sekelompok sel yang berdekatan. Ditulis dengan alamat sel awal dan akhir dipisahkan oleh titik dua, contoh: A1:C5.' },
+        { term: 'CSV (Comma-Separated Values)', definition: 'Format file teks sederhana untuk menyimpan data tabel, di mana setiap baris adalah baris data dan setiap kolom dipisahkan oleh koma.' },
         { term: 'Filter', definition: 'Fitur untuk menyaring data dan hanya menampilkan baris yang memenuhi kriteria tertentu, sementara menyembunyikan sisanya.' },
-        { term: 'Grafik (Chart)', definition: 'Representasi visual dari data untuk memudahkan pemahaman tren dan pola. Contoh: grafik batang, diagram lingkaran, grafik garis.' },
-        { term: 'Tabel Pivot (Pivot Table)', definition: 'Alat analisis data yang kuat untuk meringkas, mengelompokkan, dan mengatur ulang data dalam jumlah besar tanpa mengubah data asli.' },
         { term: 'Format Bersyarat (Conditional Formatting)', definition: 'Fitur untuk mengubah tampilan sel (seperti warna latar atau warna teks) secara otomatis berdasarkan aturan atau kondisi yang Anda tetapkan.' },
-        { term: 'Validasi Data (Data Validation)', definition: 'Fitur untuk membatasi jenis data yang dapat dimasukkan ke dalam sel, membantu mencegah kesalahan input. Contoh: hanya mengizinkan tanggal atau angka dalam rentang tertentu.' }
-    ];
+        { term: 'Fungsi (Function)', definition: 'Rumus yang sudah dibuat sebelumnya oleh aplikasi spreadsheet untuk melakukan perhitungan kompleks dengan lebih mudah. Contoh: SUM, AVERAGE, VLOOKUP.' },
+        { term: 'Grafik (Chart)', definition: 'Representasi visual dari data untuk memudahkan pemahaman tren dan pola. Contoh: grafik batang, diagram lingkaran, grafik garis.' },
+        { term: 'Lembar Kerja (Worksheet/Sheet)', definition: 'Satu halaman atau tab di dalam sebuah buku kerja. Terdiri dari grid sel, kolom, dan baris.' },
+        { term: 'Makro (Macro)', definition: 'Serangkaian perintah dan tindakan yang direkam yang dapat Anda jalankan kembali untuk mengotomatiskan tugas-tugas yang berulang.' },
+        { term: 'Rentang (Range)', definition: 'Sekelompok sel yang berdekatan. Ditulis dengan alamat sel awal dan akhir dipisahkan oleh titik dua, contoh: A1:C5.' },
+        { term: 'Rentang Bernama (Named Range)', definition: 'Nama deskriptif yang diberikan untuk sel atau rentang sel. Dapat digunakan dalam formula untuk membuatnya lebih mudah dibaca, contoh: =SUM(PenjualanJanuari).'},
+        { term: 'Rumus (Formula)', definition: 'Sebuah ekspresi yang melakukan perhitungan pada nilai-nilai di dalam sel. Selalu diawali dengan tanda sama dengan (=), contoh: =A1+B1.' },
+        { term: 'Sel Aktif (Active Cell)', definition: 'Sel tunggal yang sedang dipilih atau disorot. Sel ini siap untuk menerima input data atau formula. Biasanya ditandai dengan batas yang lebih tebal.' },
+        { term: 'Sparkline', definition: 'Grafik mini yang ditempatkan di dalam satu sel untuk memberikan representasi visual cepat dari data dalam sebuah baris.' },
+        { term: 'Tabel Pivot (Pivot Table)', definition: 'Alat analisis data yang kuat untuk meringkas, mengelompokkan, dan mengatur ulang data dalam jumlah besar tanpa mengubah data asli.' },
+        { term: 'Validasi Data (Data Validation)', definition: 'Fitur untuk membatasi jenis data yang dapat dimasukkan ke dalam sel, membantu mencegah kesalahan input. Contoh: hanya mengizinkan tanggal atau angka dalam rentang tertentu.' },
+        { term: 'VLOOKUP', definition: 'Fungsi untuk mencari nilai dalam kolom pertama dari sebuah tabel dan mengembalikan nilai di baris yang sama dari kolom lain. Singkatan dari "Vertical Lookup".' }
+    ].sort((a, b) => a.term.localeCompare(b.term)); // Sort glossary alphabetically
 
     // --- DOM ELEMENTS ---
     const modal = document.getElementById('info-modal');
@@ -375,4 +377,3 @@
 
 </body>
 </html>
-
