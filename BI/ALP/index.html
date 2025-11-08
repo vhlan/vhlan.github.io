@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKM - Laporan Ketidaksesuaian Mobile</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- html5-qrcode library -->
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* Custom scrollbar for better mobile feel */
+        .report-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .report-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
+        <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian Manajemen (LKM)</h1>
+    </header>
+
+    <!-- Konten Utama (Daftar Laporan) -->
+    <main class="flex-grow p-4">
+        <div class="bg-white p-4 rounded-xl shadow-lg">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian</h2>
+            <div id="report-list" class="space-y-3 max-h-96 overflow-y-auto report-list">
+                <!-- Laporan akan di-render di sini -->
+                <p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button (FAB) -->
+    <div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
+        <button id="create-report-btn" 
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-300 transform hover:scale-105 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            BUAT LAPORAN
+        </button>
+    </div>
+
+    <!-- Modal Scanner QR/Barcode -->
+    <div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4" onclick="closeScannerModal()">
+        <div class="bg-white w-full max-w-sm rounded-xl p-4 shadow-2xl" onclick="event.stopPropagation()">
+            <h3 class="text-xl font-bold mb-4 text-center">Pemindai SKU (QR/Barcode)</h3>
+            <div id="reader" class="w-full aspect-square border-4 border-dashed border-indigo-400 rounded-lg overflow-hidden"></div>
+            <p id="scan-result" class="mt-4 text-center text-indigo-600 font-semibold hidden">Memproses...</p>
+            <button onclick="closeScannerModal()" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl">Batal</button>
+        </div>
+    </div>
+
+    <!-- Modal Formulir Laporan -->
+    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl my-8" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">Formulir Laporan Ketidaksesuaian</h3>
+            
+            <form id="report-form" class="space-y-4">
+                
+                <!-- SKU (Kode Barang) - Otomatis terisi dari Scanner -->
+                <div>
+                    <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang)</label>
+                    <input type="text" id="sku" name="sku" required readonly
+                           class="mt-1 w-full p-3 border border-indigo-300 bg-indigo-50 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg">
+                </div>
+                
+                <!-- QTY Masuk (Diterima) -->
+                <div>
+                    <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya)</label>
+                    <input type="number" id="qtyMasuk" name="qtyMasuk" required min="1"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- QTY Aktual (Dihitung) -->
+                <div>
+                    <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan)</label>
+                    <input type="number" id="qtyAktual" name="qtyAktual" required min="0"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Keterangan Otomatis (Status) -->
+                <div class="rounded-lg p-3" id="status-display-card">
+                    <p class="text-sm font-medium text-gray-700">Status Ketidaksesuaian:</p>
+                    <p id="status-display" class="font-bold text-lg text-center mt-1 text-gray-500">Belum dihitung</p>
+                </div>
+                
+                <!-- Supplier / Partai -->
+                <div>
+                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier / Partai (Contoh: AMDA/P.377)</label>
+                    <input type="text" id="supplier" name="supplier" required
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <!-- Pembagian -->
+                <div>
+                    <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept)</label>
+                    <input type="text" id="pembagian" name="pembagian"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <!-- Foto Barang (Sederhana - hanya URL/Keterangan) -->
+                <div>
+                    <label for="foto" class="block text-sm font-medium text-gray-700">Foto Barang (Keterangan / URL)</label>
+                    <input type="text" id="foto" name="foto"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <!-- Tombol Submit dan Batal -->
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeReportModal()" 
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
+                        Batal
+                    </button>
+                    <button type="submit" 
+                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150">
+                        SIMPAN LAPORAN
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Pesan (Untuk notifikasi/alert) -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs text-center">
+            <p id="message-text" class="text-gray-800 font-medium"></p>
+            <button onclick="document.getElementById('message-modal').classList.add('hidden')" class="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg">OK</button>
+        </div>
+    </div>
+
+
+    <script>
+        const DB_NAME = 'LKM_DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'reports';
+
+        let db;
+        let html5QrCode;
+
+        // --- Helper Function untuk IndexedDB ---
+
+        /**
+         * Membuka koneksi IndexedDB.
+         * @returns {Promise<IDBDatabase>}
+         */
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("IndexedDB error:", event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        /**
+         * Menyimpan laporan baru ke IndexedDB.
+         * @param {Object} reportData
+         * @returns {Promise<void>}
+         */
+        function addReport(reportData) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(reportData);
+
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        /**
+         * Mengambil semua laporan dari IndexedDB.
+         * @returns {Promise<Array<Object>>}
+         */
+        function getReports() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = (event) => resolve(event.target.result.reverse()); // Urutkan terbaru di atas
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        // --- UI & Logic Functions ---
+        
+        /** Menampilkan pesan notifikasi kustom */
+        function showMessage(text) {
+            document.getElementById('message-text').textContent = text;
+            document.getElementById('message-modal').classList.remove('hidden');
+            document.getElementById('message-modal').classList.add('flex');
+        }
+
+        /** Render daftar laporan ke DOM */
+        async function renderReports() {
+            try {
+                const reports = await getReports();
+                const listContainer = document.getElementById('report-list');
+                const emptyMessage = document.getElementById('empty-message');
+                listContainer.innerHTML = ''; // Bersihkan kontainer
+                
+                if (reports.length === 0) {
+                    listContainer.appendChild(emptyMessage);
+                    emptyMessage.classList.remove('hidden');
+                    return;
+                }
+                emptyMessage.classList.add('hidden');
+
+                reports.forEach(report => {
+                    let statusColor = 'bg-gray-200 text-gray-700';
+                    if (report.status === 'KURANG') statusColor = 'bg-red-100 text-red-700 font-bold';
+                    if (report.status === 'LEBIH') statusColor = 'bg-yellow-100 text-yellow-700 font-bold';
+                    if (report.status === 'SESUAI') statusColor = 'bg-green-100 text-green-700 font-bold';
+
+                    const reportItem = document.createElement('div');
+                    reportItem.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition duration-200';
+                    reportItem.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <p class="text-sm text-gray-500">${report.tanggal}</p>
+                                <p class="text-xl font-extrabold text-indigo-700 truncate">${report.sku}</p>
+                                <p class="text-xs text-gray-600">${report.supplier || '-'}</p>
+                            </div>
+                            <div class="text-right ml-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${statusColor}">
+                                    ${report.status}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-sm">
+                            <p><strong>Masuk:</strong> ${report.qtyMasuk} | <strong>Aktual:</strong> ${report.qtyAktual}</p>
+                        </div>
+                    `;
+                    listContainer.appendChild(reportItem);
+                });
+
+            } catch (error) {
+                console.error('Gagal mengambil laporan:', error);
+                showMessage('Gagal memuat data laporan dari penyimpanan.');
+            }
+        }
+        
+        /** Buka modal scanner dan mulai kamera */
+        function openScannerModal() {
+            document.getElementById('scanner-modal').classList.remove('hidden');
+            document.getElementById('scanner-modal').classList.add('flex');
+            document.getElementById('scan-result').classList.add('hidden');
+
+            // 1. Pastikan instance scanner dibersihkan/dihilangkan sebelum dibuat ulang.
+            if (html5QrCode) {
+                html5QrCode.stop().catch(e => console.log('Previous scanner stop failed:', e));
+                // Clear the reader element's content manually if needed, though stop() usually handles it.
+                document.getElementById('reader').innerHTML = ''; 
+            }
+
+            html5QrCode = new Html5Qrcode("reader");
+
+            const config = { 
+                fps: 10, 
+                qrbox: { width: 250, height: 250 },
+                // Tambahkan fitur untuk memilih kamera yang paling sesuai secara otomatis.
+                // Jika facingMode: "environment" gagal, html5-qrcode akan mencoba kamera lain.
+            };
+            
+            // 2. Tentukan input kamera yang akan digunakan (kamera belakang/environment)
+            const videoInput = { facingMode: "environment" }; // Coba kamera belakang
+            
+            const onScanSuccess = (decodedText, decodedResult) => {
+                console.log(`Scan successful: ${decodedText}`);
+                document.getElementById('scan-result').textContent = `SKU ditemukan: ${decodedText}`;
+                document.getElementById('scan-result').classList.remove('hidden');
+                
+                // Hentikan scanner setelah berhasil
+                html5QrCode.stop().then(() => {
+                    closeScannerModal();
+                    openReportModal(decodedText); // Lanjutkan ke form laporan
+                }).catch(err => {
+                    console.error("Gagal menghentikan scanner setelah berhasil scan: ", err);
+                    closeScannerModal();
+                    openReportModal(decodedText);
+                });
+            };
+
+            // 3. Mulai scanning dengan penanganan error yang lebih informatif
+            html5QrCode.start(videoInput, config, onScanSuccess)
+                .then(() => {
+                    console.log("Kamera berhasil dimulai.");
+                })
+                .catch(err => {
+                    console.error("Gagal memulai kamera. Detail Error:", err);
+                    // Coba mencari list kamera yang tersedia jika gagal, mungkin karena nama kamera tidak dikenal
+                    Html5Qrcode.getCameras().then(devices => {
+                        if (devices && devices.length) {
+                            console.log("Daftar perangkat kamera yang tersedia:", devices);
+                            showMessage(`Gagal memulai kamera. Perangkat kamera terdeteksi, namun mungkin browser memblokir akses atau mode 'environment' tidak didukung. Coba muat ulang halaman.`);
+                        } else {
+                            showMessage("Gagal memulai kamera. Tidak ada perangkat kamera yang terdeteksi atau browser memblokir akses secara total.");
+                        }
+                    }).catch(error => {
+                        console.error("Gagal mendapatkan daftar kamera:", error);
+                        showMessage("Gagal memulai kamera. Periksa izin di pengaturan browser Anda.");
+                    });
+                    closeScannerModal();
+                });
+        }
+
+        /** Tutup modal scanner */
+        function closeScannerModal() {
+            document.getElementById('scanner-modal').classList.add('hidden');
+            document.getElementById('scanner-modal').classList.remove('flex');
+            document.getElementById('scan-result').classList.add('hidden');
+            if (html5QrCode) {
+                html5QrCode.stop().catch(err => {
+                    // Hanya log error jika tidak bisa berhenti, tapi tetap tutup modal
+                    console.warn("Gagal menghentikan scanner:", err);
+                });
+            }
+        }
+
+        /** Buka modal form laporan */
+        function openReportModal(sku = '') {
+            const form = document.getElementById('report-form');
+            form.reset();
+            document.getElementById('sku').value = sku;
+            updateStatusDisplay(); // Reset status display
+            
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').classList.add('flex');
+        }
+
+        /** Tutup modal form laporan */
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+            document.getElementById('report-modal').classList.remove('flex');
+        }
+
+        /** Logika untuk menentukan Status dan mengupdate UI */
+        function updateStatusDisplay() {
+            const qtyMasuk = parseInt(document.getElementById('qtyMasuk').value) || 0;
+            const qtyAktual = parseInt(document.getElementById('qtyAktual').value) || 0;
+            const statusDisplay = document.getElementById('status-display');
+            const statusCard = document.getElementById('status-display-card');
+            
+            let statusText = 'Belum dihitung';
+            let bgColor = 'bg-gray-100';
+            let textColor = 'text-gray-500';
+
+            if (qtyMasuk > 0 && qtyAktual >= 0) {
+                if (qtyAktual > qtyMasuk) {
+                    statusText = `LEBIH (${qtyAktual - qtyMasuk})`;
+                    bgColor = 'bg-yellow-200';
+                    textColor = 'text-yellow-800';
+                } else if (qtyAktual < qtyMasuk) {
+                    statusText = `KURANG (${qtyMasuk - qtyAktual})`;
+                    bgColor = 'bg-red-200';
+                    textColor = 'text-red-800';
+                } else {
+                    statusText = 'SESUAI';
+                    bgColor = 'bg-green-200';
+                    textColor = 'text-green-800';
+                }
+            }
+
+            statusDisplay.textContent = statusText;
+            statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
+            statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
+            
+            return statusText.split(' ')[0]; // Ambil hanya kata statusnya (SESUAI/KURANG/LEBIH)
+        }
+
+        // --- Event Listeners ---
+
+        // Inisialisasi Database dan Tampilan
+        window.onload = async () => {
+            try {
+                await openDB();
+                await renderReports();
+            } catch (error) {
+                showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
+            }
+
+            // Listener untuk tombol "Buat Laporan"
+            document.getElementById('create-report-btn').addEventListener('click', openScannerModal);
+
+            // Listener untuk perubahan input QTY (untuk update Status otomatis)
+            document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
+            document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
+            
+            // Listener untuk submit form
+            document.getElementById('report-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const form = e.target;
+                const qtyMasuk = parseInt(form.qtyMasuk.value);
+                const qtyAktual = parseInt(form.qtyAktual.value);
+                
+                if (qtyMasuk <= 0 || qtyAktual < 0) {
+                    showMessage("QTY Masuk harus lebih dari 0 dan QTY Aktual tidak boleh kosong.");
+                    return;
+                }
+
+                const newReport = {
+                    sku: form.sku.value.toUpperCase(),
+                    qtyMasuk: qtyMasuk,
+                    qtyAktual: qtyAktual,
+                    supplier: form.supplier.value,
+                    pembagian: form.pembagian.value,
+                    foto: form.foto.value || 'Tidak ada keterangan foto',
+                    tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                    status: updateStatusDisplay(), // Ambil status final
+                };
+
+                try {
+                    await addReport(newReport);
+                    closeReportModal();
+                    await renderReports();
+                    showMessage('Laporan Ketidaksesuaian berhasil disimpan!');
+                } catch (error) {
+                    console.error('Gagal menyimpan laporan:', error);
+                    showMessage('Gagal menyimpan laporan. Terjadi kesalahan pada IndexedDB.');
+                }
+            });
+        };
+    </script>
+</body>
+</html>
