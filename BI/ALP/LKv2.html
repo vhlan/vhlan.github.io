@@ -4,9 +4,15 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>LKM - Real-Time Scanner</title>
-    <!-- Tailwind CSS CDN --><script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Inter --><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
-    <!-- Third-Party Library for QR/Barcode Scanning --><script src="https://unpkg.com/html5-qrcode"></script>
+    
+    <!-- Load Tailwind CSS -->
+<script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Load Inter Font -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- Load html5-qrcode library -->
+<script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -22,82 +28,91 @@
             background-color: #cbd5e1;
             border-radius: 20px;
         }
-        /* Style the reader container inside the modal */
-        #reader {
-            width: 100%;
-            border-radius: 0.75rem; /* rounded-xl */
-            overflow: hidden;
-            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
-            max-width: 400px; /* Tambahkan ini agar tidak terlalu lebar di tablet/desktop */
-            aspect-ratio: 1/1;
-        }
-        
         /* Ensure the modal content itself correctly handles overflow */
         .modal-content-scroll {
             max-height: 90vh; /* Maksimum 90% tinggi viewport */
             overflow-y: auto; /* Aktifkan scrollbar vertikal jika konten lebih panjang */
             -webkit-overflow-scrolling: touch; /* Smooth scrolling for iOS */
         }
+        
+        /* Style the reader container inside the modal */
+        #reader {
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+            overflow: hidden;
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+            max-width: 400px; 
+            aspect-ratio: 1/1;
+        }
 
-        /* Specific adjustments for SKU input and scan button to ensure they fit */
+        /* Specific adjustments for SKU input to contain the button */
         .sku-input-group {
-            display: flex; /* Ensure they are side-by-side */
-            gap: 0.5rem; /* Space between input and button */
-            align-items: center; /* Vertically align them */
+            position: relative; /* Container harus relative */
         }
         
+        /* Style for the SKU input itself */
         #sku {
-            flex-grow: 1; /* Allow input to take available space */
-            padding: 0.625rem 0.75rem; /* py-2.5 px-3 - Consistent padding */
-            font-size: 1rem; /* text-base - Consistent font size */
-            line-height: 1.5; /* Default line height for better vertical alignment */
-            /* Ensure text-transform uppercase is working */
+            width: 100%;
+            padding-right: 3.5rem; /* Tambahkan padding di kanan agar tombol muat */
+            padding-left: 0.75rem; /* px-3 */
+            padding-top: 0.625rem; /* py-2.5 */
+            padding-bottom: 0.625rem; /* py-2.5 */
+            font-size: 1rem;
+            line-height: 1.5;
             text-transform: uppercase; 
         }
         
+        /* Style for the Scan button (absolute positioning) */
         #scan-sku-btn {
-            flex-shrink: 0; /* Prevent button from shrinking */
-            padding: 0.5rem 0.75rem; /* py-2 px-3 */
-            height: fit-content; /* Adjust height to content, making it flexible */
-            line-height: 1; /* Adjust line height to prevent extra space */
+            position: absolute;
+            top: 50%;
+            right: 0.25rem; /* Padding dari kanan container (px-1) */
+            transform: translateY(-50%); /* Pusatkan vertikal */
+            height: 2.75rem; /* Tinggi yang cocok dengan input */
+            width: 2.75rem;
+            padding: 0; /* Hapus padding internal */
         }
         
-        /* Override default Tailwind for file input to ensure it fits */
+        /* Override default Tailwind for file input button */
         input[type="file"]::file-selector-button {
-            padding: 0.5rem 1rem; /* py-2 px-4 */
-            margin-right: 1rem; /* mr-4 */
-            border-radius: 9999px; /* rounded-full */
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            border-radius: 9999px;
             border: 0;
-            font-size: 0.875rem; /* text-sm */
-            font-weight: 600; /* font-semibold */
-            background-color: #e0e7ff; /* bg-indigo-50 */
-            color: #4338ca; /* text-indigo-700 */
+            font-size: 0.875rem;
+            font-weight: 600;
+            background-color: #e0e7ff; 
+            color: #4338ca; 
             cursor: pointer;
             transition: background-color 0.15s ease-in-out;
         }
 
         input[type="file"]::file-selector-button:hover {
-            background-color: #c7d2fe; /* hover:file:bg-indigo-100 */
+            background-color: #c7d2fe;
         }
 
     </style>
 </head>
 <body class="min-h-screen flex flex-col">
 
-    <!-- Header Aplikasi --><header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
+    <!-- Header Aplikasi -->
+<header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
         <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian (Real-Time Scanner)</h1>
     </header>
 
-    <!-- Konten Utama (Daftar Laporan) --><main class="flex-grow p-4">
+    <!-- Main Content - Daftar Laporan -->
+<main class="flex-grow p-4">
         <div class="bg-white p-4 rounded-xl shadow-lg">
             <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian</h2>
             <div id="report-list" class="space-y-3 max-h-96 overflow-y-auto report-list">
-                <!-- Laporan akan di-render di sini --><p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
+                <!-- Data Laporan akan dirender di sini -->
+<p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
             </div>
         </div>
     </main>
 
-    <!-- Floating Action Button (FAB) --><div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
+    <!-- Footer - Tombol Buat Laporan -->
+<div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
         <button id="create-report-btn" 
                 class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-300 transform hover:scale-105 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
@@ -107,74 +122,89 @@
         </button>
     </div>
 
-    <!-- Modal Formulir Laporan (CREATE/EDIT) --><div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4">
+    <!-- MODAL - Formulir Laporan -->
+<div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 modal-content-scroll" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800" id="modal-title">Formulir Laporan Ketidaksesuaian</h3>
             
             <form id="report-form" class="space-y-4">
                 
-                <!-- SKU (Kode Barang) - SCANNER SUNGGUHAN --><div>
+                <!-- Input SKU dengan Tombol Scanner di Dalam -->
+<div>
                     <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
                     <div class="sku-input-group mt-1">
                         <input type="text" id="sku" name="sku" required 
                                class="border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold"
-                               placeholder="Scan atau masukkan kode barang">
-                        <!-- Tombol Scan SKU --><button type="button" id="scan-sku-btn"
+                               placeholder="Scan atau masukkan kode barang (Contoh: A20341)">
+                        
+                        <!-- Tombol Scanner -->
+<button type="button" id="scan-sku-btn"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold rounded-lg shadow-md transition duration-150 flex items-center justify-center">
-                            <!-- Icon Camera/Scanner --><svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.404 4h3.192a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
-                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            
+                            <!-- Ikon Scanner/Barcode -->
+<svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M4 7v10m6-10v10m5-10v10m4-10v10M9 5h6a2 2 0 012 2v10a2 2 0 01-2 2H9a2 2 0 01-2-2V7a2 2 0 012-2z" />
                             </svg>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 italic mt-1">Gunakan tombol kamera untuk memindai kode barang (QR/Barcode) secara real-time.</p>
+                    <p class="text-xs text-gray-500 italic mt-1">Gunakan tombol scanner di samping untuk memindai kode barang (QR/Barcode).</p>
                 </div>
                 
-                <!-- QTY Masuk (Diterima) --><div>
+                <!-- Input QTY Masuk -->
+<div>
                     <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya) <span class="text-red-500">*</span></label>
                     <input type="number" id="qtyMasuk" name="qtyMasuk" required min="1"
-                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Masukkan jumlah yang seharusnya masuk">
                 </div>
 
-                <!-- QTY Aktual (Dihitung) --><div>
+                <!-- Input QTY Aktual -->
+<div>
                     <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan) <span class="text-red-500">*</span></label>
                     <input type="number" id="qtyAktual" name="qtyAktual" required min="0"
-                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Masukkan jumlah aktual hasil hitungan">
                 </div>
 
-                <!-- Keterangan Otomatis (Status) --><div class="rounded-lg p-3" id="status-display-card">
+                <!-- Status Perbedaan -->
+<div class="rounded-lg p-3" id="status-display-card">
                     <p class="text-sm font-medium text-gray-700">Status Ketidaksesuaian:</p>
                     <p id="status-display" class="font-bold text-lg text-center mt-1 text-gray-500">Belum dihitung</p>
                 </div>
                 
-                <!-- Supplier / Partai --><div>
-                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier / Partai (Contoh: AMDA/P.377)</label>
+                <!-- Input Supplier -->
+<div>
+                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier / Partai</label>
                     <input type="text" id="supplier" name="supplier" required
-                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                           placeholder="Contoh: AMDA/P.377">
                 </div>
                 
-                <!-- Pembagian (Dropdown: Tidak ada pembagian, 1-6) --><div>
+                <!-- Input Pembagian -->
+<div>
                     <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept) - Opsional</label>
                     <select id="pembagian" name="pembagian"
                             class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
                         <option value="">Tidak ada pembagian</option>
-                        <option value="1">1</option>
-                        <option value="2">2</option>
-                        <option value="3">3</option>
-                        <option value="4">4</option>
-                        <option value="5">5</option>
-                        <option value="6">6</option>
+                        <option value="1">Pembagian 1</option>
+                        <option value="2">Pembagian 2</option>
+                        <option value="3">Pembagian 3</option>
+                        <option value="4">Pembagian 4</option>
+                        <option value="5">Pembagian 5</option>
+                        <option value="6">Pembagian 6</option>
                     </select>
                 </div>
                 
-                <!-- Foto Barang (FILE UPLOAD) - Masih menggunakan upload file jika diperlukan --><div>
+                <!-- Input Foto -->
+<div>
                     <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Barang (Opsional)</label>
                     <div id="current-photo-preview" class="mb-3"></div>
                     <input type="file" id="foto" name="foto" accept="image/*"
                            class="w-full text-sm text-gray-500">
                 </div>
                 
-                <!-- Tombol Submit dan Batal --><div class="flex space-x-4 pt-4">
+                <!-- Tombol Aksi -->
+<div class="flex space-x-4 pt-4">
                     <button type="button" onclick="closeReportModal()" 
                              class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
                         Batal
@@ -188,7 +218,8 @@
         </div>
     </div>
     
-    <!-- Modal Rincian Laporan (DETAIL VIEW) - (Tidak ada perubahan) --><div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4 overflow-y-auto">
+    <!-- MODAL - Rincian Laporan (DETAIL) -->
+<div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 max-h-[90vh] overflow-y-auto modal-content-scroll" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Rincian Laporan Ketidaksesuaian</h3>
 
@@ -227,14 +258,17 @@
                     <p id="detail-pembagian" class="text-gray-900"></p>
                 </div>
 
-                <!-- Kontainer Foto --><div class="border-t pt-4">
+                <!-- Kontainer Foto -->
+<div class="border-t pt-4">
                     <p class="font-medium text-gray-700 mb-2">Foto Barang:</p>
                     <div id="detail-photo-container" class="w-full bg-gray-100 p-2 rounded-lg min-h-[100px] flex items-center justify-center">
-                        <!-- Foto akan dimuat di sini oleh JS --></div>
+                        <!-- Foto akan dimuat di sini -->
+</div>
                 </div>
             </div>
 
-            <!-- Tombol Aksi Detail Modal --><div class="flex space-x-4 pt-6 border-t mt-6">
+            <!-- Tombol Aksi Detail -->
+<div class="flex space-x-4 pt-6 border-t mt-6">
                 <button type="button" onclick="document.getElementById('detail-modal').classList.add('hidden')" 
                          class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
                     Tutup
@@ -250,18 +284,22 @@
         </div>
     </div>
     
-    <!-- Modal PESAN/KONFIRMASI (Tidak ada perubahan) --><div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center p-4">
+    <!-- MODAL - Pesan/Konfirmasi -->
+<div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center p-4">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs text-center">
             <p id="message-text" class="text-gray-800 font-medium mb-4"></p>
             <div id="modal-actions" class="flex justify-center space-x-4 mt-4">
-                <!-- Buttons handled by JS --></div>
+                <!-- Tombol Aksi Pesan akan dirender di sini -->
+</div>
         </div>
     </div>
     
-    <!-- Modal SCANNER REAL-TIME BARU --><div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex-col items-center justify-center p-4">
+    <!-- MODAL - Real-Time Scanner -->
+<div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex-col items-center justify-center p-4">
         <h3 class="text-xl font-bold text-white mb-4">Pindai Kode SKU/Barcode</h3>
         
-        <!-- Reader/Video Feed container --><div id="reader" style="width: 100%; max-width: 400px; aspect-ratio: 1/1;"></div>
+        <!-- Kontainer Scanner -->
+<div id="reader" style="width: 100%; max-width: 400px; aspect-ratio: 1/1;"></div>
         
         <button id="stop-scanner-btn" onclick="stopScanner()"
                 class="mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-150 flex items-center justify-center">
@@ -369,7 +407,7 @@
             });
         }
         
-        // --- UI & Logic Functions (Sebagian besar sama) ---
+        // --- UI & Logic Functions (Sama seperti sebelumnya, kecuali editReport) ---
         
         function showMessage(text, isConfirmation = false, onConfirm = null) {
             const modal = document.getElementById('message-modal');
