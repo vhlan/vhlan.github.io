@@ -96,13 +96,13 @@
                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 
-                <!-- Pembagian (Sekarang menggunakan dropdown 1-10 dengan placeholder opsional) -->
+                <!-- Pembagian (Dropdown baru: Tidak ada pembagian, 1-10) -->
                 <div>
                     <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept) - Opsional</label>
                     <select id="pembagian" name="pembagian"
                             class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
-                        <!-- Opsi placeholder yang tersembunyi. Menyimpan nilai kosong jika tidak diubah. -->
-                        <option value="" selected disabled hidden>-- Pilih Pembagian (Opsional) --</option>
+                        <!-- Opsi "Tidak ada pembagian" menyimpan nilai kosong/default -->
+                        <option value="">Tidak ada pembagian</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
                         <option value="3">3</option>
@@ -429,6 +429,9 @@
                 // Mode Buat Baru
                 currentReportId = null; // Pastikan null saat mode buat baru
                 form.reset();
+                // Set default Pembagian ke opsi pertama ("Tidak ada pembagian")
+                form.pembagian.value = ""; 
+
                 modalTitle.textContent = "Formulir Laporan Ketidaksesuaian";
                 submitButton.textContent = "SIMPAN LAPORAN";
                 updateStatusDisplay();
@@ -458,14 +461,14 @@
                 document.getElementById('detail-tanggal').textContent = report.tanggal;
                 document.getElementById('detail-supplier').textContent = report.supplier || '-';
                 
-                // --- LOGIKA BARU UNTUK PEMBAGIAN ---
+                // --- LOGIKA UNTUK PEMBAGIAN ---
                 const rawPembagian = report.pembagian;
-                // Jika rawPembagian memiliki nilai, tampilkan "Pembagian X", jika kosong, tampilkan string kosong.
+                // Jika rawPembagian memiliki nilai (1-10), tampilkan "Pembagian X", jika kosong (""), tampilkan string kosong ("").
                 const formattedPembagian = rawPembagian 
                     ? `Pembagian ${rawPembagian}` 
                     : ""; 
                 document.getElementById('detail-pembagian').textContent = formattedPembagian;
-                // --- AKHIR LOGIKA BARU ---
+                // --- AKHIR LOGIKA PEMBAGIAN ---
 
                 document.getElementById('detail-qtyMasuk').textContent = report.qtyMasuk;
                 document.getElementById('detail-qtyAktual').textContent = report.qtyAktual;
