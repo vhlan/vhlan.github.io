@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKM - Laporan Ketidaksesuaian Mobile</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        /* Custom scrollbar for better mobile feel */
+        .report-list::-webkit-scrollbar,
+        .modal-content-scroll::-webkit-scrollbar { /* Ditambahkan untuk scrollbar modal */
+            width: 4px;
+        }
+        .report-list::-webkit-scrollbar-thumb,
+        .modal-content-scroll::-webkit-scrollbar-thumb { /* Ditambahkan untuk scrollbar modal */
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+    </style>
+</head>
+<body class="min-h-screen flex flex-col">
+
+    <!-- Header Aplikasi -->
+    <header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
+        <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian Manajemen (LKM)</h1>
+    </header>
+
+    <!-- Konten Utama (Daftar Laporan) -->
+    <main class="flex-grow p-4">
+        <div class="bg-white p-4 rounded-xl shadow-lg">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian (Klik untuk Rincian)</h2>
+            <div id="report-list" class="space-y-3 max-h-96 overflow-y-auto report-list">
+                <!-- Laporan akan di-render di sini -->
+                <p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Floating Action Button (FAB) -->
+    <div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
+        <button id="create-report-btn" 
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-300 transform hover:scale-105 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            BUAT LAPORAN BARU
+        </button>
+    </div>
+
+    <!-- Modal Formulir Laporan (Digunakan untuk CREATE dan EDIT) -->
+    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <!-- Konten Modal: Menambahkan m-4, max-h-[90vh], dan overflow-y-auto -->
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 max-h-[90vh] overflow-y-auto modal-content-scroll" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800" id="modal-title">Formulir Laporan Ketidaksesuaian</h3>
+            
+            <form id="report-form" class="space-y-4">
+                
+                <!-- SKU (Kode Barang) - Manual Input DAN SCANNER BARU -->
+                <div>
+                    <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
+                    <div class="flex space-x-2 mt-1">
+                        <input type="text" id="sku" name="sku" required 
+                               class="flex-grow p-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg uppercase">
+                        <!-- Tombol Scan SKU -->
+                        <button type="button" id="scan-sku-btn"
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 flex items-center justify-center">
+                            <!-- Icon Camera/Scanner -->
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.404 4h3.192a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
+                                <path stroke-linecap="round" stroke-linejoin="round" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z" />
+                            </svg>
+                        </button>
+                    </div>
+                    <p class="text-xs text-gray-500 italic mt-1">Gunakan tombol kamera untuk mengisi SKU dari hasil scan.</p>
+                </div>
+                
+                <!-- Hidden input for camera access (Scanner) -->
+                <!-- 'capture="environment"' akan memaksa pembukaan kamera belakang pada perangkat seluler -->
+                <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
+
+
+                <!-- QTY Masuk (Diterima) -->
+                <div>
+                    <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya) <span class="text-red-500">*</span></label>
+                    <input type="number" id="qtyMasuk" name="qtyMasuk" required min="1"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- QTY Aktual (Dihitung) -->
+                <div>
+                    <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan) <span class="text-red-500">*</span></label>
+                    <input type="number" id="qtyAktual" name="qtyAktual" required min="0"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <!-- Keterangan Otomatis (Status) -->
+                <div class="rounded-lg p-3" id="status-display-card">
+                    <p class="text-sm font-medium text-gray-700">Status Ketidaksesuaian:</p>
+                    <p id="status-display" class="font-bold text-lg text-center mt-1 text-gray-500">Belum dihitung</p>
+                </div>
+                
+                <!-- Supplier / Partai -->
+                <div>
+                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier / Partai (Contoh: AMDA/P.377)</label>
+                    <input type="text" id="supplier" name="supplier" required
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <!-- Pembagian (Dropdown: Tidak ada pembagian, 1-6) -->
+                <div>
+                    <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept) - Opsional</label>
+                    <select id="pembagian" name="pembagian"
+                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
+                        <!-- Opsi "Tidak ada pembagian" menyimpan nilai kosong/default -->
+                        <option value="">Tidak ada pembagian</option>
+                        <option value="1">1</option>
+                        <option value="2">2</option>
+                        <option value="3">3</option>
+                        <option value="4">4</option>
+                        <option value="5">5</option>
+                        <option value="6">6</option>
+                    </select>
+                </div>
+                
+                <!-- Foto Barang (FILE UPLOAD) -->
+                <div>
+                    <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Barang (Opsional - Ganti/kosongkan untuk edit)</label>
+                    <!-- Div untuk menampilkan pratinjau foto saat ini (saat mode edit) -->
+                    <div id="current-photo-preview" class="mb-3">
+                        <!-- Konten pratinjau akan dimasukkan di sini oleh JS -->
+                    </div>
+                    <input type="file" id="foto" name="foto" accept="image/*"
+                           class="w-full text-sm text-gray-500 
+                                     file:mr-4 file:py-2 file:px-4
+                                     file:rounded-full file:border-0
+                                     file:text-sm file:font-semibold
+                                     file:bg-indigo-50 file:text-indigo-700
+                                     hover:file:bg-indigo-100">
+                </div>
+                
+                <!-- Tombol Submit dan Batal -->
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeReportModal()" 
+                             class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
+                        Batal
+                    </button>
+                    <button type="submit" id="submit-button-text"
+                             class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150">
+                        SIMPAN LAPORAN
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+    
+    <!-- Modal Rincian Laporan (DETAIL VIEW) -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 max-h-[90vh] overflow-y-auto modal-content-scroll" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Rincian Laporan Ketidaksesuaian</h3>
+
+            <div class="space-y-4">
+                <div class="bg-indigo-50 p-3 rounded-lg">
+                    <p class="text-sm text-indigo-700">SKU (Kode Barang):</p>
+                    <p id="detail-sku" class="text-xl font-extrabold text-indigo-900"></p>
+                </div>
+                
+                <div class="grid grid-cols-2 gap-4">
+                    <div class="text-sm">
+                        <p class="font-medium text-gray-700">Tanggal:</p>
+                        <p id="detail-tanggal" class="text-gray-900"></p>
+                    </div>
+                    <div class="text-sm">
+                        <p class="font-medium text-gray-700">Status:</p>
+                        <p id="detail-status" class="font-bold"></p>
+                    </div>
+                </div>
+
+                <div class="text-sm border-t pt-3">
+                    <p class="font-medium text-gray-700">QTY Masuk (Harusnya):</p>
+                    <p id="detail-qtyMasuk" class="text-gray-900 text-lg font-semibold"></p>
+                </div>
+                <div class="text-sm">
+                    <p class="font-medium text-gray-700">QTY Aktual (Dihitung):</p>
+                    <p id="detail-qtyAktual" class="text-gray-900 text-lg font-semibold"></p>
+                </div>
+                
+                <div class="text-sm border-t pt-3">
+                    <p class="font-medium text-gray-700">Supplier / Partai:</p>
+                    <p id="detail-supplier" class="text-gray-900"></p>
+                </div>
+                <div class="text-sm">
+                    <p class="font-medium text-gray-700">Pembagian (Lokasi/Dept):</p>
+                    <p id="detail-pembagian" class="text-gray-900"></p>
+                </div>
+
+                <!-- Kontainer Foto -->
+                <div class="border-t pt-4">
+                    <p class="font-medium text-gray-700 mb-2">Foto Barang:</p>
+                    <div id="detail-photo-container" class="w-full bg-gray-100 p-2 rounded-lg min-h-[100px] flex items-center justify-center">
+                        <!-- Foto akan dimuat di sini oleh JS -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tombol Aksi Detail Modal -->
+            <div class="flex space-x-4 pt-6 border-t mt-6">
+                <button type="button" onclick="document.getElementById('detail-modal').classList.add('hidden')" 
+                         class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
+                    Tutup
+                </button>
+                <button type="button" id="detail-edit-btn"
+                         class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150 flex items-center justify-center">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-2" viewBox="0 0 20 20" fill="currentColor">
+                        <path d="M13.586 3.586a2 2 0 112.828 2.828l-.793.793-2.828-2.828.793-.793zm-3.586 3.586L9.293 8.707 5.586 12.414 7 13.828l3.707-3.707.707.707 3.536-3.536-1.414-1.414zM4 16h4v-1H4v1z"/>
+                    </svg>
+                    Edit Laporan
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Pesan/Aksi (Untuk notifikasi/konfirmasi) -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs text-center">
+            <p id="message-text" class="text-gray-800 font-medium mb-4"></p>
+            <div id="modal-actions" class="flex justify-center space-x-4 mt-4">
+                <!-- Buttons handled by JS -->
+            </div>
+        </div>
+    </div>
+
+
+    <script>
+        const DB_NAME = 'LKM_DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'reports';
+
+        let db;
+        let currentReportId = null; 
+        let emptyMessageNode; 
+
+        // --- Helper Function untuk IndexedDB ---
+        
+        /** Membuka koneksi IndexedDB. */
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+
+                request.onerror = (event) => {
+                    console.error("IndexedDB error:", event.target.error);
+                    reject(event.target.error);
+                };
+
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
+        }
+
+        /** Menyimpan laporan baru ke IndexedDB. */
+        function addReport(reportData) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(reportData);
+
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        /** Mengupdate laporan yang sudah ada di IndexedDB (menggunakan put). */
+        function putReport(reportData) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                // put() akan mengupdate jika ID sudah ada
+                const request = store.put(reportData); 
+
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        /** Mengambil laporan tunggal berdasarkan ID dari IndexedDB. */
+        function getReportById(id) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                // Pastikan ID diperlakukan sebagai Number karena IndexedDB autoIncrement key biasanya Number
+                const request = store.get(Number(id)); 
+
+                request.onsuccess = (event) => resolve(event.target.result);
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        /** Mengambil semua laporan dari IndexedDB. */
+        function getReports() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+
+                request.onsuccess = (event) => resolve(event.target.result.reverse()); // Urutkan terbaru di atas
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
+
+        // --- FILE HANDLING FUNCTION ---
+
+        /** Mengubah objek File menjadi Base64 Data URL. */
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+            });
+        }
+        
+        // --- UI & Logic Functions ---
+        
+        /** Menampilkan pesan notifikasi kustom atau konfirmasi aksi. */
+        function showMessage(text, isConfirmation = false, onConfirm = null) {
+            const modal = document.getElementById('message-modal');
+            const textElement = document.getElementById('message-text');
+            const actionContainer = document.getElementById('modal-actions');
+            
+            textElement.textContent = text;
+            actionContainer.innerHTML = ''; // Bersihkan tombol aksi sebelumnya
+
+            if (isConfirmation && onConfirm) {
+                // Mode Konfirmasi: Tombol Batal dan Lanjutkan Simpan
+                const cancelButton = document.createElement('button');
+                cancelButton.textContent = "Batal";
+                cancelButton.className = "flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150";
+                cancelButton.onclick = () => modal.classList.add('hidden');
+
+                const confirmButton = document.createElement('button');
+                confirmButton.textContent = "Lanjutkan Simpan";
+                confirmButton.className = "flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150";
+                confirmButton.onclick = () => {
+                    modal.classList.add('hidden');
+                    onConfirm(); // Eksekusi logika penyimpanan
+                };
+
+                actionContainer.classList.add('space-x-4');
+                actionContainer.appendChild(cancelButton);
+                actionContainer.appendChild(confirmButton);
+
+            } else {
+                // Mode Notifikasi: Tombol OK saja
+                const okButton = document.createElement('button');
+                okButton.textContent = "OK";
+                okButton.className = "bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg";
+                okButton.onclick = () => modal.classList.add('hidden');
+
+                actionContainer.classList.remove('space-x-4');
+                actionContainer.appendChild(okButton);
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        /** Mengisi formulir modal dengan data laporan (untuk mode edit) */
+        async function editReport(id) {
+            try {
+                const report = await getReportById(id);
+                if (report) {
+                    currentReportId = id; // Set ID yang sedang diedit
+                    openReportModal(report);
+                } else {
+                    showMessage("Laporan tidak ditemukan.");
+                }
+            } catch (error) {
+                console.error('Gagal memuat laporan untuk diedit:', error);
+                showMessage('Gagal memuat data laporan.');
+            }
+        }
+
+
+        /** Buka modal form laporan (Manual Input/Edit) */
+        function openReportModal(report = null) {
+            const form = document.getElementById('report-form');
+            const modalTitle = document.getElementById('modal-title');
+            const submitButton = document.getElementById('submit-button-text');
+            const fileInput = document.getElementById('foto');
+            const photoPreviewDiv = document.getElementById('current-photo-preview'); 
+
+            photoPreviewDiv.innerHTML = ''; // Bersihkan pratinjau
+
+            if (report) {
+                // Mode Edit
+                modalTitle.textContent = "Edit Laporan (ID: " + report.id + ")";
+                submitButton.textContent = "UPDATE LAPORAN";
+
+                // Isi formulir dengan data laporan
+                form.sku.value = report.sku;
+                form.qtyMasuk.value = report.qtyMasuk;
+                form.qtyAktual.value = report.qtyAktual;
+                form.supplier.value = report.supplier;
+                // Pembagian akan memilih opsi yang sesuai (1-6) atau default (kosong)
+                form.pembagian.value = report.pembagian; 
+                
+                // Kosongkan input file untuk mencegah pengunggahan file yang tidak disengaja saat update
+                fileInput.value = ''; 
+                
+                // Logika untuk menampilkan foto saat ini
+                if (report.foto && typeof report.foto === 'string' && report.foto.startsWith('data:image')) {
+                    photoPreviewDiv.innerHTML = `
+                        <p class="text-sm font-semibold text-gray-700 mb-2">Foto Saat Ini Tersimpan:</p>
+                        <img src="${report.foto}" alt="Foto Barang Saat Ini" class="w-full max-h-48 object-contain rounded-lg shadow-md border border-gray-300 mb-2">
+                        <p class="text-xs text-gray-500 italic">Upload file baru di bawah untuk mengganti foto ini, atau biarkan kosong untuk mempertahankan foto ini.</p>
+                    `;
+                } else {
+                    photoPreviewDiv.innerHTML = '<p class="text-xs text-gray-500 italic">Tidak ada foto tersimpan untuk laporan ini.</p>';
+                }
+
+                updateStatusDisplay();
+            } else {
+                // Mode Buat Baru
+                currentReportId = null; // Pastikan null saat mode buat baru
+                form.reset();
+                // Set default Pembagian ke opsi pertama ("Tidak ada pembagian")
+                form.pembagian.value = ""; 
+
+                modalTitle.textContent = "Formulir Laporan Ketidaksesuaian";
+                submitButton.textContent = "SIMPAN LAPORAN";
+                updateStatusDisplay();
+            }
+
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').classList.add('flex');
+        }
+
+        /** Tutup modal form laporan */
+        function closeReportModal() {
+            currentReportId = null; // Reset ID saat modal ditutup
+            document.getElementById('report-modal').classList.add('hidden');
+            document.getElementById('report-modal').classList.remove('flex');
+        }
+        
+        /** Menampilkan modal rincian laporan saat kartu diklik */
+        async function viewReportDetails(id) {
+            try {
+                const report = await getReportById(id);
+                if (!report) {
+                    showMessage("Laporan tidak ditemukan.");
+                    return;
+                }
+
+                document.getElementById('detail-sku').textContent = report.sku;
+                document.getElementById('detail-tanggal').textContent = report.tanggal;
+                document.getElementById('detail-supplier').textContent = report.supplier || '-';
+                
+                // --- LOGIKA UNTUK PEMBAGIAN ---
+                const rawPembagian = report.pembagian;
+                // Jika rawPembagian memiliki nilai (1-6), tampilkan "Pembagian X", jika kosong (""), tampilkan string kosong ("").
+                const formattedPembagian = rawPembagian 
+                    ? `Pembagian ${rawPembagian}` 
+                    : "Tidak ada pembagian"; // Menampilkan teks jika kosong
+                document.getElementById('detail-pembagian').textContent = formattedPembagian;
+                // --- AKHIR LOGIKA PEMBAGIAN ---
+
+                document.getElementById('detail-qtyMasuk').textContent = report.qtyMasuk;
+                document.getElementById('detail-qtyAktual').textContent = report.qtyAktual;
+                
+                const detailStatusElement = document.getElementById('detail-status');
+                detailStatusElement.textContent = report.status;
+                
+                // Dynamic status color
+                let statusColorClass = 'text-gray-500';
+                if (report.status === 'KURANG') statusColorClass = 'text-red-600';
+                if (report.status === 'LEBIH') statusColorClass = 'text-yellow-600';
+                if (report.status === 'SESUAI') statusColorClass = 'text-green-600';
+                detailStatusElement.className = `font-bold ${statusColorClass}`;
+
+                // Photo handling
+                const photoContainer = document.getElementById('detail-photo-container');
+                if (report.foto && typeof report.foto === 'string' && report.foto.startsWith('data:image')) {
+                    photoContainer.innerHTML = `
+                        <img src="${report.foto}" alt="Foto Barang" class="w-full h-auto object-contain rounded-lg shadow-md max-h-64">
+                    `;
+                } else {
+                    photoContainer.innerHTML = `
+                        <div class="bg-gray-100 p-4 text-center rounded-lg text-gray-500 italic w-full">Tidak ada foto tersimpan.</div>
+                    `;
+                }
+                
+                // Set up Edit button inside detail modal to open the main edit modal
+                document.getElementById('detail-edit-btn').onclick = () => {
+                    document.getElementById('detail-modal').classList.add('hidden');
+                    editReport(id); 
+                };
+
+                // Display modal
+                document.getElementById('detail-modal').classList.remove('hidden');
+                document.getElementById('detail-modal').classList.add('flex');
+            } catch (error) {
+                console.error('Gagal memuat detail laporan:', error);
+                showMessage('Gagal memuat detail laporan.');
+            }
+        }
+
+
+        /** Render daftar laporan ke DOM */
+        async function renderReports() {
+            try {
+                const reports = await getReports();
+                const listContainer = document.getElementById('report-list');
+                
+                listContainer.innerHTML = ''; // Bersihkan kontainer
+                
+                if (reports.length === 0) {
+                    // Gunakan node yang sudah di-detach
+                    listContainer.appendChild(emptyMessageNode); 
+                    emptyMessageNode.classList.remove('hidden');
+                    return;
+                }
+                
+                // Sembunyikan pesan kosong
+                emptyMessageNode.classList.add('hidden');
+
+                reports.forEach(report => {
+                    let statusColor = 'bg-gray-200 text-gray-700';
+                    if (report.status === 'KURANG') statusColor = 'bg-red-100 text-red-700 font-bold';
+                    if (report.status === 'LEBIH') statusColor = 'bg-yellow-100 text-yellow-700 font-bold';
+                    if (report.status === 'SESUAI') statusColor = 'bg-green-100 text-green-700 font-bold';
+                    
+                    // LOGIKA UNTUK BADGE EDIT
+                    let editedBadge = '';
+                    if (report.isEdited) {
+                         editedBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Diedit</span>`;
+                    }
+                    
+                    const reportItem = document.createElement('div');
+                    reportItem.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition duration-200 cursor-pointer';
+                    // Tambahkan event listener ke seluruh kartu untuk menampilkan detail
+                    reportItem.setAttribute('onclick', `viewReportDetails(${report.id})`); 
+                    
+                    reportItem.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <p class="text-sm text-gray-500">${report.tanggal}</p>
+                                <p class="text-xl font-extrabold text-indigo-700 truncate">${report.sku}</p>
+                                <p class="text-xs text-gray-600">${report.supplier || '-'}</p>
+                                <p class="text-sm mt-1 text-gray-700">Aktual: ${report.qtyAktual} / Masuk: ${report.qtyMasuk}</p>
+                            </div>
+                            <!-- Flex container untuk badge Diedit dan Status -->
+                            <div class="text-right ml-4 flex flex-col items-end space-y-1">
+                                ${editedBadge} 
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${statusColor}">
+                                    ${report.status}
+                                </span>
+                            </div>
+                        </div>
+                        <!-- Menghilangkan konten foto dan tombol edit dari list card untuk memperjelas. Edit sekarang diakses via modal detail. -->
+                    `;
+                    listContainer.appendChild(reportItem);
+                });
+
+            } catch (error) {
+                console.error('Gagal mengambil laporan:', error);
+                showMessage('Gagal memuat data laporan dari penyimpanan.');
+            }
+        }
+
+        /** Logika untuk menentukan Status dan mengupdate UI */
+        function updateStatusDisplay() {
+            const qtyMasuk = parseInt(document.getElementById('qtyMasuk').value) || 0;
+            const qtyAktual = parseInt(document.getElementById('qtyAktual').value) || 0;
+            const statusDisplay = document.getElementById('status-display');
+            const statusCard = document.getElementById('status-display-card');
+            
+            let statusText = 'Belum dihitung';
+            let bgColor = 'bg-gray-100';
+            let textColor = 'text-gray-500';
+
+            if (qtyMasuk > 0 && qtyAktual >= 0) {
+                if (qtyAktual > qtyMasuk) {
+                    statusText = `LEBIH (${qtyAktual - qtyMasuk})`;
+                    bgColor = 'bg-yellow-200';
+                    textColor = 'text-yellow-800';
+                } else if (qtyAktual < qtyMasuk) {
+                    statusText = `KURANG (${qtyMasuk - qtyAktual})`;
+                    bgColor = 'bg-red-200';
+                    textColor = 'text-red-800';
+                } else {
+                    statusText = 'SESUAI';
+                    bgColor = 'bg-green-200';
+                    textColor = 'text-green-800';
+                }
+            }
+
+            statusDisplay.textContent = statusText;
+            statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
+            statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
+            
+            return statusText.split(' ')[0]; // Ambil hanya kata statusnya (SESUAI/KURANG/LEBIH)
+        }
+        
+        /** Menangani logika penyimpanan/update laporan yang sebenarnya */
+        async function handleSaveReport(form, isEditing, reportIdToUse) {
+            const qtyMasuk = parseInt(form.qtyMasuk.value);
+            const qtyAktual = parseInt(form.qtyAktual.value);
+            const skuValue = form.sku.value.trim().toUpperCase();
+
+            const fileInput = document.getElementById('foto');
+            const uploadedFile = fileInput.files[0];
+            
+            const photoDataUrl = await readFileAsBase64(uploadedFile);
+            
+            let reportData = {
+                sku: skuValue,
+                qtyMasuk: qtyMasuk,
+                qtyAktual: qtyAktual,
+                supplier: form.supplier.value,
+                pembagian: form.pembagian.value, // Mengambil nilai dari dropdown (bisa "" atau "1"-"6")
+                tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                status: updateStatusDisplay(), 
+            };
+
+            if (isEditing) {
+                // Mode Update
+                reportData.id = reportIdToUse; 
+                reportData.isEdited = true; 
+
+                try {
+                    const oldReport = await getReportById(reportIdToUse);
+
+                    // 1. Pertahankan foto lama secara default
+                    if (oldReport) {
+                        reportData.foto = oldReport.foto || null;
+                        reportData.isEdited = oldReport.isEdited || true;
+                    } else {
+                        reportData.foto = null; 
+                    }
+
+                    // 2. Jika ada foto baru diupload, timpa data foto lama
+                    if (photoDataUrl) {
+                        reportData.foto = photoDataUrl;
+                    }
+
+                    await putReport(reportData);
+                    closeReportModal();
+                    await renderReports(); 
+                    console.log(`Laporan ID ${reportIdToUse} berhasil diupdate dan daftar dirender ulang.`);
+                    showMessage('Laporan berhasil diupdate!');
+                } catch (error) {
+                    console.error('Gagal mengupdate laporan:', error);
+                    showMessage('Gagal mengupdate laporan. Terjadi kesalahan pada IndexedDB.');
+                }
+
+            } else {
+                // Mode Tambah Baru
+                reportData.foto = photoDataUrl;
+                reportData.isEdited = false; 
+                
+                try {
+                    await addReport(reportData);
+                    closeReportModal();
+                    await renderReports();
+                    showMessage('Laporan Ketidaksesuaian berhasil disimpan!');
+                } catch (error) {
+                    console.error('Gagal menyimpan laporan:', error);
+                    showMessage('Gagal menyimpan laporan. Terjadi kesalahan pada IndexedDB.');
+                }
+            }
+        }
+
+
+        // --- Event Listeners ---
+
+        // Inisialisasi Database dan Tampilan
+        window.onload = async () => {
+            // Ambil referensi node pesan kosong sebelum DOM-nya dihancurkan oleh innerHTML
+            emptyMessageNode = document.getElementById('empty-message');
+            const listContainer = document.getElementById('report-list');
+            
+            // Detach node dari parent. Ini mencegah innerHTML = '' menghancurkan elemen `empty-message`.
+            if (emptyMessageNode && listContainer.contains(emptyMessageNode)) {
+                listContainer.removeChild(emptyMessageNode);
+            }
+            
+            try {
+                await openDB();
+                await renderReports();
+            } catch (error) {
+                showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
+            }
+
+            // Listener untuk tombol "Buat Laporan"
+            document.getElementById('create-report-btn').addEventListener('click', () => openReportModal(null));
+
+            // Listener untuk perubahan input QTY (untuk update Status otomatis)
+            document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
+            document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
+
+            // --- Logika Scanner Baru ---
+            const scanSkuBtn = document.getElementById('scan-sku-btn');
+            const cameraInput = document.getElementById('camera-input');
+
+            // 1. Tombol "Scan SKU" diklik -> picu input kamera
+            scanSkuBtn.addEventListener('click', () => {
+                cameraInput.click();
+            });
+
+            // 2. Hasil dari kamera/galeri diterima
+            cameraInput.addEventListener('change', (e) => {
+                if (e.target.files && e.target.files.length > 0) {
+                    // SIMULASI HASIL SCAN:
+                    // Setelah gambar diambil/dipilih, kita anggap proses scanning berhasil
+                    // dan memasukkan hasilnya (SKU placeholder) ke kolom SKU.
+                    const randomCode = Math.floor(Math.random() * 90000) + 10000;
+                    const scannedSKU = 'BARCODE-' + randomCode.toString().padStart(5, '0');
+                    
+                    document.getElementById('sku').value = scannedSKU;
+                    
+                    showMessage(`Scan berhasil! SKU: ${scannedSKU} telah diisi otomatis. (Simulasi)`);
+                    
+                    // Membersihkan input file agar bisa digunakan lagi untuk scan berikutnya
+                    cameraInput.value = ''; 
+                }
+            });
+            // --- Akhir Logika Scanner Baru ---
+            
+            // Listener untuk submit form
+            document.getElementById('report-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const form = e.target;
+                const qtyMasuk = parseInt(form.qtyMasuk.value);
+                const qtyAktual = parseInt(form.qtyAktual.value);
+                const skuValue = form.sku.value.trim().toUpperCase();
+                
+                if (!skuValue) {
+                    showMessage("SKU (Kode Barang) wajib diisi.");
+                    return;
+                }
+
+                if (qtyMasuk <= 0 || qtyAktual < 0) {
+                    showMessage("QTY Masuk harus lebih dari 0 dan QTY Aktual tidak boleh negatif.");
+                    return;
+                }
+
+                const isEditing = currentReportId !== null;
+                const reportIdToUse = currentReportId; 
+                
+                // Tampilkan konfirmasi sebelum menyimpan
+                const actionText = isEditing ? 
+                    `Apakah Anda yakin ingin MENGUPDATE laporan ID ${reportIdToUse} ini?` : 
+                    "Apakah Anda yakin ingin MENYIMPAN laporan baru ini?";
+                    
+                showMessage(actionText, true, () => handleSaveReport(form, isEditing, reportIdToUse));
+                
+                // Hentikan proses di sini, penyimpanan akan dilanjutkan oleh callback 'onConfirm'
+            });
+        };
+    </script>
+</body>
+</html>
