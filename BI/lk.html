@@ -19,39 +19,31 @@
             background-color: #cbd5e1;
             border-radius: 20px;
         }
-
-        /* Style Scanner Diambil dari Project WMS Anda */
-        #reader {
-            position: relative;
-            width: 100%;
-            border: 4px dashed #a5b4fc;
-            border-radius: 8px;
-            overflow: hidden;
+        
+        /* CSS dari index.html (Put Away) untuk scanner */
+        .modal { transition: opacity 0.3s ease; }
+        #scannerModal { padding: 0; }
+        #scannerModal .bg-white { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
         }
-        #reader video {
-            width: 100% !important;
-            height: auto !important;
+        #scannerModal .bg-white > div { padding: 1rem; }
+        #reader { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 0; 
+            border: none; 
+            overflow: hidden; 
+            background-color: #000; 
         }
-        #qr-shaded-region {
-            box-sizing: border-box !important;
-        }
-        #scan-laser {
-            position: absolute;
-            top: 50%;
-            left: 10%;
-            right: 10%;
-            height: 2px;
-            background-color: #ef4444;
-            box-shadow: 0 0 10px 1px #ef4444;
-            transform: translateY(-50%);
-            z-index: 10;
-            border-radius: 2px;
-            animation: laser-scan 2.5s infinite linear;
-        }
-        @keyframes laser-scan {
-            0% { top: 10%; }
-            50% { top: 90%; }
-            100% { top: 10%; }
+        #reader video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            object-fit: cover; 
         }
     </style>
 </head>
@@ -80,17 +72,16 @@
         </button>
     </div>
 
-    <div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4" onclick="closeScannerModal()">
-        <div class="bg-white w-full max-w-sm rounded-xl p-4 shadow-2xl" onclick="event.stopPropagation()">
-            <h3 class="text-xl font-bold mb-4 text-center">Pemindai SKU (QR/Barcode)</h3>
-            <div id="reader" class="w-full aspect-square">
-                <div id="scan-laser"></div>
+    <div id="scannerModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-0 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full p-0 flex flex-col transform transition-all">
+            <div class="flex justify-between items-center border-b pb-2 mb-4 p-4">
+                <h2 class="text-xl font-bold text-gray-800">Scan Barcode</h2>
+                <button id="closeScannerBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
             </div>
-            <p id="scan-result" class="mt-4 text-center text-indigo-600 font-semibold hidden">Memproses...</p>
-            <button onclick="closeScannerModal()" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl">Batal</button>
+            <div id="reader" class="w-full h-full flex-grow"></div>
+            <p id="scannerMessage" class="text-center text-sm text-gray-500 mt-2 p-4">Mengarahkan kamera...</p>
         </div>
     </div>
-
     <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl my-8" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800">Formulir Laporan Ketidaksesuaian</h3>
@@ -167,24 +158,21 @@
 
         let db;
         let html5QrCode = null;
-        let isScannerStopping = false; // Flag untuk mencegah race condition (dari WMS Project)
 
-        // --- Helper Function untuk IndexedDB ---
+        const scannerModal = document.getElementById('scannerModal');
+        const scannerMessage = document.getElementById('scannerMessage');
 
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-
                 request.onerror = (event) => {
                     console.error("IndexedDB error:", event.target.error);
                     reject(event.target.error);
                 };
-
                 request.onsuccess = (event) => {
                     db = event.target.result;
                     resolve(db);
                 };
-
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -199,7 +187,6 @@
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.add(reportData);
-
                 request.onsuccess = () => resolve();
                 request.onerror = (event) => reject(event.target.error);
             });
@@ -210,14 +197,11 @@
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
-
                 request.onsuccess = (event) => resolve(event.target.result.reverse());
                 request.onerror = (event) => reject(event.target.error);
             });
         }
 
-        // --- UI & Logic Functions ---
-        
         function showMessage(text) {
             document.getElementById('message-text').textContent = text;
             document.getElementById('message-modal').classList.remove('hidden');
@@ -272,88 +256,60 @@
             }
         }
         
-        /** Buka modal scanner dan mulai kamera (Logika WMS Project) */
-        async function openScannerModal() {
-            if (isScannerStopping) {
-                showMessage("Kamera sedang memproses, mohon tunggu...");
-                return;
-            }
+        // --- LOGIKA SCANNER BARU (DARI index.html) ---
 
-            document.getElementById('scanner-modal').classList.remove('hidden');
-            document.getElementById('scanner-modal').classList.add('flex');
-            document.getElementById('scan-result').classList.add('hidden');
-            document.getElementById('reader').innerHTML = '<div id="scan-laser"></div>'; // Tambahkan laser
-
-            if (!html5QrCode) {
-                html5QrCode = new Html5Qrcode("reader");
-            }
-
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0
-            };
+        const startScanner = () => {
+            scannerMessage.textContent = "Requesting camera access...";
+            scannerModal.classList.remove('hidden');
             
-            const videoInput = { facingMode: "environment" }; // Minta kamera belakang
+            html5QrCode = new Html5Qrcode("reader");
             
-            const onScanSuccess = async (decodedText, decodedResult) => {
-                console.log(`Scan successful: ${decodedText}`);
-                document.getElementById('scan-result').textContent = `SKU ditemukan: ${decodedText}`;
-                document.getElementById('scan-result').classList.remove('hidden');
-                
-                // (PERBAIKAN) Gunakan await untuk closeScannerModal
-                await closeScannerModal(); 
+            const qrCodeSuccessCallback = (decodedText) => {
+                scannerMessage.textContent = `SKU Ditemukan: ${decodedText}`;
+                stopScanner();
                 openReportModal(decodedText);
             };
             
-            const onScanFailure = (error) => {
-                // Biarkan, scanner akan terus mencoba
-            };
-
-            // (PERBAIKAN) Gunakan try-catch-await saat memulai
-            try {
-                await html5QrCode.start(videoInput, config, onScanSuccess, onScanFailure);
-                console.log("Kamera berhasil dimulai.");
-            } catch (err) {
-                console.error("Gagal memulai kamera:", err);
-                let userMessage = "Gagal memulai kamera. Periksa izin di pengaturan browser Anda.";
-                
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 250 } }, 
+                qrCodeSuccessCallback
+            )
+            .then(() => { 
+                scannerMessage.textContent = "Arahkan kamera ke Barcode/QR Code"; 
+            })
+            .catch((err) => {
+                let userMessage = `Error: ${err}`;
                 if (String(err).includes('NotAllowedError')) {
                      userMessage = "Izin kamera ditolak. Harap izinkan kamera di pengaturan browser.";
                 } else if (String(err).includes('NotFoundError')) {
-                     userMessage = "Kamera belakang (environment) tidak ditemukan.";
+                     userMessage = "Kamera tidak ditemukan.";
                 } else if (String(err).includes('secure context')) {
                      userMessage = "Kamera memerlukan koneksi aman (HTTPS). Aplikasi tidak dapat berjalan di HTTP atau file://";
                 }
+                scannerMessage.textContent = userMessage;
+                scannerMessage.classList.add('text-red-500');
                 
-                showMessage(userMessage);
-                await closeScannerModal(); // Tutup modal jika gagal start
-            }
-        }
+                setTimeout(stopScanner, 3000);
+            });
+        };
 
-        /** Tutup modal scanner (Logika WMS Project) */
-        async function closeScannerModal() {
-            if (isScannerStopping) return; 
-
-            document.getElementById('scanner-modal').classList.add('hidden');
-            document.getElementById('scanner-modal').classList.remove('flex');
-            document.getElementById('scan-result').classList.add('hidden');
-            
+        const stopScanner = () => {
             if (html5QrCode && html5QrCode.isScanning) {
-                isScannerStopping = true;
-                try {
-                    await html5QrCode.stop();
-                    console.log("Scanner stopped.");
-                } catch (err) {
-                    console.warn("Gagal menghentikan scanner:", err);
-                } finally {
-                    isScannerStopping = false; 
-                    document.getElementById('reader').innerHTML = ''; // Bersihkan div reader
-                }
+                html5QrCode.stop().catch((err) => {
+                    console.error("Gagal menghentikan scanner.", err);
+                });
             }
+            html5QrCode = null;
+            scannerModal.classList.add('hidden');
+        };
+
+        function closeScannerModal() {
+            stopScanner();
         }
 
-        /** Buka modal form laporan */
+        // --- AKHIR LOGIKA SCANNER BARU ---
+
         function openReportModal(sku = '') {
             const form = document.getElementById('report-form');
             form.reset();
@@ -366,13 +322,11 @@
             document.getElementById('qtyMasuk').focus();
         }
 
-        /** Tutup modal form laporan */
         function closeReportModal() {
             document.getElementById('report-modal').classList.add('hidden');
             document.getElementById('report-modal').classList.remove('flex');
         }
 
-        /** Logika untuk menentukan Status dan mengupdate UI */
         function updateStatusDisplay() {
             const qtyMasukInput = document.getElementById('qtyMasuk');
             const qtyAktualInput = document.getElementById('qtyAktual');
@@ -410,8 +364,6 @@
             return statusText.split(' ')[0]; 
         }
 
-        // --- Event Listeners ---
-
         window.onload = async () => {
             try {
                 await openDB();
@@ -420,7 +372,8 @@
                 showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
             }
 
-            document.getElementById('create-report-btn').addEventListener('click', openScannerModal);
+            document.getElementById('create-report-btn').addEventListener('click', startScanner);
+            document.getElementById('closeScannerBtn').addEventListener('click', stopScanner);
 
             document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
             document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
