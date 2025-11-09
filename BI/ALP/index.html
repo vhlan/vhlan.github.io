@@ -162,27 +162,21 @@
         let html5QrCode;
         let availableCameras = [];
         let currentCameraId = null;
+        const MOBILE_FALLBACK_ID = 'environment-fallback';
 
-        // --- Helper Function untuk IndexedDB ---
+        // --- Helper Function untuk IndexedDB (Tidak Berubah) ---
 
-        /**
-         * Membuka koneksi IndexedDB.
-         * @returns {Promise<IDBDatabase>}
-         */
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
-
                 request.onerror = (event) => {
                     console.error("IndexedDB error:", event.target.error);
                     reject(event.target.error);
                 };
-
                 request.onsuccess = (event) => {
                     db = event.target.result;
                     resolve(db);
                 };
-
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -192,53 +186,40 @@
             });
         }
 
-        /**
-         * Menyimpan laporan baru ke IndexedDB.
-         * @param {Object} reportData
-         * @returns {Promise<void>}
-         */
         function addReport(reportData) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.add(reportData);
-
                 request.onsuccess = () => resolve();
                 request.onerror = (event) => reject(event.target.error);
             });
         }
 
-        /**
-         * Mengambil semua laporan dari IndexedDB.
-         * @returns {Promise<Array<Object>>}
-         */
         function getReports() {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
-
-                request.onsuccess = (event) => resolve(event.target.result.reverse()); // Urutkan terbaru di atas
+                request.onsuccess = (event) => resolve(event.target.result.reverse());
                 request.onerror = (event) => reject(event.target.error);
             });
         }
 
         // --- UI & Logic Functions ---
         
-        /** Menampilkan pesan notifikasi kustom */
         function showMessage(text) {
             document.getElementById('message-text').textContent = text;
             document.getElementById('message-modal').classList.remove('hidden');
             document.getElementById('message-modal').classList.add('flex');
         }
 
-        /** Render daftar laporan ke DOM */
         async function renderReports() {
             try {
                 const reports = await getReports();
                 const listContainer = document.getElementById('report-list');
                 const emptyMessage = document.getElementById('empty-message');
-                listContainer.innerHTML = ''; // Bersihkan kontainer
+                listContainer.innerHTML = '';
                 
                 if (reports.length === 0) {
                     listContainer.appendChild(emptyMessage);
@@ -280,6 +261,58 @@
                 showMessage('Gagal memuat data laporan dari penyimpanan.');
             }
         }
+        
+        // --- LOGIKA SCANNER YANG DIPERBARUI ---
+        
+        /** Fungsi internal untuk memulai scanner dengan input video tertentu */
+        function startScannerWithInput(videoInput) {
+             const scanResult = document.getElementById('scan-result');
+
+             // Hentikan scanner yang ada sebelum memulai yang baru
+             if (html5QrCode) {
+                 html5QrCode.stop().catch(e => console.log('Previous scanner stop failed (non-critical):', e));
+                 document.getElementById('reader').innerHTML = ''; 
+             }
+             html5QrCode = new Html5Qrcode("reader");
+
+             const config = { 
+                 fps: 10, 
+                 qrbox: { width: 250, height: 250 },
+                 aspectRatio: 1.0, 
+                 disableFlip: false
+             };
+            
+             const onScanSuccess = (decodedText, decodedResult) => {
+                 console.log(`Scan successful: ${decodedText}`);
+                 scanResult.textContent = `SKU ditemukan: ${decodedText}`;
+                
+                 html5QrCode.stop().then(() => {
+                     closeScannerModal();
+                     openReportModal(decodedText);
+                 }).catch(err => {
+                     console.error("Gagal menghentikan scanner setelah berhasil scan: ", err);
+                     closeScannerModal();
+                     openReportModal(decodedText);
+                 });
+             };
+
+             html5QrCode.start(videoInput, config, onScanSuccess)
+                 .then(() => {
+                     console.log("Kamera berhasil dimulai.");
+                     scanResult.textContent = 'Siap memindai...';
+                 })
+                 .catch(err => {
+                     console.error("Gagal memulai kamera. Detail Error:", err);
+                     // Pesan error yang lebih spesifik untuk mobile
+                     showMessage(`Gagal Akses Kamera. 1) Coba ganti opsi di dropdown. 2) Pastikan Anda telah mengizinkan kamera di pengaturan browser/OS Anda. 3) Cek ikon kamera di bilah alamat browser Anda.`);
+                     document.getElementById('reader').innerHTML = `
+                         <div class="flex items-center justify-center h-full text-red-600 font-bold text-center p-4">
+                             Gagal Akses Kamera. Coba Pilih Perangkat Lain di atas.
+                         </div>
+                     `;
+                     scanResult.textContent = 'Gagal Akses Kamera.';
+                 });
+        }
 
         /** Memulai/Mem-restart scanner dengan kamera yang dipilih */
         function restartScanner() {
@@ -291,54 +324,16 @@
                 return;
             }
 
-            // Hentikan scanner yang ada sebelum memulai yang baru
-            if (html5QrCode) {
-                html5QrCode.stop().catch(e => console.log('Previous scanner stop failed (non-critical):', e));
-                document.getElementById('reader').innerHTML = ''; 
+            let videoInput;
+            if (currentCameraId === MOBILE_FALLBACK_ID) {
+                // Gunakan facingMode: environment sebagai fallback terkuat untuk mobile
+                videoInput = { facingMode: 'environment' };
+            } else {
+                // Gunakan ID perangkat spesifik
+                videoInput = { deviceId: { exact: currentCameraId } };
             }
-
-            html5QrCode = new Html5Qrcode("reader");
-            const scanResult = document.getElementById('scan-result');
-            scanResult.textContent = `Memulai kamera: ${selectElement.options[selectElement.selectedIndex].text}`;
-
-            const config = { 
-                fps: 10, 
-                qrbox: { width: 250, height: 250 },
-                aspectRatio: 1.0, 
-                disableFlip: false
-            };
             
-            const onScanSuccess = (decodedText, decodedResult) => {
-                console.log(`Scan successful: ${decodedText}`);
-                scanResult.textContent = `SKU ditemukan: ${decodedText}`;
-                
-                html5QrCode.stop().then(() => {
-                    closeScannerModal();
-                    openReportModal(decodedText);
-                }).catch(err => {
-                    console.error("Gagal menghentikan scanner setelah berhasil scan: ", err);
-                    closeScannerModal();
-                    openReportModal(decodedText);
-                });
-            };
-
-            const videoInput = { deviceId: { exact: currentCameraId } };
-
-            html5QrCode.start(videoInput, config, onScanSuccess)
-                .then(() => {
-                    console.log("Kamera berhasil dimulai dengan ID:", currentCameraId);
-                    scanResult.textContent = 'Siap memindai...';
-                })
-                .catch(err => {
-                    console.error("Gagal memulai kamera. Detail Error:", err);
-                    showMessage(`Gagal memulai kamera. Pastikan Anda telah memilih perangkat yang benar dan izin kamera DITERIMA di browser.`);
-                    document.getElementById('reader').innerHTML = `
-                        <div class="flex items-center justify-center h-full text-red-600 font-bold p-4">
-                            Gagal Akses Kamera. Coba Pilih Perangkat Lain.
-                        </div>
-                    `;
-                    scanResult.textContent = 'Gagal Akses Kamera.';
-                });
+            startScannerWithInput(videoInput);
         }
 
         /** Buka modal scanner dan mulai kamera */
@@ -351,63 +346,51 @@
             scannerModal.classList.remove('hidden');
             scannerModal.classList.add('flex');
             scanResult.classList.remove('hidden');
-            selectContainer.classList.add('hidden'); // Sembunyikan pemilih saat inisialisasi
-            scanResult.textContent = 'Mengecek izin kamera dan perangkat...'; 
-
-            // Cek status izin kamera terlebih dahulu (Opsional, tapi membantu diagnostik)
-            try {
-                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
-                console.log("Status Izin Kamera:", permissionStatus.state);
-                if (permissionStatus.state === 'denied') {
-                     showMessage("Status izin kamera di browser/OS Anda saat ini adalah DITOLAK. Anda harus mengubahnya secara manual di pengaturan browser Anda.");
-                     closeScannerModal();
-                     return;
-                }
-            } catch (e) {
-                console.warn("navigator.permissions.query tidak didukung atau gagal:", e);
-                // Lanjut, karena query permissions tidak kritis
-            }
-
+            scanResult.textContent = 'Mengecek perangkat kamera...'; 
+            selectContainer.classList.add('hidden');
 
             try {
                 // 1. Dapatkan daftar kamera
                 availableCameras = await Html5Qrcode.getCameras();
-
+                
                 if (availableCameras && availableCameras.length) {
                     selectContainer.classList.remove('hidden');
                     selectElement.innerHTML = ''; // Bersihkan opsi lama
                     
-                    let environmentCameraId = null;
+                    // Tambahkan opsi fallback mobile terkuat sebagai default
+                    const fallbackOption = document.createElement('option');
+                    fallbackOption.value = MOBILE_FALLBACK_ID;
+                    fallbackOption.textContent = 'Kamera Belakang (Mode Mobile Terbaik)';
+                    selectElement.appendChild(fallbackOption);
+                    
+                    let environmentCameraId = MOBILE_FALLBACK_ID;
 
                     // Isi dropdown dengan kamera yang tersedia
                     availableCameras.forEach((device, index) => {
                         const option = document.createElement('option');
                         option.value = device.id;
-                        // Label kamera sering kali kosong jika izin belum diberikan.
-                        // Beri label default berdasarkan index dan facing mode (jika diketahui)
-                        let label = device.label || `Kamera ${index + 1}`;
+                        let label = device.label || `Kamera Perangkat ${index + 1}`;
+                        
+                        // Deteksi kamera belakang untuk penentuan default
                         if (label.toLowerCase().includes('back') || label.toLowerCase().includes('environment')) {
                             label += " (Belakang)";
-                            environmentCameraId = device.id; // Simpan ID kamera belakang
+                            environmentCameraId = device.id; 
                         } else if (label.toLowerCase().includes('front') || label.toLowerCase().includes('user')) {
                             label += " (Depan)";
-                        } else {
-                            label += ` (Perangkat ID: ${device.id.substring(0, 8)}...)`;
                         }
 
                         option.textContent = label;
                         selectElement.appendChild(option);
                     });
                     
-                    // Coba atur kamera belakang sebagai default, jika terdeteksi
-                    if (environmentCameraId) {
+                    // Set default: jika ID kamera belakang terdeteksi, gunakan ID; jika tidak, gunakan fallback environment
+                    if (environmentCameraId !== MOBILE_FALLBACK_ID) {
                         selectElement.value = environmentCameraId;
                     } else {
-                        // Jika tidak terdeteksi, gunakan yang pertama
-                        selectElement.selectedIndex = 0;
+                        selectElement.value = MOBILE_FALLBACK_ID;
                     }
 
-                    // 2. Mulai scanner dengan kamera yang dipilih
+                    // 2. Mulai scanner
                     restartScanner();
 
                 } else {
@@ -416,9 +399,9 @@
                 }
 
             } catch (err) {
-                // Catch error jika getCameras() gagal (ini biasanya kegagalan izin hard-blocked)
+                // Kegagalan total, biasanya karena izin diblokir permanen
                 console.error("Gagal total mendapatkan daftar kamera:", err);
-                showMessage("Akses kamera DITOLAK. Pastikan Anda menggunakan koneksi HTTPS dan telah memberikan izin kamera secara manual di pengaturan browser Anda.");
+                showMessage("Izin kamera DITOLAK. Solusi Mobile: 1) Coba muat ulang halaman. 2) Pastikan izin kamera untuk situs ini (cek ikon kunci/kamera di bilah alamat) diatur ke IZINKAN.");
                 closeScannerModal();
             }
         }
@@ -431,31 +414,29 @@
             document.getElementById('camera-select-container').classList.add('hidden');
             
             if (html5QrCode) {
-                // Pastikan scanner dihentikan saat modal ditutup
                 html5QrCode.stop().catch(err => {
                     console.warn("Gagal menghentikan scanner secara bersih:", err);
                 });
             }
         }
 
-        /** Buka modal form laporan */
+        // --- Logika Form (Tidak Berubah) ---
+
         function openReportModal(sku = '') {
             const form = document.getElementById('report-form');
             form.reset();
             document.getElementById('sku').value = sku;
-            updateStatusDisplay(); // Reset status display
+            updateStatusDisplay();
             
             document.getElementById('report-modal').classList.remove('hidden');
             document.getElementById('report-modal').classList.add('flex');
         }
 
-        /** Tutup modal form laporan */
         function closeReportModal() {
             document.getElementById('report-modal').classList.add('hidden');
             document.getElementById('report-modal').classList.remove('flex');
         }
 
-        /** Logika untuk menentukan Status dan mengupdate UI */
         function updateStatusDisplay() {
             const qtyMasuk = parseInt(document.getElementById('qtyMasuk').value) || 0;
             const qtyAktual = parseInt(document.getElementById('qtyAktual').value) || 0;
@@ -486,12 +467,11 @@
             statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
             statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
             
-            return statusText.split(' ')[0]; // Ambil hanya kata statusnya (SESUAI/KURANG/LEBIH)
+            return statusText.split(' ')[0];
         }
 
-        // --- Event Listeners ---
+        // --- Event Listeners (Tidak Berubah) ---
 
-        // Inisialisasi Database dan Tampilan
         window.onload = async () => {
             try {
                 await openDB();
@@ -500,14 +480,10 @@
                 showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
             }
 
-            // Listener untuk tombol "Buat Laporan"
             document.getElementById('create-report-btn').addEventListener('click', openScannerModal);
-
-            // Listener untuk perubahan input QTY (untuk update Status otomatis)
             document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
             document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
             
-            // Listener untuk submit form
             document.getElementById('report-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -528,7 +504,7 @@
                     pembagian: form.pembagian.value,
                     foto: form.foto.value || 'Tidak ada keterangan foto',
                     tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-                    status: updateStatusDisplay(), // Ambil status final
+                    status: updateStatusDisplay(),
                 };
 
                 try {
