@@ -58,6 +58,15 @@
     <div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4" onclick="closeScannerModal()">
         <div class="bg-white w-full max-w-sm rounded-xl p-4 shadow-2xl" onclick="event.stopPropagation()">
             <h3 class="text-xl font-bold mb-4 text-center">Pemindai SKU (QR/Barcode)</h3>
+            
+            <!-- Kontainer Pemilih Kamera dan Status -->
+            <div id="camera-select-container" class="mb-4 hidden">
+                <label for="camera-select" class="block text-sm font-medium text-gray-700 mb-1">Pilih Kamera:</label>
+                <select id="camera-select" class="w-full p-2 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500" onchange="restartScanner()">
+                    <!-- Opsi Kamera akan dimasukkan di sini oleh JS -->
+                </select>
+            </div>
+
             <div id="reader" class="w-full aspect-square border-4 border-dashed border-indigo-400 rounded-lg overflow-hidden"></div>
             <!-- Status/Hasil Pindai -->
             <p id="scan-result" class="mt-4 text-center text-indigo-600 font-semibold hidden">Mencoba mengakses kamera...</p>
@@ -151,6 +160,8 @@
 
         let db;
         let html5QrCode;
+        let availableCameras = [];
+        let currentCameraId = null;
 
         // --- Helper Function untuk IndexedDB ---
 
@@ -270,44 +281,40 @@
             }
         }
 
-        // ---------------------------------------------------
-        // LOGIKA SCANNER PALING KRITIS TELAH DIPERBAIKI DI SINI
-        // ---------------------------------------------------
+        /** Memulai/Mem-restart scanner dengan kamera yang dipilih */
+        function restartScanner() {
+            const selectElement = document.getElementById('camera-select');
+            currentCameraId = selectElement.value;
+            
+            if (!currentCameraId) {
+                showMessage("Tidak ada kamera yang dipilih.");
+                return;
+            }
 
-        /** Buka modal scanner dan mulai kamera */
-        function openScannerModal() {
-            const scannerModal = document.getElementById('scanner-modal');
-            const scanResult = document.getElementById('scan-result');
-
-            scannerModal.classList.remove('hidden');
-            scannerModal.classList.add('flex');
-            scanResult.classList.remove('hidden');
-            // Menampilkan status inisialisasi
-            scanResult.textContent = 'Mencoba mengakses kamera... Mohon izinkan akses.'; 
-
-            // Pastikan instance scanner dibersihkan/dihilangkan sebelum dibuat ulang.
+            // Hentikan scanner yang ada sebelum memulai yang baru
             if (html5QrCode) {
                 html5QrCode.stop().catch(e => console.log('Previous scanner stop failed (non-critical):', e));
                 document.getElementById('reader').innerHTML = ''; 
             }
 
             html5QrCode = new Html5Qrcode("reader");
+            const scanResult = document.getElementById('scan-result');
+            scanResult.textContent = `Memulai kamera: ${selectElement.options[selectElement.selectedIndex].text}`;
 
             const config = { 
                 fps: 10, 
                 qrbox: { width: 250, height: 250 },
                 aspectRatio: 1.0, 
-                disableFlip: false // Mengizinkan pemindaian QR terbalik
+                disableFlip: false
             };
             
             const onScanSuccess = (decodedText, decodedResult) => {
                 console.log(`Scan successful: ${decodedText}`);
                 scanResult.textContent = `SKU ditemukan: ${decodedText}`;
                 
-                // Hentikan scanner setelah berhasil
                 html5QrCode.stop().then(() => {
                     closeScannerModal();
-                    openReportModal(decodedText); // Lanjutkan ke form laporan
+                    openReportModal(decodedText);
                 }).catch(err => {
                     console.error("Gagal menghentikan scanner setelah berhasil scan: ", err);
                     closeScannerModal();
@@ -315,58 +322,105 @@
                 });
             };
 
-            // 1. Fungsi pembantu untuk memulai pemindaian
-            function startScanning(videoInput, config) {
-                 html5QrCode.start(videoInput, config, onScanSuccess)
-                    .then(() => {
-                        console.log("Kamera berhasil dimulai.");
-                        scanResult.textContent = 'Siap memindai...';
-                    })
-                    .catch(err => {
-                        // Jika start() gagal, tampilkan pesan error yang lebih jelas
-                        console.error("Gagal memulai kamera. Detail Error:", err);
-                        showMessage("Akses kamera DITOLAK. Solusi: 1) Pastikan Anda menggunakan koneksi HTTPS, 2) Periksa izin kamera di pengaturan browser/OS Anda.");
-                        closeScannerModal();
-                    });
+            const videoInput = { deviceId: { exact: currentCameraId } };
+
+            html5QrCode.start(videoInput, config, onScanSuccess)
+                .then(() => {
+                    console.log("Kamera berhasil dimulai dengan ID:", currentCameraId);
+                    scanResult.textContent = 'Siap memindai...';
+                })
+                .catch(err => {
+                    console.error("Gagal memulai kamera. Detail Error:", err);
+                    showMessage(`Gagal memulai kamera. Pastikan Anda telah memilih perangkat yang benar dan izin kamera DITERIMA di browser.`);
+                    document.getElementById('reader').innerHTML = `
+                        <div class="flex items-center justify-center h-full text-red-600 font-bold p-4">
+                            Gagal Akses Kamera. Coba Pilih Perangkat Lain.
+                        </div>
+                    `;
+                    scanResult.textContent = 'Gagal Akses Kamera.';
+                });
+        }
+
+        /** Buka modal scanner dan mulai kamera */
+        async function openScannerModal() {
+            const scannerModal = document.getElementById('scanner-modal');
+            const scanResult = document.getElementById('scan-result');
+            const selectContainer = document.getElementById('camera-select-container');
+            const selectElement = document.getElementById('camera-select');
+
+            scannerModal.classList.remove('hidden');
+            scannerModal.classList.add('flex');
+            scanResult.classList.remove('hidden');
+            selectContainer.classList.add('hidden'); // Sembunyikan pemilih saat inisialisasi
+            scanResult.textContent = 'Mengecek izin kamera dan perangkat...'; 
+
+            // Cek status izin kamera terlebih dahulu (Opsional, tapi membantu diagnostik)
+            try {
+                const permissionStatus = await navigator.permissions.query({ name: 'camera' });
+                console.log("Status Izin Kamera:", permissionStatus.state);
+                if (permissionStatus.state === 'denied') {
+                     showMessage("Status izin kamera di browser/OS Anda saat ini adalah DITOLAK. Anda harus mengubahnya secara manual di pengaturan browser Anda.");
+                     closeScannerModal();
+                     return;
+                }
+            } catch (e) {
+                console.warn("navigator.permissions.query tidak didukung atau gagal:", e);
+                // Lanjut, karena query permissions tidak kritis
             }
 
-            // 2. Coba deteksi kamera untuk mendapatkan ID perangkat yang lebih stabil
-            Html5Qrcode.getCameras().then(devices => {
-                if (devices && devices.length) {
-                    console.log("Perangkat kamera terdeteksi:", devices);
 
-                    // Cari kamera belakang ('back'/'environment')
-                    let cameraDeviceId = null;
-                    const environmentCamera = devices.find(device => 
-                        device.label.toLowerCase().includes('back') || 
-                        device.label.toLowerCase().includes('environment')
-                    );
+            try {
+                // 1. Dapatkan daftar kamera
+                availableCameras = await Html5Qrcode.getCameras();
+
+                if (availableCameras && availableCameras.length) {
+                    selectContainer.classList.remove('hidden');
+                    selectElement.innerHTML = ''; // Bersihkan opsi lama
                     
-                    if (environmentCamera) {
-                        cameraDeviceId = environmentCamera.id;
-                    } else if (devices.length === 1) {
-                        // Jika hanya ada satu kamera, gunakan itu
-                        cameraDeviceId = devices[0].id;
+                    let environmentCameraId = null;
+
+                    // Isi dropdown dengan kamera yang tersedia
+                    availableCameras.forEach((device, index) => {
+                        const option = document.createElement('option');
+                        option.value = device.id;
+                        // Label kamera sering kali kosong jika izin belum diberikan.
+                        // Beri label default berdasarkan index dan facing mode (jika diketahui)
+                        let label = device.label || `Kamera ${index + 1}`;
+                        if (label.toLowerCase().includes('back') || label.toLowerCase().includes('environment')) {
+                            label += " (Belakang)";
+                            environmentCameraId = device.id; // Simpan ID kamera belakang
+                        } else if (label.toLowerCase().includes('front') || label.toLowerCase().includes('user')) {
+                            label += " (Depan)";
+                        } else {
+                            label += ` (Perangkat ID: ${device.id.substring(0, 8)}...)`;
+                        }
+
+                        option.textContent = label;
+                        selectElement.appendChild(option);
+                    });
+                    
+                    // Coba atur kamera belakang sebagai default, jika terdeteksi
+                    if (environmentCameraId) {
+                        selectElement.value = environmentCameraId;
                     } else {
-                        // Default ke kamera pertama yang terdeteksi
-                        cameraDeviceId = devices[0].id;
+                        // Jika tidak terdeteksi, gunakan yang pertama
+                        selectElement.selectedIndex = 0;
                     }
-                    
-                    const videoInput = { deviceId: { exact: cameraDeviceId } };
-                    startScanning(videoInput, config);
+
+                    // 2. Mulai scanner dengan kamera yang dipilih
+                    restartScanner();
 
                 } else {
-                    // Fallback jika tidak ada perangkat yang terdeteksi secara eksplisit
-                    console.warn("Gagal mendeteksi perangkat, mencoba fallback ke facingMode: 'environment'.");
-                    const videoInput = { facingMode: "environment" };
-                    startScanning(videoInput, config);
+                    showMessage("Gagal mendeteksi perangkat kamera. Pastikan kamera terpasang dan izin diberikan.");
+                    closeScannerModal();
                 }
-            }).catch(err => {
-                // Catch error jika getCameras() gagal (biasanya karena izin diblokir pada level browser)
-                console.error("Gagal total mendapatkan daftar kamera atau izin diblokir:", err);
+
+            } catch (err) {
+                // Catch error jika getCameras() gagal (ini biasanya kegagalan izin hard-blocked)
+                console.error("Gagal total mendapatkan daftar kamera:", err);
                 showMessage("Akses kamera DITOLAK. Pastikan Anda menggunakan koneksi HTTPS dan telah memberikan izin kamera secara manual di pengaturan browser Anda.");
                 closeScannerModal();
-            });
+            }
         }
 
         /** Tutup modal scanner */
@@ -374,6 +428,8 @@
             document.getElementById('scanner-modal').classList.add('hidden');
             document.getElementById('scanner-modal').classList.remove('flex');
             document.getElementById('scan-result').classList.add('hidden');
+            document.getElementById('camera-select-container').classList.add('hidden');
+            
             if (html5QrCode) {
                 // Pastikan scanner dihentikan saat modal ditutup
                 html5QrCode.stop().catch(err => {
