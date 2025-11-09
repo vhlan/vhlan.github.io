@@ -96,7 +96,7 @@
                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 
-                <!-- Pembagian (Dropdown baru: Tidak ada pembagian, 1-10) -->
+                <!-- Pembagian (Dropdown baru: Tidak ada pembagian, 1-6) -->
                 <div>
                     <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept) - Opsional</label>
                     <select id="pembagian" name="pembagian"
@@ -109,10 +109,6 @@
                         <option value="4">4</option>
                         <option value="5">5</option>
                         <option value="6">6</option>
-                        <option value="7">7</option>
-                        <option value="8">8</option>
-                        <option value="9">9</option>
-                        <option value="10">10</option>
                     </select>
                 </div>
                 
@@ -407,7 +403,7 @@
                 form.qtyMasuk.value = report.qtyMasuk;
                 form.qtyAktual.value = report.qtyAktual;
                 form.supplier.value = report.supplier;
-                // Pembagian akan memilih opsi yang sesuai (1-10) atau default (kosong)
+                // Pembagian akan memilih opsi yang sesuai (1-6) atau default (kosong)
                 form.pembagian.value = report.pembagian; 
                 
                 // Kosongkan input file untuk mencegah pengunggahan file yang tidak disengaja saat update
@@ -463,7 +459,7 @@
                 
                 // --- LOGIKA UNTUK PEMBAGIAN ---
                 const rawPembagian = report.pembagian;
-                // Jika rawPembagian memiliki nilai (1-10), tampilkan "Pembagian X", jika kosong (""), tampilkan string kosong ("").
+                // Jika rawPembagian memiliki nilai (1-6), tampilkan "Pembagian X", jika kosong (""), tampilkan string kosong ("").
                 const formattedPembagian = rawPembagian 
                     ? `Pembagian ${rawPembagian}` 
                     : ""; 
@@ -625,7 +621,7 @@
                 qtyMasuk: qtyMasuk,
                 qtyAktual: qtyAktual,
                 supplier: form.supplier.value,
-                pembagian: form.pembagian.value, // Mengambil nilai dari dropdown (bisa "" atau "1"-"10")
+                pembagian: form.pembagian.value, // Mengambil nilai dari dropdown (bisa "" atau "1"-"6")
                 tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
                 status: updateStatusDisplay(), 
             };
