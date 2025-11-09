@@ -19,31 +19,29 @@
             background-color: #cbd5e1;
             border-radius: 20px;
         }
-        
-        /* CSS dari index.html (Put Away) untuk scanner */
-        .modal { transition: opacity 0.3s ease; }
-        #scannerModal { padding: 0; }
-        #scannerModal .bg-white { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 0; 
-            padding: 0; 
-            display: flex; 
-            flex-direction: column; 
+        #scan-reader {
+            position: relative;
+            overflow: hidden;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
         }
-        #scannerModal .bg-white > div { padding: 1rem; }
-        #reader { 
-            width: 100%; 
-            height: 100%; 
-            border-radius: 0; 
-            border: none; 
-            overflow: hidden; 
-            background-color: #000; 
+        #qr-shaded-region {
+            box-sizing: border-box !important;
         }
-        #reader video { 
-            width: 100% !important; 
-            height: 100% !important; 
-            object-fit: cover; 
+        #scan-laser {
+            position: absolute;
+            top: 50%;
+            left: 10%;
+            right: 10%;
+            height: 2px;
+            background-color: #ef4444;
+            box-shadow: 0 0 10px 1px #ef4444;
+            transform: translateY(-50%);
+            z-index: 10;
+            border-radius: 2px;
         }
     </style>
 </head>
@@ -63,25 +61,15 @@
     </main>
 
     <div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
-        <button id="create-report-btn"
+        <button id="create-report-btn" 
                 class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-300 transform hover:scale-105 flex items-center justify-center">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                 <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
-            BUAT LAPORAN
+            BUAT LAPORAN BARU
         </button>
     </div>
 
-    <div id="scannerModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-0 hidden z-50">
-        <div class="bg-white rounded-lg shadow-2xl w-full h-full p-0 flex flex-col transform transition-all">
-            <div class="flex justify-between items-center border-b pb-2 mb-4 p-4">
-                <h2 class="text-xl font-bold text-gray-800">Scan Barcode</h2>
-                <button id="closeScannerBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-            </div>
-            <div id="reader" class="w-full h-full flex-grow"></div>
-            <p id="scannerMessage" class="text-center text-sm text-gray-500 mt-2 p-4">Mengarahkan kamera...</p>
-        </div>
-    </div>
     <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl my-8" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800">Formulir Laporan Ketidaksesuaian</h3>
@@ -89,19 +77,19 @@
             <form id="report-form" class="space-y-4">
                 
                 <div>
-                    <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang)</label>
-                    <input type="text" id="sku" name="sku" required readonly
-                           class="mt-1 w-full p-3 border border-indigo-300 bg-indigo-50 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg">
+                    <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
+                    <input type="text" id="sku" name="sku" required 
+                           class="mt-1 w-full p-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg uppercase">
                 </div>
                 
                 <div>
-                    <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya)</label>
+                    <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya) <span class="text-red-500">*</span></label>
                     <input type="number" id="qtyMasuk" name="qtyMasuk" required min="1"
                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
 
                 <div>
-                    <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan)</label>
+                    <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan) <span class="text-red-500">*</span></label>
                     <input type="number" id="qtyAktual" name="qtyAktual" required min="0"
                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
@@ -130,11 +118,11 @@
                 </div>
                 
                 <div class="flex space-x-4 pt-4">
-                    <button type="button" onclick="closeReportModal()"
+                    <button type="button" onclick="closeReportModal()" 
                             class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
                         Batal
                     </button>
-                    <button type="submit"
+                    <button type="submit" 
                             class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150">
                         SIMPAN LAPORAN
                     </button>
@@ -150,6 +138,16 @@
         </div>
     </div>
 
+    <div id="scanner-modal" class="hidden fixed inset-0 bg-black z-50 flex flex-col">
+        <div id="scan-reader">
+            <p class="text-white/50 text-lg">Starting camera...</p>
+            <div id="scan-laser"></div>
+        </div>
+        <button id="close-scanner-btn" class="absolute bottom-10 left-1/2 -translate-x-1/2 px-6 py-3 bg-white/20 text-white font-semibold rounded-lg backdrop-blur-sm active:bg-white/40">
+            Cancel Scan
+        </button>
+    </div>
+
 
     <script>
         const DB_NAME = 'LKM_DB';
@@ -158,21 +156,52 @@
 
         let db;
         let html5QrCode = null;
+        let isScannerStopping = false;
 
-        const scannerModal = document.getElementById('scannerModal');
-        const scannerMessage = document.getElementById('scannerMessage');
+        function beep(type = 'success') {
+            const AudioContext = window.AudioContext || window.webkitAudioContext;
+            if (!AudioContext) return; 
+
+            try {
+                const audioContext = new AudioContext();
+                const oscillator = audioContext.createOscillator();
+                const gainNode = audioContext.createGain();
+
+                oscillator.connect(gainNode);
+                gainNode.connect(audioContext.destination);
+
+                if (type === 'success') {
+                    oscillator.type = 'sine';
+                    oscillator.frequency.setValueAtTime(880, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                } else if (type === 'error') {
+                    oscillator.type = 'square';
+                    oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
+                    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+                    oscillator.frequency.setValueAtTime(220, audioContext.currentTime + 0.05);
+                }
+
+                oscillator.start();
+                oscillator.stop(audioContext.currentTime + 0.1);
+            } catch (e) {
+                console.error("Audio playback failed", e);
+            }
+        }
 
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
+
                 request.onerror = (event) => {
                     console.error("IndexedDB error:", event.target.error);
                     reject(event.target.error);
                 };
+
                 request.onsuccess = (event) => {
                     db = event.target.result;
                     resolve(db);
                 };
+
                 request.onupgradeneeded = (event) => {
                     const db = event.target.result;
                     if (!db.objectStoreNames.contains(STORE_NAME)) {
@@ -187,6 +216,7 @@
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.add(reportData);
+
                 request.onsuccess = () => resolve();
                 request.onerror = (event) => reject(event.target.error);
             });
@@ -197,11 +227,12 @@
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
+
                 request.onsuccess = (event) => resolve(event.target.result.reverse());
                 request.onerror = (event) => reject(event.target.error);
             });
         }
-
+        
         function showMessage(text) {
             document.getElementById('message-text').textContent = text;
             document.getElementById('message-modal').classList.remove('hidden');
@@ -213,7 +244,7 @@
                 const reports = await getReports();
                 const listContainer = document.getElementById('report-list');
                 const emptyMessage = document.getElementById('empty-message');
-                listContainer.innerHTML = ''; 
+                listContainer.innerHTML = '';
                 
                 if (reports.length === 0) {
                     listContainer.appendChild(emptyMessage);
@@ -255,71 +286,14 @@
                 showMessage('Gagal memuat data laporan dari penyimpanan.');
             }
         }
-        
-        // --- LOGIKA SCANNER BARU (DARI index.html) ---
 
-        const startScanner = () => {
-            scannerMessage.textContent = "Requesting camera access...";
-            scannerModal.classList.remove('hidden');
-            
-            html5QrCode = new Html5Qrcode("reader");
-            
-            const qrCodeSuccessCallback = (decodedText) => {
-                scannerMessage.textContent = `SKU Ditemukan: ${decodedText}`;
-                stopScanner();
-                openReportModal(decodedText);
-            };
-            
-            html5QrCode.start(
-                { facingMode: "environment" }, 
-                { fps: 10, qrbox: { width: 250, height: 250 } }, 
-                qrCodeSuccessCallback
-            )
-            .then(() => { 
-                scannerMessage.textContent = "Arahkan kamera ke Barcode/QR Code"; 
-            })
-            .catch((err) => {
-                let userMessage = `Error: ${err}`;
-                if (String(err).includes('NotAllowedError')) {
-                     userMessage = "Izin kamera ditolak. Harap izinkan kamera di pengaturan browser.";
-                } else if (String(err).includes('NotFoundError')) {
-                     userMessage = "Kamera tidak ditemukan.";
-                } else if (String(err).includes('secure context')) {
-                     userMessage = "Kamera memerlukan koneksi aman (HTTPS). Aplikasi tidak dapat berjalan di HTTP atau file://";
-                }
-                scannerMessage.textContent = userMessage;
-                scannerMessage.classList.add('text-red-500');
-                
-                setTimeout(stopScanner, 3000);
-            });
-        };
-
-        const stopScanner = () => {
-            if (html5QrCode && html5QrCode.isScanning) {
-                html5QrCode.stop().catch((err) => {
-                    console.error("Gagal menghentikan scanner.", err);
-                });
-            }
-            html5QrCode = null;
-            scannerModal.classList.add('hidden');
-        };
-
-        function closeScannerModal() {
-            stopScanner();
-        }
-
-        // --- AKHIR LOGIKA SCANNER BARU ---
-
-        function openReportModal(sku = '') {
+        function openReportModal() {
             const form = document.getElementById('report-form');
             form.reset();
-            document.getElementById('sku').value = sku;
-            updateStatusDisplay(); 
+            updateStatusDisplay();
             
             document.getElementById('report-modal').classList.remove('hidden');
             document.getElementById('report-modal').classList.add('flex');
-            
-            document.getElementById('qtyMasuk').focus();
         }
 
         function closeReportModal() {
@@ -328,12 +302,8 @@
         }
 
         function updateStatusDisplay() {
-            const qtyMasukInput = document.getElementById('qtyMasuk');
-            const qtyAktualInput = document.getElementById('qtyAktual');
-            
-            const qtyMasuk = qtyMasukInput.value ? parseInt(qtyMasukInput.value) : null;
-            const qtyAktual = qtyAktualInput.value ? parseInt(qtyAktualInput.value) : null;
-            
+            const qtyMasuk = parseInt(document.getElementById('qtyMasuk').value) || 0;
+            const qtyAktual = parseInt(document.getElementById('qtyAktual').value) || 0;
             const statusDisplay = document.getElementById('status-display');
             const statusCard = document.getElementById('status-display-card');
             
@@ -341,7 +311,7 @@
             let bgColor = 'bg-gray-100';
             let textColor = 'text-gray-500';
 
-            if (qtyMasuk !== null && qtyAktual !== null && qtyMasuk > 0) {
+            if (qtyMasuk > 0 && qtyAktual >= 0) {
                 if (qtyAktual > qtyMasuk) {
                     statusText = `LEBIH (${qtyAktual - qtyMasuk})`;
                     bgColor = 'bg-yellow-200';
@@ -361,7 +331,79 @@
             statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
             statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
             
-            return statusText.split(' ')[0]; 
+            return statusText.split(' ')[0];
+        }
+
+        async function stopScanner() {
+            const scannerModal = document.getElementById('scanner-modal');
+            if (html5QrCode && html5QrCode.isScanning) {
+                isScannerStopping = true;
+                try {
+                    await html5QrCode.stop();
+                } catch (err) {
+                    console.error("Gagal stop scanner", err);
+                } finally {
+                    isScannerStopping = false;
+                }
+            }
+            scannerModal.classList.add('hidden');
+            scannerModal.classList.remove('flex');
+            document.getElementById('scan-reader').innerHTML = `
+                <p class="text-white/50 text-lg">Starting camera...</p>
+                <div id="scan-laser"></div>
+            `;
+        }
+
+        async function onScanSuccess(decodedText, decodedResult) {
+            beep('success');
+            await stopScanner();
+            document.getElementById('sku').value = decodedText.toUpperCase();
+            openReportModal();
+        }
+
+        function onScanFailure(error) {
+        }
+
+        function startScanner() {
+            if (isScannerStopping) {
+                showMessage('Kamera sedang ditutup...');
+                return;
+            }
+
+            const scannerModal = document.getElementById('scanner-modal');
+            const scanReader = document.getElementById('scan-reader');
+
+            if (!html5QrCode) {
+                html5QrCode = new Html5Qrcode("scan-reader");
+            }
+            scannerModal.classList.remove('hidden');
+            scannerModal.classList.add('flex');
+            
+            scanReader.innerHTML = `
+                <p class="text-white/50 text-lg">Starting camera...</p>
+                <div id="scan-laser"></div>
+            `;
+
+            const config = {
+                fps: 10,
+                qrbox: { width: 250, height: 250 }
+            };
+
+            html5QrCode.start(
+                { facingMode: "environment" },
+                config,
+                onScanSuccess,
+                onScanFailure
+            ).catch((err) => {
+                console.error("Camera start failed:", err);
+                let userMessage = `Error: ${err}. Mohon izinkan kamera.`;
+                if (String(err).includes('NotAllowedError')) {
+                    userMessage = "Izin kamera ditolak. Mohon izinkan di pengaturan browser Anda.";
+                } else if (String(err).includes('NotFoundError')) {
+                    userMessage = "Tidak ada kamera yang ditemukan.";
+                }
+                scanReader.innerHTML = `<p class="text-white text-center p-4">${userMessage}</p>`;
+            });
         }
 
         window.onload = async () => {
@@ -373,7 +415,7 @@
             }
 
             document.getElementById('create-report-btn').addEventListener('click', startScanner);
-            document.getElementById('closeScannerBtn').addEventListener('click', stopScanner);
+            document.getElementById('close-scanner-btn').addEventListener('click', stopScanner);
 
             document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
             document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
@@ -384,28 +426,27 @@
                 const form = e.target;
                 const qtyMasuk = parseInt(form.qtyMasuk.value);
                 const qtyAktual = parseInt(form.qtyAktual.value);
+                const skuValue = form.sku.value.trim().toUpperCase();
                 
-                if (isNaN(qtyMasuk) || isNaN(qtyAktual) || qtyMasuk <= 0 || qtyAktual < 0) {
-                    showMessage("QTY Masuk harus lebih dari 0 dan QTY Aktual tidak boleh kosong.");
+                if (!skuValue) {
+                    showMessage("SKU (Kode Barang) wajib diisi.");
                     return;
                 }
-                
-                const statusFinal = updateStatusDisplay();
-                
-                if (statusFinal === 'Belum') {
-                     showMessage("Silakan isi QTY Masuk dan QTY Aktual.");
+
+                if (qtyMasuk <= 0 || qtyAktual < 0) {
+                    showMessage("QTY Masuk harus lebih dari 0 dan QTY Aktual tidak boleh negatif.");
                     return;
                 }
 
                 const newReport = {
-                    sku: form.sku.value.toUpperCase(),
+                    sku: skuValue,
                     qtyMasuk: qtyMasuk,
                     qtyAktual: qtyAktual,
                     supplier: form.supplier.value,
                     pembagian: form.pembagian.value,
                     foto: form.foto.value || 'Tidak ada keterangan foto',
                     tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
-                    status: statusFinal,
+                    status: updateStatusDisplay(),
                 };
 
                 try {
