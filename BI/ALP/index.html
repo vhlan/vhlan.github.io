@@ -59,7 +59,8 @@
         <div class="bg-white w-full max-w-sm rounded-xl p-4 shadow-2xl" onclick="event.stopPropagation()">
             <h3 class="text-xl font-bold mb-4 text-center">Pemindai SKU (QR/Barcode)</h3>
             <div id="reader" class="w-full aspect-square border-4 border-dashed border-indigo-400 rounded-lg overflow-hidden"></div>
-            <p id="scan-result" class="mt-4 text-center text-indigo-600 font-semibold hidden">Memproses...</p>
+            <!-- Status/Hasil Pindai -->
+            <p id="scan-result" class="mt-4 text-center text-indigo-600 font-semibold hidden">Mencoba mengakses kamera...</p>
             <button onclick="closeScannerModal()" class="mt-4 w-full bg-red-500 hover:bg-red-600 text-white py-2 rounded-xl">Batal</button>
         </div>
     </div>
@@ -268,17 +269,25 @@
                 showMessage('Gagal memuat data laporan dari penyimpanan.');
             }
         }
-        
+
+        // ---------------------------------------------------
+        // LOGIKA SCANNER PALING KRITIS TELAH DIPERBAIKI DI SINI
+        // ---------------------------------------------------
+
         /** Buka modal scanner dan mulai kamera */
         function openScannerModal() {
-            document.getElementById('scanner-modal').classList.remove('hidden');
-            document.getElementById('scanner-modal').classList.add('flex');
-            document.getElementById('scan-result').classList.add('hidden');
+            const scannerModal = document.getElementById('scanner-modal');
+            const scanResult = document.getElementById('scan-result');
 
-            // 1. Pastikan instance scanner dibersihkan/dihilangkan sebelum dibuat ulang.
+            scannerModal.classList.remove('hidden');
+            scannerModal.classList.add('flex');
+            scanResult.classList.remove('hidden');
+            // Menampilkan status inisialisasi
+            scanResult.textContent = 'Mencoba mengakses kamera... Mohon izinkan akses.'; 
+
+            // Pastikan instance scanner dibersihkan/dihilangkan sebelum dibuat ulang.
             if (html5QrCode) {
-                html5QrCode.stop().catch(e => console.log('Previous scanner stop failed:', e));
-                // Clear the reader element's content manually if needed, though stop() usually handles it.
+                html5QrCode.stop().catch(e => console.log('Previous scanner stop failed (non-critical):', e));
                 document.getElementById('reader').innerHTML = ''; 
             }
 
@@ -287,17 +296,13 @@
             const config = { 
                 fps: 10, 
                 qrbox: { width: 250, height: 250 },
-                // Tambahkan fitur untuk memilih kamera yang paling sesuai secara otomatis.
-                // Jika facingMode: "environment" gagal, html5-qrcode akan mencoba kamera lain.
+                aspectRatio: 1.0, 
+                disableFlip: false // Mengizinkan pemindaian QR terbalik
             };
-            
-            // 2. Tentukan input kamera yang akan digunakan (kamera belakang/environment)
-            const videoInput = { facingMode: "environment" }; // Coba kamera belakang
             
             const onScanSuccess = (decodedText, decodedResult) => {
                 console.log(`Scan successful: ${decodedText}`);
-                document.getElementById('scan-result').textContent = `SKU ditemukan: ${decodedText}`;
-                document.getElementById('scan-result').classList.remove('hidden');
+                scanResult.textContent = `SKU ditemukan: ${decodedText}`;
                 
                 // Hentikan scanner setelah berhasil
                 html5QrCode.stop().then(() => {
@@ -310,27 +315,58 @@
                 });
             };
 
-            // 3. Mulai scanning dengan penanganan error yang lebih informatif
-            html5QrCode.start(videoInput, config, onScanSuccess)
-                .then(() => {
-                    console.log("Kamera berhasil dimulai.");
-                })
-                .catch(err => {
-                    console.error("Gagal memulai kamera. Detail Error:", err);
-                    // Coba mencari list kamera yang tersedia jika gagal, mungkin karena nama kamera tidak dikenal
-                    Html5Qrcode.getCameras().then(devices => {
-                        if (devices && devices.length) {
-                            console.log("Daftar perangkat kamera yang tersedia:", devices);
-                            showMessage(`Gagal memulai kamera. Perangkat kamera terdeteksi, namun mungkin browser memblokir akses atau mode 'environment' tidak didukung. Coba muat ulang halaman.`);
-                        } else {
-                            showMessage("Gagal memulai kamera. Tidak ada perangkat kamera yang terdeteksi atau browser memblokir akses secara total.");
-                        }
-                    }).catch(error => {
-                        console.error("Gagal mendapatkan daftar kamera:", error);
-                        showMessage("Gagal memulai kamera. Periksa izin di pengaturan browser Anda.");
+            // 1. Fungsi pembantu untuk memulai pemindaian
+            function startScanning(videoInput, config) {
+                 html5QrCode.start(videoInput, config, onScanSuccess)
+                    .then(() => {
+                        console.log("Kamera berhasil dimulai.");
+                        scanResult.textContent = 'Siap memindai...';
+                    })
+                    .catch(err => {
+                        // Jika start() gagal, tampilkan pesan error yang lebih jelas
+                        console.error("Gagal memulai kamera. Detail Error:", err);
+                        showMessage("Akses kamera DITOLAK. Solusi: 1) Pastikan Anda menggunakan koneksi HTTPS, 2) Periksa izin kamera di pengaturan browser/OS Anda.");
+                        closeScannerModal();
                     });
-                    closeScannerModal();
-                });
+            }
+
+            // 2. Coba deteksi kamera untuk mendapatkan ID perangkat yang lebih stabil
+            Html5Qrcode.getCameras().then(devices => {
+                if (devices && devices.length) {
+                    console.log("Perangkat kamera terdeteksi:", devices);
+
+                    // Cari kamera belakang ('back'/'environment')
+                    let cameraDeviceId = null;
+                    const environmentCamera = devices.find(device => 
+                        device.label.toLowerCase().includes('back') || 
+                        device.label.toLowerCase().includes('environment')
+                    );
+                    
+                    if (environmentCamera) {
+                        cameraDeviceId = environmentCamera.id;
+                    } else if (devices.length === 1) {
+                        // Jika hanya ada satu kamera, gunakan itu
+                        cameraDeviceId = devices[0].id;
+                    } else {
+                        // Default ke kamera pertama yang terdeteksi
+                        cameraDeviceId = devices[0].id;
+                    }
+                    
+                    const videoInput = { deviceId: { exact: cameraDeviceId } };
+                    startScanning(videoInput, config);
+
+                } else {
+                    // Fallback jika tidak ada perangkat yang terdeteksi secara eksplisit
+                    console.warn("Gagal mendeteksi perangkat, mencoba fallback ke facingMode: 'environment'.");
+                    const videoInput = { facingMode: "environment" };
+                    startScanning(videoInput, config);
+                }
+            }).catch(err => {
+                // Catch error jika getCameras() gagal (biasanya karena izin diblokir pada level browser)
+                console.error("Gagal total mendapatkan daftar kamera atau izin diblokir:", err);
+                showMessage("Akses kamera DITOLAK. Pastikan Anda menggunakan koneksi HTTPS dan telah memberikan izin kamera secara manual di pengaturan browser Anda.");
+                closeScannerModal();
+            });
         }
 
         /** Tutup modal scanner */
@@ -339,9 +375,9 @@
             document.getElementById('scanner-modal').classList.remove('flex');
             document.getElementById('scan-result').classList.add('hidden');
             if (html5QrCode) {
+                // Pastikan scanner dihentikan saat modal ditutup
                 html5QrCode.stop().catch(err => {
-                    // Hanya log error jika tidak bisa berhenti, tapi tetap tutup modal
-                    console.warn("Gagal menghentikan scanner:", err);
+                    console.warn("Gagal menghentikan scanner secara bersih:", err);
                 });
             }
         }
