@@ -60,7 +60,7 @@
             
             <form id="report-form" class="space-y-4">
                 
-                <!-- SKU (Kode Barang) - Sekarang Input Manual dan Required -->
+                <!-- SKU (Kode Barang) - Manual Input dan Required -->
                 <div>
                     <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
                     <input type="text" id="sku" name="sku" required 
@@ -101,11 +101,16 @@
                            class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
                 </div>
                 
-                <!-- Foto Barang (Sederhana - hanya URL/Keterangan) -->
+                <!-- Foto Barang (FILE UPLOAD) -->
                 <div>
-                    <label for="foto" class="block text-sm font-medium text-gray-700">Foto Barang (Keterangan / URL)</label>
-                    <input type="text" id="foto" name="foto"
-                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                    <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Barang (Opsional)</label>
+                    <input type="file" id="foto" name="foto" accept="image/*"
+                           class="w-full text-sm text-gray-500 
+                                  file:mr-4 file:py-2 file:px-4
+                                  file:rounded-full file:border-0
+                                  file:text-sm file:font-semibold
+                                  file:bg-indigo-50 file:text-indigo-700
+                                  hover:file:bg-indigo-100">
                 </div>
                 
                 <!-- Tombol Submit dan Batal -->
@@ -189,6 +194,22 @@
             });
         }
 
+        // --- FILE HANDLING FUNCTION ---
+
+        /** Mengubah objek File menjadi Base64 Data URL. */
+        function readFileAsBase64(file) {
+            return new Promise((resolve, reject) => {
+                if (!file) {
+                    resolve(null);
+                    return;
+                }
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+            });
+        }
+        
         // --- UI & Logic Functions ---
         
         /** Menampilkan pesan notifikasi kustom */
@@ -219,6 +240,15 @@
                     if (report.status === 'LEBIH') statusColor = 'bg-yellow-100 text-yellow-700 font-bold';
                     if (report.status === 'SESUAI') statusColor = 'bg-green-100 text-green-700 font-bold';
 
+                    // Konten Foto
+                    let photoContent = '';
+                    if (report.foto && typeof report.foto === 'string' && report.foto.startsWith('data:image')) {
+                        photoContent = `<img src="${report.foto}" alt="Foto Barang" class="mt-3 w-full max-h-40 object-cover rounded-lg shadow-inner border border-gray-200">`;
+                    } else {
+                        photoContent = '<p class="text-xs text-gray-500 mt-2 italic">Tidak ada foto di laporan ini.</p>';
+                    }
+
+
                     const reportItem = document.createElement('div');
                     reportItem.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition duration-200';
                     reportItem.innerHTML = `
@@ -236,6 +266,7 @@
                         </div>
                         <div class="mt-2 text-sm">
                             <p><strong>Masuk:</strong> ${report.qtyMasuk} | <strong>Aktual:</strong> ${report.qtyAktual}</p>
+                            ${photoContent}
                         </div>
                     `;
                     listContainer.appendChild(reportItem);
@@ -315,7 +346,7 @@
             document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
             document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
             
-            // Listener untuk submit form
+            // Listener untuk submit form (dibuat async untuk proses file)
             document.getElementById('report-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -334,13 +365,20 @@
                     return;
                 }
 
+                // Ambil file yang diunggah
+                const fileInput = document.getElementById('foto');
+                const uploadedFile = fileInput.files[0];
+                
+                // Konversi file ke Base64 (asinkron)
+                const photoDataUrl = await readFileAsBase64(uploadedFile);
+                
                 const newReport = {
                     sku: skuValue,
                     qtyMasuk: qtyMasuk,
                     qtyAktual: qtyAktual,
                     supplier: form.supplier.value,
                     pembagian: form.pembagian.value,
-                    foto: form.foto.value || 'Tidak ada keterangan foto',
+                    foto: photoDataUrl, // Simpan data Base64
                     tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
                     status: updateStatusDisplay(), // Ambil status final
                 };
