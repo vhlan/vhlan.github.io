@@ -1,770 +1,424 @@
 <!DOCTYPE html>
 <html lang="id">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>PDA Put Away</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
-  <style>
-    .modal { transition: opacity 0.3s ease; }
-    .accordion-content { transition: max-height 0.3s ease-out, padding 0.3s ease-out; max-height: 0; overflow: hidden; padding: 0; }
-    .accordion-item.open > .accordion-header + .accordion-content { max-height: 1500px; padding: 1rem 0; }
-    .accordion-item.open > .accordion-header .accordion-arrow { transform: rotate(90deg); }
-    .accordion-arrow { transition: transform 0.3s ease; }
-    input[type='number']::-webkit-inner-spin-button,
-    input[type='number']::-webkit-outer-spin-button { -webkit-appearance: none; margin: 0; }
-    input[type='number'] { -moz-appearance: textfield; }
-    input:disabled, textarea:disabled, input[type="checkbox"]:disabled { background-color: #f3f4f6; cursor: not-allowed; border-color: #e5e7eb; }
-    input[type="checkbox"]:disabled { opacity: 0.7; }
-    .autocomplete-suggestions { position: absolute; border: 1px solid #d1d5db; background-color: white; z-index: 9999; max-height: 150px; overflow-y: auto; width: 100%; border-radius: 0 0 0.5rem 0.5rem; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
-    .autocomplete-suggestions li { padding: 0.5rem 0.75rem; cursor: pointer; }
-    .autocomplete-suggestions li:hover { background-color: #f3f4f6; }
-    #scannerModal { padding: 0; }
-    #scannerModal .bg-white { width: 100%; height: 100%; border-radius: 0; padding: 0; display: flex; flex-direction: column; }
-    #scannerModal .bg-white > div { padding: 1rem; }
-    #reader { width: 100%; height: 100%; border-radius: 0; border: none; overflow: hidden; background-color: #000; }
-    #reader video { width: 100% !important; height: 100% !important; object-fit: cover; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>LKM - Laporan Ketidaksesuaian Mobile</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <script src="https://unpkg.com/html5-qrcode" type="text/javascript"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fc;
+        }
+        .report-list::-webkit-scrollbar {
+            width: 4px;
+        }
+        .report-list::-webkit-scrollbar-thumb {
+            background-color: #cbd5e1;
+            border-radius: 20px;
+        }
+        
+        /* CSS dari index.html (Put Away) untuk scanner */
+        .modal { transition: opacity 0.3s ease; }
+        #scannerModal { padding: 0; }
+        #scannerModal .bg-white { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 0; 
+            padding: 0; 
+            display: flex; 
+            flex-direction: column; 
+        }
+        #scannerModal .bg-white > div { padding: 1rem; }
+        #reader { 
+            width: 100%; 
+            height: 100%; 
+            border-radius: 0; 
+            border: none; 
+            overflow: hidden; 
+            background-color: #000; 
+        }
+        #reader video { 
+            width: 100% !important; 
+            height: 100% !important; 
+            object-fit: cover; 
+        }
+    </style>
 </head>
-<body class="bg-gray-100 font-sans">
+<body class="min-h-screen flex flex-col">
 
-  <div class="container mx-auto p-4 md:p-8">
-    <header id="mainHeader" class="mb-6 flex justify-between items-center">
-      <h1 class="text-2xl md:text-3xl font-bold text-gray-800">Put Away Tasks</h1>
-      <button id="addEventBtn" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 flex items-center gap-2">
-        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clip-rule="evenodd" /></svg>
-        New Task
-      </button>
+    <header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
+        <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian Manajemen (LKM)</h1>
     </header>
 
-    <main id="mainContent">
-      <div id="taskListContainer" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"></div>
+    <main class="flex-grow p-4">
+        <div class="bg-white p-4 rounded-xl shadow-lg">
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian</h2>
+            <div id="report-list" class="space-y-3 max-h-96 overflow-y-auto report-list">
+                <p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
+            </div>
+        </div>
     </main>
-    
-    <section id="parcelListPage" class="hidden">
-      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div>
-          <button id="backToMainListBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">&larr; Back to List</button>
-        </div>
-        <div class="text-right">
-          <h2 id="parcelListPageTitle" class="text-2xl font-bold text-gray-800"></h2>
-          <p id="parcelListPageDate" class="text-sm text-gray-500"></p>
-        </div>
-      </div>
-      <div class="flex justify-between items-center mb-4">
-        <h3 class="text-xl font-bold text-gray-800">Parcel List</h3>
-        <button class="report-btn bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-4 rounded-lg text-sm">Review Result</button>
-      </div>
-      <div id="parcelListContainer" class="space-y-3"></div>
-    </section>
 
-    <section id="parcelDetailPage" class="hidden">
-      <div class="flex justify-between items-center mb-6 flex-wrap gap-4">
-        <div>
-          <button id="backToParcelListBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg transition duration-300">&larr; Back to Parcel List</button>
-        </div>
-        <div class="text-right">
-          <h2 id="parcelDetailPageTitle" class="text-2xl font-bold text-gray-800"></h2>
-          <p id="parcelDetailPageInfo" class="text-sm text-gray-500"></p>
-        </div>
-      </div>
-      <div class="mb-4 relative">
-        <input type="text" id="itemSearchInput" class="w-full p-3 pl-4 pr-12 border rounded-lg shadow-sm focus:outline-none focus:ring-2 focus:ring-blue-500" placeholder="Cari Kode Produk atau Nama Barang...">
-        <button id="scanBtn" class="absolute inset-y-0 right-0 flex items-center px-4 text-gray-500 hover:text-blue-600" title="Scan Barcode">
-          <i class="fa-solid fa-barcode fa-lg"></i>
+    <div class="p-4 sticky bottom-0 bg-white shadow-2xl rounded-t-xl">
+        <button id="create-report-btn"
+                class="w-full bg-green-500 hover:bg-green-600 text-white font-bold py-3 px-4 rounded-xl shadow-md transition duration-300 transform hover:scale-105 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            BUAT LAPORAN
         </button>
-      </div>
-      <div id="itemContainer" class="space-y-3"></div>
-    </section>
-
-    <section id="reportPage" class="hidden">
-      <div class="flex justify-between items-start mb-4 flex-wrap gap-2">
-        <button id="backToListFromReportBtn" class="bg-gray-500 hover:bg-gray-600 text-white font-bold py-2 px-4 rounded-lg">&larr; Back to List</button>
-        <div class="flex flex-wrap gap-2">
-          <button id="exportExcelBtn" class="bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg flex items-center gap-2 text-sm">
-            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clip-rule="evenodd" /></svg>
-            Export Excel
-          </button>
-          <button id="deleteEventBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded-lg text-sm">Delete Task</button>
-        </div>
-      </div>
-      <div class="bg-white p-4 md:p-6 rounded-lg shadow-lg">
-        <div id="reportMetadata" class="mb-6 border-b pb-4">
-          <h2 class="text-3xl font-bold text-gray-800 mb-2">Put Away Result</h2>
-          <p><strong>Area:</strong> <span id="reportArea" class="font-mono bg-gray-100 px-2 py-1 rounded"></span></p>
-          <p><strong>Date:</strong> <span id="reportDate" class="font-mono bg-gray-100 px-2 py-1 rounded"></span></p>
-          <p><strong>Operator:</strong> <span id="reportOperator" class="font-mono bg-gray-100 px-2 py-1 rounded"></span></p>
-        </div>
-        <h3 class="text-2xl font-semibold text-gray-700 mb-4">Execution Summary</h3>
-        <div id="reportItemContainer" class="space-y-4 mb-8"></div>
-        <h3 class="text-2xl font-semibold text-gray-700 mb-4">Full Activity Log</h3>
-        <div id="fullActivityLogContainer" class="bg-gray-50 p-4 rounded-lg text-sm space-y-2 max-h-96 overflow-y-auto"></div>
-      </div>
-    </section>
-  </div>
-
-  <div id="addEventModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div id="modalContent" class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-full max-w-lg transform transition-all">
-      <div class="flex justify-between items-center border-b pb-3 mb-4">
-        <h2 class="text-2xl font-bold text-gray-800">Create New Task</h2>
-        <button id="closeAddEventModalBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-      </div>
-      <form id="addEventForm">
-        <div class="mb-4">
-          <label for="area" class="block text-gray-700 text-sm font-bold mb-2">Area</label>
-          <select id="area" class="shadow border rounded w-full py-2 px-3" required>
-            <option value="">Select Area</option>
-            <option value="AREA 1">AREA 1</option>
-            <option value="AREA 2">AREA 2</option>
-            <option value="AREA 3">AREA 3</option>
-            <option value="AREA 4">AREA 4</option>
-          </select>
-        </div>
-        <div class="mb-4">
-          <label for="creationDate" class="block text-gray-700 text-sm font-bold mb-2">Date</label>
-          <input type="date" id="creationDate" class="shadow border rounded w-full py-2 px-3" required>
-        </div>
-        <div class="mb-4">
-          <label for="operatorName" class="block text-gray-700 text-sm font-bold mb-2">Operator Name</label>
-          <input type="text" id="operatorName" class="shadow border rounded w-full py-2 px-3" placeholder="PDA user name" required>
-        </div>
-        <div class="mb-6">
-          <label for="xlsxFile" class="block text-gray-700 text-sm font-bold mb-2">Upload Task File (.xlsx)</label>
-          <input type="file" id="xlsxFile" class="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100" accept=".xlsx, .xls" required>
-        </div>
-        <div class="flex justify-end">
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save Task</button>
-        </div>
-      </form>
     </div>
-  </div>
-  
-  <div id="addItemModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div class="bg-white rounded-lg shadow-2xl p-6 md:p-8 w-full max-w-2xl transform transition-all">
-      <h2 class="text-2xl font-bold text-gray-800 border-b pb-3 mb-4">Manual Item Entry</h2>
-      <form id="addItemForm">
-        <input type="hidden" id="newItemKoliHidden">
-        <div class="mb-4">
-          <p class="text-sm">Adding item to Parcel No: <strong id="addItemKoliDisplay" class="font-mono"></strong></p>
+
+    <div id="scannerModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-0 hidden z-50">
+        <div class="bg-white rounded-lg shadow-2xl w-full h-full p-0 flex flex-col transform transition-all">
+            <div class="flex justify-between items-center border-b pb-2 mb-4 p-4">
+                <h2 class="text-xl font-bold text-gray-800">Scan Barcode</h2>
+                <button id="closeScannerBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
+            </div>
+            <div id="reader" class="w-full h-full flex-grow"></div>
+            <p id="scannerMessage" class="text-center text-sm text-gray-500 mt-2 p-4">Mengarahkan kamera...</p>
         </div>
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div><label for="newItemKodeProduk" class="block text-sm font-bold">Product Code</label><input type="text" id="newItemKodeProduk" class="mt-1 shadow border rounded w-full py-2 px-3" required></div>
-          <div class="md:col-span-2"><label for="newItemNamaBarang" class="block text-sm font-bold">Product Name</label><textarea id="newItemNamaBarang" rows="2" class="mt-1 shadow border rounded w-full py-2 px-3" required></textarea></div>
-          <div><label for="newItemQty" class="block text-sm font-bold">Counted Qty</label><input type="number" id="newItemQty" class="mt-1 shadow border rounded w-full py-2 px-3" required></div>
-          <div class="relative"><label for="newItemBinBox" class="block text-sm font-bold">Bin Location</label><input type="text" id="newItemBinBox" class="mt-1 shadow border rounded w-full py-2 px-3" autocomplete="off"></div>
-          <div class="md:col-span-2"><label for="newItemNotes" class="block text-sm font-bold">Notes</label><textarea id="newItemNotes" rows="2" class="mt-1 shadow border rounded w-full py-2 px-3"></textarea></div>
+    </div>
+    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+        <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl my-8" onclick="event.stopPropagation()">
+            <h3 class="text-2xl font-bold mb-6 text-gray-800">Formulir Laporan Ketidaksesuaian</h3>
+            
+            <form id="report-form" class="space-y-4">
+                
+                <div>
+                    <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang)</label>
+                    <input type="text" id="sku" name="sku" required readonly
+                           class="mt-1 w-full p-3 border border-indigo-300 bg-indigo-50 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg">
+                </div>
+                
+                <div>
+                    <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya)</label>
+                    <input type="number" id="qtyMasuk" name="qtyMasuk" required min="1"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div>
+                    <label for="qtyAktual" class="block text-sm font-medium text-gray-700">QTY Aktual (Hasil Hitungan)</label>
+                    <input type="number" id="qtyAktual" name="qtyAktual" required min="0"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+
+                <div class="rounded-lg p-3" id="status-display-card">
+                    <p class="text-sm font-medium text-gray-700">Status Ketidaksesuaian:</p>
+                    <p id="status-display" class="font-bold text-lg text-center mt-1 text-gray-500">Belum dihitung</p>
+                </div>
+                
+                <div>
+                    <label for="supplier" class="block text-sm font-medium text-gray-700">Supplier / Partai (Contoh: AMDA/P.377)</label>
+                    <input type="text" id="supplier" name="supplier" required
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div>
+                    <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept)</label>
+                    <input type="text" id="pembagian" name="pembagian"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div>
+                    <label for="foto" class="block text-sm font-medium text-gray-700">Foto Barang (Keterangan / URL)</label>
+                    <input type="text" id="foto" name="foto"
+                           class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500">
+                </div>
+                
+                <div class="flex space-x-4 pt-4">
+                    <button type="button" onclick="closeReportModal()"
+                            class="flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150">
+                        Batal
+                    </button>
+                    <button type="submit"
+                            class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150">
+                        SIMPAN LAPORAN
+                    </button>
+                </div>
+            </form>
         </div>
-        <div class="flex items-center justify-end gap-4 mt-6">
-          <button type="button" id="cancelAddItemBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-4 rounded-lg">Cancel</button>
-          <button type="submit" class="bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg">Save Item</button>
+    </div>
+    
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+        <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs text-center">
+            <p id="message-text" class="text-gray-800 font-medium"></p>
+            <button onclick="document.getElementById('message-modal').classList.add('hidden')" class="mt-4 bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg">OK</button>
         </div>
-      </form>
     </div>
-  </div>
 
-  <div id="deleteConfirmModal" class="modal fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 hidden z-50">
-    <div class="bg-white rounded-lg shadow-2xl p-6 w-full max-w-sm text-center">
-      <h3 class="text-lg font-bold">Are you sure you want to delete this task?</h3>
-      <p class="text-gray-600 text-sm my-6">All progress will be permanently lost.</p>
-      <div class="flex justify-center gap-4">
-        <button id="cancelDeleteBtn" class="bg-gray-300 hover:bg-gray-400 text-gray-800 font-bold py-2 px-6 rounded-lg">Cancel</button>
-        <button id="confirmDeleteBtn" class="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-6 rounded-lg">Delete</button>
-      </div>
-    </div>
-  </div>
 
-  <div id="scannerModal" class="modal fixed inset-0 bg-black bg-opacity-60 flex items-center justify-center p-0 hidden z-50">
-    <div class="bg-white rounded-lg shadow-2xl w-full h-full p-0 flex flex-col transform transition-all">
-      <div class="flex justify-between items-center border-b pb-2 mb-4 p-4">
-        <h2 class="text-xl font-bold text-gray-800">Scan Barcode</h2>
-        <button id="closeScannerBtn" class="text-gray-500 hover:text-gray-800 text-3xl">&times;</button>
-      </div>
-      <div id="reader" class="w-full h-full flex-grow"></div>
-      <p id="scannerMessage" class="text-center text-sm text-gray-500 mt-2 p-4"></p>
-    </div>
-  </div>
+    <script>
+        const DB_NAME = 'LKM_DB';
+        const DB_VERSION = 1;
+        const STORE_NAME = 'reports';
 
-  <script>
-    // --- Application State and DB ---
-    let db, currentEventId = null, currentParcelNo = null, html5QrCode = null;
-    let binLocations = [];
-    const DB_NAME = "PDACycleCountDB_V17", DB_VERSION = 1;
+        let db;
+        let html5QrCode = null;
 
-    // --- DOM Elements ---
-    const mainHeader = document.getElementById('mainHeader'),
-      mainContent = document.getElementById('mainContent'),
-      parcelListPage = document.getElementById('parcelListPage'),
-      parcelDetailPage = document.getElementById('parcelDetailPage'),
-      reportPage = document.getElementById('reportPage'),
-      taskListContainer = document.getElementById('taskListContainer'),
-      parcelListContainer = document.getElementById('parcelListContainer'),
-      itemContainer = document.getElementById('itemContainer'),
-      reportItemContainer = document.getElementById('reportItemContainer'),
-      fullActivityLogContainer = document.getElementById('fullActivityLogContainer'),
-      addEventModal = document.getElementById('addEventModal'),
-      addItemModal = document.getElementById('addItemModal'),
-      deleteConfirmModal = document.getElementById('deleteConfirmModal'),
-      scannerModal = document.getElementById('scannerModal'),
-      addEventForm = document.getElementById('addEventForm'),
-      addItemForm = document.getElementById('addItemForm');
+        const scannerModal = document.getElementById('scannerModal');
+        const scannerMessage = document.getElementById('scannerMessage');
 
-    // --- Utility Functions ---
-    const showPage = (pageToShow) => {
-      [mainContent, parcelListPage, parcelDetailPage, reportPage].forEach(page => page.classList.add('hidden'));
-      mainHeader.classList.toggle('hidden', pageToShow !== mainContent);
-      pageToShow.classList.remove('hidden');
-    };
-    const formatTimestamp = (isoString) => new Date(isoString).toLocaleString('en-US', { dateStyle: 'short', timeStyle: 'short' });
-
-    // --- IndexedDB and Data Fetching Logic ---
-    const initDB = async () => {
-      try {
-        const response = await fetch('https://vhlan.github.io/BI/FPB/area.json');
-        const data = await response.json();
-        if (data && Array.isArray(data.AREA)) {
-          binLocations = data.AREA.map(loc => loc.BIN);
-          console.log(`${binLocations.length} bin locations loaded.`);
-        } else {
-          console.error("Fetched data does not contain an 'AREA' array:", data);
+        function openDB() {
+            return new Promise((resolve, reject) => {
+                const request = indexedDB.open(DB_NAME, DB_VERSION);
+                request.onerror = (event) => {
+                    console.error("IndexedDB error:", event.target.error);
+                    reject(event.target.error);
+                };
+                request.onsuccess = (event) => {
+                    db = event.target.result;
+                    resolve(db);
+                };
+                request.onupgradeneeded = (event) => {
+                    const db = event.target.result;
+                    if (!db.objectStoreNames.contains(STORE_NAME)) {
+                        db.createObjectStore(STORE_NAME, { keyPath: 'id', autoIncrement: true });
+                    }
+                };
+            });
         }
-      } catch (error) {
-        console.error("Failed to fetch bin locations:", error);
-      }
 
-      const request = indexedDB.open(DB_NAME, DB_VERSION);
-      request.onupgradeneeded = e => e.target.result.createObjectStore('tasks', { keyPath: 'id', autoIncrement: true });
-      request.onsuccess = e => { db = e.target.result; console.log(`Database ${DB_NAME} opened successfully.`); displayEvents(); };
-      request.onerror = e => console.error("Database error:", e.target.errorCode);
-    };
-    
-    // --- Event CRUD ---
-    const getEvent = (id) => new Promise((resolve, reject) => {
-      if (!db) return reject("Database not initialized");
-      const tx = db.transaction('tasks', 'readonly');
-      const store = tx.objectStore('tasks');
-      const request = store.get(id);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = e => reject(e.target.error);
-    });
-    const updateEvent = (data) => new Promise((resolve, reject) => {
-      if (!db) return reject("Database not initialized");
-      const tx = db.transaction('tasks', 'readwrite');
-      const store = tx.objectStore('tasks');
-      const request = store.put(data);
-      request.onsuccess = () => resolve(request.result);
-      request.onerror = e => reject(e.target.error);
-    });
-    const deleteEventFromDB = (id) => new Promise((resolve, reject) => {
-      if (!db) return reject("Database not initialized");
-      const tx = db.transaction('tasks', 'readwrite');
-      const store = tx.objectStore('tasks');
-      const request = store.delete(id);
-      request.onsuccess = () => resolve();
-      request.onerror = e => reject(e.target.error);
-    });
-
-    // --- Main Page Logic (Card View) ---
-    const displayEvents = () => {
-      showPage(mainContent);
-      if (!db) return;
-      const tx = db.transaction('tasks', 'readonly');
-      const store = tx.objectStore('tasks');
-      store.getAll().onsuccess = (e) => {
-        const events = e.target.result.sort((a, b) => new Date(b.date) - new Date(a.date));
-        taskListContainer.innerHTML = '';
-        if (events.length === 0) {
-          taskListContainer.innerHTML = `<p class="text-center p-10 text-gray-500 col-span-full">No tasks found.</p>`;
-        } else {
-          events.forEach(event => {
-            const totalItems = event.items.length;
-            const confirmedItems = event.items.filter(item => item.actual.isValidated).length;
-            const progress = totalItems > 0 ? (confirmedItems / totalItems) * 100 : 0;
-            const parcelSet = new Set(event.items.map(item => item.original?.noKoli || item.actual.noKoli || 'UNASSIGNED'));
-            const totalParcels = parcelSet.size;
-
-            const taskCard = document.createElement('div');
-            taskCard.className = "bg-white rounded-lg shadow-lg border border-gray-200 overflow-hidden flex flex-col";
-            taskCard.innerHTML = `
-              <div class="p-4 flex-grow">
-                <div class="flex justify-between items-start">
-                  <div>
-                    <p class="font-bold text-lg text-gray-800">${event.area}</p>
-                    <p class="text-sm text-gray-500">${event.date}</p>
-                  </div>
-                  <p class="text-sm text-gray-600">Operator: <span class="font-semibold">${event.operator}</span></p>
-                </div>
-                <div class="mt-4 grid grid-cols-2 gap-4 text-center border-t border-b py-3">
-                  <div><p class="text-sm text-gray-500">Parcels</p><p class="font-bold text-2xl">${totalParcels}</p></div>
-                  <div><p class="text-sm text-gray-500">Items</p><p class="font-bold text-2xl">${totalItems}</p></div>
-                </div>
-                <div class="mt-4">
-                  <div class="flex justify-between items-center mb-1">
-                    <span class="text-sm font-medium text-gray-700">Progress</span>
-                    <span class="text-sm font-medium text-gray-700">${Math.round(progress)}%</span>
-                  </div>
-                  <div class="w-full bg-gray-200 rounded-full h-2.5"><div class="bg-green-500 h-2.5 rounded-full" style="width: ${progress}%"></div></div>
-                </div>
-              </div>
-              <div class="bg-gray-50 p-3 grid grid-cols-2 gap-2">
-                <button class="report-btn w-full bg-indigo-600 hover:bg-indigo-700 text-white font-semibold py-2 px-3 rounded text-xs" data-id="${event.id}">Review</button>
-                <button class="work-btn w-full bg-green-500 hover:bg-green-600 text-white font-semibold py-2 px-3 rounded text-xs" data-id="${event.id}">Execute</button>
-              </div>`;
-            taskListContainer.appendChild(taskCard);
-          });
+        function addReport(reportData) {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readwrite');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.add(reportData);
+                request.onsuccess = () => resolve();
+                request.onerror = (event) => reject(event.target.error);
+            });
         }
-      };
-    };
 
-    // --- Parcel List Page Logic (with Status) ---
-    const showParcelListPage = async (eventId) => {
-      currentEventId = eventId;
-      try {
-        const event = await getEvent(eventId);
-        if (!event) return;
+        function getReports() {
+            return new Promise((resolve, reject) => {
+                const transaction = db.transaction([STORE_NAME], 'readonly');
+                const store = transaction.objectStore(STORE_NAME);
+                const request = store.getAll();
+                request.onsuccess = (event) => resolve(event.target.result.reverse());
+                request.onerror = (event) => reject(event.target.error);
+            });
+        }
 
-        document.getElementById('parcelListPageTitle').textContent = `Task Area: ${event.area}`;
-        document.getElementById('parcelListPageDate').textContent = `Date: ${event.date} | Operator: ${event.operator}`;
-        document.querySelector('#parcelListPage .report-btn').dataset.id = eventId;
+        function showMessage(text) {
+            document.getElementById('message-text').textContent = text;
+            document.getElementById('message-modal').classList.remove('hidden');
+            document.getElementById('message-modal').classList.add('flex');
+        }
 
-        const koliGroups = event.items.reduce((acc, item) => {
-          const parcelNo = item.original?.noKoli || item.actual.noKoli || 'UNASSIGNED';
-          if (!acc[parcelNo]) acc[parcelNo] = { total: 0, confirmed: 0 };
-          acc[parcelNo].total++;
-          if (item.actual.isValidated) acc[parcelNo].confirmed++;
-          return acc;
-        }, {});
+        async function renderReports() {
+            try {
+                const reports = await getReports();
+                const listContainer = document.getElementById('report-list');
+                const emptyMessage = document.getElementById('empty-message');
+                listContainer.innerHTML = ''; 
+                
+                if (reports.length === 0) {
+                    listContainer.appendChild(emptyMessage);
+                    emptyMessage.classList.remove('hidden');
+                    return;
+                }
+                emptyMessage.classList.add('hidden');
 
-        parcelListContainer.innerHTML = Object.entries(koliGroups).map(([parcelNo, status]) => {
-          const progress = status.total > 0 ? (status.confirmed / status.total) * 100 : 0;
-          let statusLabel, statusColor, progressColor;
+                reports.forEach(report => {
+                    let statusColor = 'bg-gray-200 text-gray-700';
+                    if (report.status === 'KURANG') statusColor = 'bg-red-100 text-red-700 font-bold';
+                    if (report.status === 'LEBIH') statusColor = 'bg-yellow-100 text-yellow-700 font-bold';
+                    if (report.status === 'SESUAI') statusColor = 'bg-green-100 text-green-700 font-bold';
 
-          if (progress === 0) {
-            [statusLabel, statusColor, progressColor] = ['PENDING', 'bg-gray-200 text-gray-800', 'bg-gray-400'];
-          } else if (progress < 100) {
-            [statusLabel, statusColor, progressColor] = ['IN PROGRESS', 'bg-blue-200 text-blue-800', 'bg-blue-500'];
-          } else {
-            [statusLabel, statusColor, progressColor] = ['COMPLETED', 'bg-green-200 text-green-800', 'bg-green-500'];
-          }
+                    const reportItem = document.createElement('div');
+                    reportItem.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition duration-200';
+                    reportItem.innerHTML = `
+                        <div class="flex justify-between items-start">
+                            <div class="flex-grow">
+                                <p class="text-sm text-gray-500">${report.tanggal}</p>
+                                <p class="text-xl font-extrabold text-indigo-700 truncate">${report.sku}</p>
+                                <p class="text-xs text-gray-600">${report.supplier || '-'}</p>
+                            </div>
+                            <div class="text-right ml-4">
+                                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${statusColor}">
+                                    ${report.status}
+                                </span>
+                            </div>
+                        </div>
+                        <div class="mt-2 text-sm">
+                            <p><strong>Masuk:</strong> ${report.qtyMasuk} | <strong>Aktual:</strong> ${report.qtyAktual}</p>
+                        </div>
+                    `;
+                    listContainer.appendChild(reportItem);
+                });
 
-          return `
-            <button class="parcel-btn w-full text-left bg-white hover:bg-gray-50 rounded-lg shadow-md border overflow-hidden" data-parcel-no="${parcelNo}">
-              <div class="p-4">
-                <div class="flex justify-between items-center">
-                  <div class="flex items-center gap-3">
-                    <span class="font-bold text-xl text-indigo-600">${parcelNo}</span>
-                    <span class="flex items-center justify-center w-6 h-6 text-xs font-bold text-white bg-gray-400 rounded-full">${status.total}</span>
-                  </div>
-                  <span class="text-xs font-bold px-2 py-1 rounded-full ${statusColor}">${statusLabel}</span>
-                </div>
-                <div class="mt-2 text-xs text-gray-500">${status.confirmed} of ${status.total} items confirmed</div>
-              </div>
-              <div class="w-full bg-gray-200 h-1"><div class="${progressColor} h-1" style="width: ${progress}%"></div></div>
-            </button>`;
-        }).join('');
-        
-        showPage(parcelListPage);
-      } catch (error) {
-        console.error("Failed to show parcel list page:", error);
-      }
-    };
-
-    // --- Parcel Detail Page Logic ---
-    const showParcelDetailPage = async (parcelNo) => {
-      currentParcelNo = parcelNo;
-      try {
-        const event = await getEvent(currentEventId);
-        if (!event) return;
-
-        document.getElementById('itemSearchInput').value = '';
-        document.getElementById('parcelDetailPageTitle').textContent = `Parcel No: ${parcelNo}`;
-        document.getElementById('parcelDetailPageInfo').textContent = `Task Area: ${event.area} | Operator: ${event.operator}`;
-
-        const itemsInParcel = event.items.filter(item => (item.original?.noKoli || item.actual.noKoli) === parcelNo);
-        itemContainer.innerHTML = itemsInParcel.map(renderWorkItem).join('') + 
-            `<button class="add-item-btn w-full bg-blue-100 text-blue-700 hover:bg-blue-200 font-bold py-2 px-4 rounded-lg text-sm mt-4" data-koli="${parcelNo}">+ Manual Entry</button>`;
-
-        showPage(parcelDetailPage);
-      } catch (error) {
-        console.error("Failed to show parcel detail page:", error);
-      }
-    };
-    
-    const renderWorkItem = (item) => {
-      const isManual = !item.original;
-      const isValidated = item.actual.isValidated;
-      const isDisabled = isValidated ? 'disabled' : '';
-      const originalQty = item.original?.qty ?? 0;
-      const countedQty = item.actual.countedQty ?? null;
-      const variance = (countedQty !== null) ? countedQty - originalQty : null;
-      const notes = item.actual.notes || '';
-      const displayCountedQty = countedQty ?? '-';
-      const displayVariance = variance !== null ? variance : '-';
-      const varianceColor = variance === null || variance === 0 ? 'text-gray-700' : (variance > 0 ? 'text-green-600' : 'text-red-600');
-      const binBox = item.actual.kodeBinBox ?? (item.original?.kodeBinBox || 'N/A');
-      const cardBg = isManual ? 'bg-blue-50' : 'bg-white';
-      const borderColor = isValidated ? 'border-green-500' : (isManual ? 'border-blue-200' : 'border-gray-200');
-      const kodeProduk = item.original?.kodeProduk || item.actual.kodeProduk;
-      const namaBarang = item.original?.namaBarang || item.actual.namaBarang;
-
-      return `
-        <div class="accordion-item ${cardBg} ${borderColor} rounded-lg border-2 shadow-sm" data-item-id="${item.itemId}" data-kode-produk="${kodeProduk}" data-nama-barang="${namaBarang}">
-          <div class="accordion-header w-full flex justify-between items-center p-3 text-left cursor-pointer">
-            <div class="flex-grow">
-              <p class="text-xs text-gray-500">${kodeProduk}</p>
-              <h4 class="font-semibold text-gray-900">${namaBarang}</h4>
-              <div class="text-sm text-gray-600 mt-2 pt-2 border-t">
-                <p class="font-mono">
-                  <span class="font-semibold text-gray-800" title="Bin Location">${binBox}</span> - 
-                  <span title="System Quantity">${originalQty}</span> / 
-                  <span title="Counted Quantity" class="font-bold text-blue-600">${displayCountedQty}</span> / 
-                  <span title="Variance" class="font-bold ${varianceColor}">${displayVariance}</span>
-                </p>
-                <p class="text-xs italic text-gray-500 mt-1 truncate" title="${notes}">${notes || 'No notes'}</p>
-              </div>
-            </div>
-            <div class="flex items-center pl-3">
-              ${isManual ? '<span class="text-xs font-bold text-blue-800 bg-blue-200 px-2 py-1 rounded-full mr-2">MANUAL</span>' : ''}
-              <svg class="accordion-arrow w-5 h-5 text-gray-500" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clip-rule="evenodd" /></svg>
-            </div>
-          </div>
-          <div class="accordion-content px-3 bg-white">
-            <div class="border-t pt-3">
-              <div class="grid grid-cols-3 gap-3 mb-3 text-center">
-                <div><p class="text-sm text-gray-500">Sys. Qty</p><p class="font-bold text-xl">${isManual ? '-' : originalQty}</p></div>
-                <div><label class="block text-sm font-medium text-gray-700">Counted Qty</label><input type="number" value="${item.actual.countedQty ?? ''}" class="item-input mt-1 shadow-sm border-gray-300 rounded-md w-full text-center font-bold text-lg" data-field="countedQty" ${isDisabled}></div>
-                <div><p class="text-sm text-gray-500">Variance</p><p class="qty-diff font-bold text-xl ${varianceColor}">${isManual ? '-' : displayVariance}</p></div>
-              </div>
-              <div class="mb-3 relative">
-                <label class="block text-sm font-medium text-gray-700">Bin Location</label>
-                <input type="text" value="${item.actual.kodeBinBox ?? (item.original?.kodeBinBox || '')}" class="item-input mt-1 shadow-sm border-gray-300 rounded-md w-full" data-field="kodeBinBox" autocomplete="off" ${isDisabled}>
-              </div>
-              <div class="mb-3">
-                <label class="block text-sm font-medium text-gray-700">Notes</label>
-                <textarea rows="2" class="item-input mt-1 shadow-sm border-gray-300 rounded-md w-full" data-field="notes" ${isDisabled}>${notes}</textarea>
-              </div>
-              <div class="flex justify-between items-center">
-                <div class="flex items-center">
-                  <input type="checkbox" id="binNotEmpty-${item.itemId}" ${item.actual.binWasNotEmpty ? 'checked' : ''} class="item-input h-4 w-4 text-blue-600 border-gray-300 rounded" data-field="binWasNotEmpty" ${isDisabled}>
-                  <label for="binNotEmpty-${item.itemId}" class="ml-2 block text-sm text-gray-900">Bin Occupied</label>
-                </div>
-                <div class="flex items-center gap-4">
-                  ${isValidated ? `<div class="text-right"><p class="text-sm font-bold text-green-600">CONFIRMED</p><p class="text-xs text-gray-500">${displayCountedQty}/${originalQty}</p></div>` : ''}
-                  <button class="validate-btn text-white font-bold py-2 px-4 rounded-lg text-sm ${isValidated ? 'bg-yellow-500 hover:bg-yellow-600' : 'bg-green-500 hover:bg-green-600'}" data-item-id="${item.itemId}">${isValidated ? 'Revise' : 'Confirm'}</button>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>`;
-    };
-    
-    const handleValidateToggle = async (itemId) => {
-      try {
-        const event = await getEvent(currentEventId);
-        const item = event.items.find(i => i.itemId === itemId);
-        if (!item) return;
-
-        const isUnlocking = item.actual.isValidated;
-        if (isUnlocking) {
-          item.actual.isValidated = false;
-          item.history.push({ timestamp: new Date().toISOString(), user: event.operator, action: `Data for item ${item.original?.kodeProduk || item.actual.kodeProduk} revised for correction.` });
-        } else {
-          const itemElement = document.querySelector(`.accordion-item[data-item-id="${itemId}"]`);
-          const newQty = itemElement.querySelector('[data-field="countedQty"]').value === '' ? null : Number(itemElement.querySelector('[data-field="countedQty"]').value);
-          const newBinBox = itemElement.querySelector('[data-field="kodeBinBox"]').value;
-          const newNotes = itemElement.querySelector('[data-field="notes"]').value;
-          const newBinNotEmpty = itemElement.querySelector('[data-field="binWasNotEmpty"]').checked;
-          const changes = [];
-
-          if (newQty !== item.actual.countedQty) changes.push(`Qty: ${item.actual.countedQty ?? 'empty'} -> ${newQty ?? 'empty'}`);
-          if (newBinBox !== (item.actual.kodeBinBox ?? (item.original?.kodeBinBox || ''))) changes.push(`Bin: '${item.actual.kodeBinBox}' -> '${newBinBox}'`);
-          if (newNotes !== item.actual.notes) changes.push(`Notes added/changed`);
-          if (newBinNotEmpty !== item.actual.binWasNotEmpty) changes.push(`Bin Occupied: ${newBinNotEmpty}`);
-
-          if (changes.length > 0) {
-            item.history.push({ timestamp: new Date().toISOString(), user: event.operator, action: `Item ${item.original?.kodeProduk || item.actual.kodeProduk} confirmed. Changes: ${changes.join(', ')}.` });
-          }
-
-          item.actual.countedQty = newQty;
-          item.actual.kodeBinBox = newBinBox;
-          item.actual.notes = newNotes;
-          item.actual.binWasNotEmpty = newBinNotEmpty;
-          item.actual.isValidated = true;
+            } catch (error) {
+                console.error('Gagal mengambil laporan:', error);
+                showMessage('Gagal memuat data laporan dari penyimpanan.');
+            }
         }
         
-        await updateEvent(event);
-        showParcelDetailPage(currentParcelNo);
-      } catch (error) {
-        console.error("Failed to confirm/revise:", error);
-      }
-    };
-    
-    // --- Report Page Logic ---
-    const showReportPage = async (eventId) => {
-      currentEventId = eventId;
-      try {
-        const event = await getEvent(eventId);
-        if (!event) return;
+        // --- LOGIKA SCANNER BARU (DARI index.html) ---
 
-        document.getElementById('reportArea').textContent = event.area;
-        document.getElementById('reportDate').textContent = event.date;
-        document.getElementById('reportOperator').textContent = event.operator;
-
-        reportItemContainer.innerHTML = event.items.map(renderReportItemCard).join('');
-        
-        const allHistory = event.items.flatMap(item => item.history.map(log => ({ ...log, itemCode: item.original?.kodeProduk || item.actual.kodeProduk }))).sort((a, b) => new Date(a.timestamp) - new Date(b.timestamp));
-
-        fullActivityLogContainer.innerHTML = allHistory.length > 1 
-          ? allHistory.map(log => `<p><span class="font-semibold text-gray-500">${formatTimestamp(log.timestamp)}</span>: ${log.action}</p>`).join('')
-          : `<p class="text-gray-500">No activities recorded for this task.</p>`;
-
-        showPage(reportPage);
-      } catch (error) {
-        console.error("Failed to show report page:", error);
-      }
-    };
-
-    const renderReportItemCard = (item) => {
-      const isManual = !item.original;
-      const originalQty = item.original?.qty ?? '-';
-      const countedQty = item.actual.countedQty ?? '-';
-      const parcelNo = item.original?.noKoli || item.actual.noKoli || 'N/A';
-      const binBox = item.actual.kodeBinBox || item.original?.kodeBinBox || 'N/A';
-
-      return `
-        <div class="border border-gray-200 rounded-lg overflow-hidden shadow-sm ${isManual ? 'bg-blue-50' : 'bg-white'}">
-          <div class="p-4">
-            <p class="text-xs text-gray-500">${item.original?.kodeProduk || item.actual.kodeProduk}</p>
-            <h4 class="font-semibold text-gray-900">${item.original?.namaBarang || item.actual.namaBarang}</h4>
-            ${isManual ? '<span class="text-xs font-bold text-blue-600 bg-blue-100 px-2 py-1 rounded-full inline-block mt-1">MANUAL ENTRY</span>' : ''}
-          </div>
-          <div class="p-4 grid grid-cols-2 md:grid-cols-4 gap-4 border-t bg-gray-50">
-            <div class="text-center"><p class="text-sm text-gray-500">No. Parcel</p><p class="font-mono text-lg">${parcelNo}</p></div>
-            <div class="text-center"><p class="text-sm text-gray-500">Bin Location</p><p class="font-mono text-lg">${binBox}</p></div>
-            <div class="text-center"><p class="text-sm text-gray-500">Sys. Qty</p><p class="font-mono text-lg">${originalQty}</p></div>
-            <div class="text-center"><p class="text-sm text-gray-500">Counted Qty</p><p class="font-mono text-lg font-bold">${countedQty}</p></div>
-          </div>
-          ${item.actual.notes ? `<div class="p-4 border-t"><p class="text-sm text-gray-500">Notes</p><p class="italic text-gray-700">${item.actual.notes}</p></div>` : ''}
-        </div>`;
-    };
-
-    // --- Modal and Form Submission Logic ---
-    const handleAddEvent = (e) => {
-      e.preventDefault();
-      const file = document.getElementById('xlsxFile').files[0];
-      if (!file) { alert("Please upload a task file."); return; }
-      
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        try {
-          const workbook = XLSX.read(e.target.result, { type: 'array' });
-          const worksheet = workbook.Sheets[workbook.SheetNames[0]];
-          const customHeaders = ['kodeProduk', 'namaBarang', 'qty', 'unit', 'zonaLokasi', 'kodeBinBox', 'verifikasiOperator', 'namaOperatorExcel', 'checklistWMS', 'noKoli'];
-          const jsonData = XLSX.utils.sheet_to_json(worksheet, { range: 'B13:K150', header: customHeaders });
-
-          const newEvent = {
-            area: document.getElementById('area').value,
-            date: document.getElementById('creationDate').value,
-            operator: document.getElementById('operatorName').value,
-            items: jsonData.filter(row => row.kodeProduk).map(row => ({
-              itemId: crypto.randomUUID(),
-              original: row,
-              actual: { countedQty: null, notes: '', binWasNotEmpty: false, kodeBinBox: row.kodeBinBox || '', isValidated: false },
-              history: [{ timestamp: new Date().toISOString(), user: 'System', action: 'Task created from system file.' }]
-            }))
-          };
-
-          const tx = db.transaction('tasks', 'readwrite');
-          tx.objectStore('tasks').add(newEvent);
-          tx.oncomplete = () => { addEventModal.classList.add('hidden'); addEventForm.reset(); displayEvents(); };
-          tx.onerror = () => alert("Failed to save task to database.");
-        } catch (err) {
-          alert("Failed to process Excel file. Please ensure correct format.");
-          console.error(err);
-        }
-      };
-      reader.readAsArrayBuffer(file);
-    };
-
-    const handleAddItem = async (e) => {
-      e.preventDefault();
-      try {
-        const event = await getEvent(currentEventId);
-        const newItem = {
-          itemId: crypto.randomUUID(),
-          original: null,
-          actual: {
-            kodeProduk: document.getElementById('newItemKodeProduk').value,
-            namaBarang: document.getElementById('newItemNamaBarang').value,
-            countedQty: Number(document.getElementById('newItemQty').value),
-            notes: document.getElementById('newItemNotes').value,
-            noKoli: document.getElementById('newItemKoliHidden').value,
-            kodeBinBox: document.getElementById('newItemBinBox').value,
-            binWasNotEmpty: false,
-            isValidated: false
-          },
-          history: [{ timestamp: new Date().toISOString(), user: event.operator, action: 'Item added manually by operator.' }]
+        const startScanner = () => {
+            scannerMessage.textContent = "Requesting camera access...";
+            scannerModal.classList.remove('hidden');
+            
+            html5QrCode = new Html5Qrcode("reader");
+            
+            const qrCodeSuccessCallback = (decodedText) => {
+                scannerMessage.textContent = `SKU Ditemukan: ${decodedText}`;
+                stopScanner();
+                openReportModal(decodedText);
+            };
+            
+            html5QrCode.start(
+                { facingMode: "environment" }, 
+                { fps: 10, qrbox: { width: 250, height: 250 } }, 
+                qrCodeSuccessCallback
+            )
+            .then(() => { 
+                scannerMessage.textContent = "Arahkan kamera ke Barcode/QR Code"; 
+            })
+            .catch((err) => {
+                let userMessage = `Error: ${err}`;
+                if (String(err).includes('NotAllowedError')) {
+                     userMessage = "Izin kamera ditolak. Harap izinkan kamera di pengaturan browser.";
+                } else if (String(err).includes('NotFoundError')) {
+                     userMessage = "Kamera tidak ditemukan.";
+                } else if (String(err).includes('secure context')) {
+                     userMessage = "Kamera memerlukan koneksi aman (HTTPS). Aplikasi tidak dapat berjalan di HTTP atau file://";
+                }
+                scannerMessage.textContent = userMessage;
+                scannerMessage.classList.add('text-red-500');
+                
+                setTimeout(stopScanner, 3000);
+            });
         };
-        event.items.push(newItem);
-        await updateEvent(event);
-        addItemModal.classList.add('hidden');
-        addItemForm.reset();
-        showParcelDetailPage(newItem.actual.noKoli);
-      } catch (error) {
-        console.error("Failed to add item:", error);
-      }
-    };
-    
-    // --- Search, Scanner, and Autocomplete Logic ---
-    const filterItems = () => {
-      const searchTerm = document.getElementById('itemSearchInput').value.toLowerCase();
-      document.querySelectorAll('#itemContainer .accordion-item').forEach(item => {
-        const kodeProduk = item.dataset.kodeProduk.toLowerCase();
-        const namaBarang = item.dataset.namaBarang.toLowerCase();
-        item.style.display = (kodeProduk.includes(searchTerm) || namaBarang.includes(searchTerm)) ? 'block' : 'none';
-      });
-    };
 
-    const startScanner = () => {
-      const messageEl = document.getElementById('scannerMessage');
-      messageEl.textContent = "Requesting camera access...";
-      html5QrCode = new Html5Qrcode("reader");
-      const qrCodeSuccessCallback = (decodedText) => {
-        document.getElementById('itemSearchInput').value = decodedText;
-        filterItems();
-        stopScanner();
-      };
-      html5QrCode.start({ facingMode: "environment" }, { fps: 10, qrbox: { width: 250, height: 250 } }, qrCodeSuccessCallback)
-        .then(() => { messageEl.textContent = "Point camera at a barcode"; })
-        .catch((err) => {
-          messageEl.textContent = `Error: ${err}`;
-          messageEl.classList.add('text-red-500');
-        });
-    };
+        const stopScanner = () => {
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().catch((err) => {
+                    console.error("Gagal menghentikan scanner.", err);
+                });
+            }
+            html5QrCode = null;
+            scannerModal.classList.add('hidden');
+        };
 
-    const stopScanner = () => {
-      if (html5QrCode?.isScanning) {
-        html5QrCode.stop().catch((err) => console.error("Failed to stop scanning.", err));
-      }
-      scannerModal.classList.add('hidden');
-    };
+        function closeScannerModal() {
+            stopScanner();
+        }
 
-    const handleAutocomplete = (e) => {
-      const input = e.target;
-      const value = input.value.toUpperCase();
-      const suggestionsContainer = input.parentElement.querySelector('.autocomplete-suggestions');
-      if (suggestionsContainer) suggestionsContainer.remove();
-      if (value.length < 2) return;
+        // --- AKHIR LOGIKA SCANNER BARU ---
 
-      const suggestions = binLocations.filter(loc => loc.toUpperCase().includes(value)).slice(0, 5);
-      if (suggestions.length > 0) {
-        const ul = document.createElement('ul');
-        ul.className = 'autocomplete-suggestions';
-        suggestions.forEach(suggestion => {
-          const li = document.createElement('li');
-          li.textContent = suggestion;
-          li.onclick = () => { input.value = suggestion; ul.remove(); };
-          ul.appendChild(li);
-        });
-        input.parentElement.appendChild(ul);
-      }
-    };
+        function openReportModal(sku = '') {
+            const form = document.getElementById('report-form');
+            form.reset();
+            document.getElementById('sku').value = sku;
+            updateStatusDisplay(); 
+            
+            document.getElementById('report-modal').classList.remove('hidden');
+            document.getElementById('report-modal').classList.add('flex');
+            
+            document.getElementById('qtyMasuk').focus();
+        }
 
-    // --- Export Logic ---
-    const getExportData = async () => {
-      const event = await getEvent(currentEventId);
-      if (!event) return alert("Task data not found.");
-      return event.items.map(item => ({
-        "Kode Produk": item.original?.kodeProduk || item.actual.kodeProduk,
-        "Nama Barang": item.original?.namaBarang || item.actual.namaBarang,
-        "Sys. Qty": item.original?.qty ?? 0,
-        "Counted Qty": item.actual.countedQty ?? 0,
-        "Bin Location": item.actual.kodeBinBox || item.original?.kodeBinBox || '',
-        "No. Parcel": item.original?.noKoli || item.actual.noKoli || 'N/A',
-        "Variance": (item.actual.countedQty ?? 0) - (item.original?.qty ?? 0),
-        "Keterangan": item.actual.notes || ''
-      }));
-    };
-    
-    const handleExportExcel = async () => {
-      try {
-        const data = await getExportData();
-        if (!data) return;
-        const event = await getEvent(currentEventId);
-        const filename = `Put_Away_${event.area}_${event.date}.xlsx`;
-        const worksheet = XLSX.utils.json_to_sheet(data);
-        const workbook = XLSX.utils.book_new();
-        XLSX.utils.book_append_sheet(workbook, worksheet, "Put Away Result");
-        XLSX.writeFile(workbook, filename);
-      } catch (error) {
-        console.error("Failed to export Excel file:", error);
-        alert("An error occurred during export.");
-      }
-    };
+        function closeReportModal() {
+            document.getElementById('report-modal').classList.add('hidden');
+            document.getElementById('report-modal').classList.remove('flex');
+        }
 
-    // --- Event Delegation ---
-    document.addEventListener('click', (e) => {
-      const { target } = e;
-      const accordionHeader = target.closest('.accordion-header');
+        function updateStatusDisplay() {
+            const qtyMasukInput = document.getElementById('qtyMasuk');
+            const qtyAktualInput = document.getElementById('qtyAktual');
+            
+            const qtyMasuk = qtyMasukInput.value ? parseInt(qtyMasukInput.value) : null;
+            const qtyAktual = qtyAktualInput.value ? parseInt(qtyAktualInput.value) : null;
+            
+            const statusDisplay = document.getElementById('status-display');
+            const statusCard = document.getElementById('status-display-card');
+            
+            let statusText = 'Belum dihitung';
+            let bgColor = 'bg-gray-100';
+            let textColor = 'text-gray-500';
 
-      if (target.id === 'addEventBtn') {
-        document.getElementById('creationDate').value = new Date().toISOString().split('T')[0];
-        addEventModal.classList.remove('hidden');
-      } else if (target.id === 'closeAddEventModalBtn' || target === addEventModal) {
-        addEventModal.classList.add('hidden');
-      } else if (target.id === 'cancelAddItemBtn' || target === addItemModal) {
-        addItemModal.classList.add('hidden');
-      } else if (target.id === 'backToMainListBtn' || target.id === 'backToListFromReportBtn') {
-        displayEvents();
-      } else if (target.id === 'backToParcelListBtn') {
-        showParcelListPage(currentEventId);
-      } else if (target.id === 'deleteEventBtn') {
-        deleteConfirmModal.classList.remove('hidden');
-      } else if (target.id === 'cancelDeleteBtn' || target === deleteConfirmModal) {
-        deleteConfirmModal.classList.add('hidden');
-      } else if (target.id === 'confirmDeleteBtn') {
-        deleteEventFromDB(currentEventId).then(() => {
-          deleteConfirmModal.classList.add('hidden');
-          displayEvents();
-        });
-      } else if (target.id === 'exportExcelBtn') {
-        handleExportExcel();
-      } else if (target.id === 'closeScannerBtn' || target === scannerModal) {
-        stopScanner();
-      } else if (target.closest('.work-btn')) {
-        showParcelListPage(Number(target.closest('.work-btn').dataset.id));
-      } else if (target.closest('.parcel-btn')) {
-        showParcelDetailPage(target.closest('.parcel-btn').dataset.parcelNo);
-      } else if (accordionHeader && !target.closest('.validate-btn')) {
-        accordionHeader.parentElement.classList.toggle('open');
-      } else if (target.closest('.report-btn')) {
-        showReportPage(Number(target.closest('.report-btn').dataset.id || currentEventId));
-      } else if (target.closest('.validate-btn')) {
-        handleValidateToggle(target.closest('.validate-btn').dataset.itemId);
-      } else if (target.closest('.add-item-btn')) {
-        const koli = target.closest('.add-item-btn').dataset.koli;
-        document.getElementById('newItemKoliHidden').value = koli;
-        document.getElementById('addItemKoliDisplay').textContent = koli;
-        addItemModal.classList.remove('hidden');
-      } else if (target.closest('#scanBtn')) {
-        scannerModal.classList.remove('hidden');
-        startScanner();
-      } else if (!target.closest('.relative')) {
-        document.querySelectorAll('.autocomplete-suggestions').forEach(el => el.remove());
-      }
-    });
-    
-    addEventForm.addEventListener('submit', handleAddEvent);
-    addItemForm.addEventListener('submit', handleAddItem);
+            if (qtyMasuk !== null && qtyAktual !== null && qtyMasuk > 0) {
+                if (qtyAktual > qtyMasuk) {
+                    statusText = `LEBIH (${qtyAktual - qtyMasuk})`;
+                    bgColor = 'bg-yellow-200';
+                    textColor = 'text-yellow-800';
+                } else if (qtyAktual < qtyMasuk) {
+                    statusText = `KURANG (${qtyMasuk - qtyAktual})`;
+                    bgColor = 'bg-red-200';
+                    textColor = 'text-red-800';
+                } else {
+                    statusText = 'SESUAI';
+                    bgColor = 'bg-green-200';
+                    textColor = 'text-green-800';
+                }
+            }
 
-    document.addEventListener('input', (e) => {
-      if (e.target.id === 'itemSearchInput') filterItems();
-      if (e.target.matches('[data-field="kodeBinBox"]') || e.target.id === 'newItemBinBox') handleAutocomplete(e);
-    });
+            statusDisplay.textContent = statusText;
+            statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
+            statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
+            
+            return statusText.split(' ')[0]; 
+        }
 
-    window.addEventListener('load', initDB);
-  </script>
+        window.onload = async () => {
+            try {
+                await openDB();
+                await renderReports();
+            } catch (error) {
+                showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
+            }
+
+            document.getElementById('create-report-btn').addEventListener('click', startScanner);
+            document.getElementById('closeScannerBtn').addEventListener('click', stopScanner);
+
+            document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
+            document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
+            
+            document.getElementById('report-form').addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                const form = e.target;
+                const qtyMasuk = parseInt(form.qtyMasuk.value);
+                const qtyAktual = parseInt(form.qtyAktual.value);
+                
+                if (isNaN(qtyMasuk) || isNaN(qtyAktual) || qtyMasuk <= 0 || qtyAktual < 0) {
+                    showMessage("QTY Masuk harus lebih dari 0 dan QTY Aktual tidak boleh kosong.");
+                    return;
+                }
+                
+                const statusFinal = updateStatusDisplay();
+                
+                if (statusFinal === 'Belum') {
+                     showMessage("Silakan isi QTY Masuk dan QTY Aktual.");
+                    return;
+                }
+
+                const newReport = {
+                    sku: form.sku.value.toUpperCase(),
+                    qtyMasuk: qtyMasuk,
+                    qtyAktual: qtyAktual,
+                    supplier: form.supplier.value,
+                    pembagian: form.pembagian.value,
+                    foto: form.foto.value || 'Tidak ada keterangan foto',
+                    tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
+                    status: statusFinal,
+                };
+
+                try {
+                    await addReport(newReport);
+                    closeReportModal();
+                    await renderReports();
+                    showMessage('Laporan Ketidaksesuaian berhasil disimpan!');
+                } catch (error) {
+                    console.error('Gagal menyimpan laporan:', error);
+                    showMessage('Gagal menyimpan laporan. Terjadi kesalahan pada IndexedDB.');
+                }
+            });
+        };
+    </script>
 </body>
 </html>
