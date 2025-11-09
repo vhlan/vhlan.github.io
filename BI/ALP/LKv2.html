@@ -30,7 +30,23 @@
             width: 100%;
             border-radius: 0.75rem; /* rounded-xl */
             overflow: hidden;
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+            box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+        }
+        
+        /* Adjustments for better mobile fit on SKU input */
+        #sku {
+            /* Reduced padding and size for better fit on small screens */
+            padding-top: 0.625rem; /* py-2.5 */
+            padding-bottom: 0.625rem; /* py-2.5 */
+            font-size: 1rem; /* text-base */
+        }
+        
+        #scan-sku-btn {
+            /* Adjusted size for better touch target without being too wide */
+            padding-top: 0.5rem; /* py-2 */
+            padding-bottom: 0.5rem; /* py-2 */
+            padding-left: 0.75rem; /* px-3 */
+            padding-right: 0.75rem; /* px-3 */
         }
     </style>
 </head>
@@ -75,11 +91,13 @@
                     <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
                     <div class="flex space-x-2 mt-1">
                         <input type="text" id="sku" name="sku" required 
-                               class="flex-grow p-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg uppercase"
+                               <!-- CLASS Disesuaikan untuk mobile: p-3 diubah menjadi py-2.5 px-3, text-lg diubah menjadi text-base -->
+                               class="flex-grow py-2.5 px-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-base uppercase"
                                placeholder="Scan atau masukkan kode barang">
                         <!-- Tombol Scan SKU -->
                         <button type="button" id="scan-sku-btn"
-                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 flex items-center justify-center">
+                                <!-- CLASS Disesuaikan untuk mobile: px-4 py-2 diubah menjadi py-2 px-3, icon tetap -->
+                                class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg shadow-md transition duration-150 flex items-center justify-center">
                             <!-- Icon Camera/Scanner -->
                             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
                                 <path stroke-linecap="round" stroke-linejoin="round" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.218A2 2 0 0110.404 4h3.192a2 2 0 011.664.89l.812 1.218A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z" />
