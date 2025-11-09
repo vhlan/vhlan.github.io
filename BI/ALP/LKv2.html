@@ -3,11 +3,13 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>LKM - Laporan Ketidaksesuaian Mobile</title>
+    <title>LKM - Real-Time Scanner</title>
     <!-- Tailwind CSS CDN -->
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- Font Inter -->
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700&display=swap" rel="stylesheet">
+    <!-- Third-Party Library for QR/Barcode Scanning -->
+    <script src="https://unpkg.com/html5-qrcode"></script>
     <style>
         body {
             font-family: 'Inter', sans-serif;
@@ -15,13 +17,20 @@
         }
         /* Custom scrollbar for better mobile feel */
         .report-list::-webkit-scrollbar,
-        .modal-content-scroll::-webkit-scrollbar { /* Ditambahkan untuk scrollbar modal */
+        .modal-content-scroll::-webkit-scrollbar {
             width: 4px;
         }
         .report-list::-webkit-scrollbar-thumb,
-        .modal-content-scroll::-webkit-scrollbar-thumb { /* Ditambahkan untuk scrollbar modal */
+        .modal-content-scroll::-webkit-scrollbar-thumb {
             background-color: #cbd5e1;
             border-radius: 20px;
+        }
+        /* Style the reader container inside the modal */
+        #reader {
+            width: 100%;
+            border-radius: 0.75rem; /* rounded-xl */
+            overflow: hidden;
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
         }
     </style>
 </head>
@@ -29,13 +38,13 @@
 
     <!-- Header Aplikasi -->
     <header class="bg-indigo-600 shadow-lg p-4 sticky top-0 z-10">
-        <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian Manajemen (LKM)</h1>
+        <h1 class="text-xl font-bold text-white text-center">Laporan Ketidaksesuaian (Real-Time Scanner)</h1>
     </header>
 
     <!-- Konten Utama (Daftar Laporan) -->
     <main class="flex-grow p-4">
         <div class="bg-white p-4 rounded-xl shadow-lg">
-            <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian (Klik untuk Rincian)</h2>
+            <h2 class="text-lg font-semibold text-gray-800 mb-3">Daftar Laporan Ketidaksesuaian</h2>
             <div id="report-list" class="space-y-3 max-h-96 overflow-y-auto report-list">
                 <!-- Laporan akan di-render di sini -->
                 <p id="empty-message" class="text-gray-500 text-center py-4">Belum ada Laporan. Klik 'Buat Laporan' untuk memulai.</p>
@@ -54,20 +63,20 @@
         </button>
     </div>
 
-    <!-- Modal Formulir Laporan (Digunakan untuk CREATE dan EDIT) -->
-    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
-        <!-- Konten Modal: Menambahkan m-4, max-h-[90vh], dan overflow-y-auto -->
+    <!-- Modal Formulir Laporan (CREATE/EDIT) -->
+    <div id="report-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 max-h-[90vh] overflow-y-auto modal-content-scroll" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800" id="modal-title">Formulir Laporan Ketidaksesuaian</h3>
             
             <form id="report-form" class="space-y-4">
                 
-                <!-- SKU (Kode Barang) - Manual Input DAN SCANNER BARU -->
+                <!-- SKU (Kode Barang) - SCANNER SUNGGUHAN -->
                 <div>
                     <label for="sku" class="block text-sm font-medium text-gray-700">SKU (Kode Barang) <span class="text-red-500">*</span></label>
                     <div class="flex space-x-2 mt-1">
                         <input type="text" id="sku" name="sku" required 
-                               class="flex-grow p-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg uppercase">
+                               class="flex-grow p-3 border border-indigo-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 font-mono font-bold text-lg uppercase"
+                               placeholder="Scan atau masukkan kode barang">
                         <!-- Tombol Scan SKU -->
                         <button type="button" id="scan-sku-btn"
                                 class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-4 py-2 rounded-lg shadow-md transition duration-150 flex items-center justify-center">
@@ -78,14 +87,9 @@
                             </svg>
                         </button>
                     </div>
-                    <p class="text-xs text-gray-500 italic mt-1">Gunakan tombol kamera untuk mengisi SKU dari hasil scan.</p>
+                    <p class="text-xs text-gray-500 italic mt-1">Gunakan tombol kamera untuk memindai kode barang (QR/Barcode) secara real-time.</p>
                 </div>
                 
-                <!-- Hidden input for camera access (Scanner) -->
-                <!-- 'capture="environment"' akan memaksa pembukaan kamera belakang pada perangkat seluler -->
-                <input type="file" id="camera-input" accept="image/*" capture="environment" class="hidden">
-
-
                 <!-- QTY Masuk (Diterima) -->
                 <div>
                     <label for="qtyMasuk" class="block text-sm font-medium text-gray-700">QTY Masuk (Harusnya) <span class="text-red-500">*</span></label>
@@ -118,7 +122,6 @@
                     <label for="pembagian" class="block text-sm font-medium text-gray-700">Pembagian (Keterangan Lokasi/Dept) - Opsional</label>
                     <select id="pembagian" name="pembagian"
                             class="mt-1 w-full p-3 border border-gray-300 rounded-lg shadow-sm focus:ring-indigo-500 focus:border-indigo-500 appearance-none bg-white">
-                        <!-- Opsi "Tidak ada pembagian" menyimpan nilai kosong/default -->
                         <option value="">Tidak ada pembagian</option>
                         <option value="1">1</option>
                         <option value="2">2</option>
@@ -129,13 +132,10 @@
                     </select>
                 </div>
                 
-                <!-- Foto Barang (FILE UPLOAD) -->
+                <!-- Foto Barang (FILE UPLOAD) - Masih menggunakan upload file jika diperlukan -->
                 <div>
-                    <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Barang (Opsional - Ganti/kosongkan untuk edit)</label>
-                    <!-- Div untuk menampilkan pratinjau foto saat ini (saat mode edit) -->
-                    <div id="current-photo-preview" class="mb-3">
-                        <!-- Konten pratinjau akan dimasukkan di sini oleh JS -->
-                    </div>
+                    <label for="foto" class="block text-sm font-medium text-gray-700 mb-1">Unggah Foto Barang (Opsional)</label>
+                    <div id="current-photo-preview" class="mb-3"></div>
                     <input type="file" id="foto" name="foto" accept="image/*"
                            class="w-full text-sm text-gray-500 
                                      file:mr-4 file:py-2 file:px-4
@@ -160,8 +160,8 @@
         </div>
     </div>
     
-    <!-- Modal Rincian Laporan (DETAIL VIEW) -->
-    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-75 z-50 hidden items-center justify-center p-4 overflow-y-auto">
+    <!-- Modal Rincian Laporan (DETAIL VIEW) - (Tidak ada perubahan) -->
+    <div id="detail-modal" class="fixed inset-0 bg-black bg-opacity-75 z-40 hidden items-center justify-center p-4 overflow-y-auto">
         <div class="bg-white w-full max-w-md rounded-xl p-6 shadow-2xl m-4 max-h-[90vh] overflow-y-auto modal-content-scroll" onclick="event.stopPropagation()">
             <h3 class="text-2xl font-bold mb-6 text-gray-800 border-b pb-2">Rincian Laporan Ketidaksesuaian</h3>
 
@@ -225,15 +225,32 @@
             </div>
         </div>
     </div>
-
-    <!-- Modal Pesan/Aksi (Untuk notifikasi/konfirmasi) -->
-    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-50 hidden items-center justify-center p-4">
+    
+    <!-- Modal PESAN/KONFIRMASI (Tidak ada perubahan) -->
+    <div id="message-modal" class="fixed inset-0 bg-black bg-opacity-50 z-40 hidden items-center justify-center p-4">
         <div class="bg-white p-6 rounded-xl shadow-2xl w-full max-w-xs text-center">
             <p id="message-text" class="text-gray-800 font-medium mb-4"></p>
             <div id="modal-actions" class="flex justify-center space-x-4 mt-4">
                 <!-- Buttons handled by JS -->
             </div>
         </div>
+    </div>
+    
+    <!-- Modal SCANNER REAL-TIME BARU -->
+    <div id="scanner-modal" class="fixed inset-0 bg-black bg-opacity-95 z-50 hidden flex-col items-center justify-center p-4">
+        <h3 class="text-xl font-bold text-white mb-4">Pindai Kode SKU/Barcode</h3>
+        
+        <!-- Reader/Video Feed container -->
+        <div id="reader" style="width: 100%; max-width: 400px; aspect-ratio: 1/1;"></div>
+        
+        <button id="stop-scanner-btn" onclick="stopScanner()"
+                class="mt-6 bg-red-600 hover:bg-red-700 text-white font-bold py-3 px-6 rounded-xl shadow-lg transition duration-150 flex items-center justify-center">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 mr-2" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+            Tutup Scanner
+        </button>
+        <p class="text-xs text-gray-300 mt-3 italic">Pastikan kode berada di dalam area pindai.</p>
     </div>
 
 
@@ -245,10 +262,11 @@
         let db;
         let currentReportId = null; 
         let emptyMessageNode; 
+        // INSTANCE GLOBAL UNTUK HTML5-QRCODE SCANNER
+        let html5QrCode = null; 
 
-        // --- Helper Function untuk IndexedDB ---
+        // --- Helper Function untuk IndexedDB (Sama seperti sebelumnya) ---
         
-        /** Membuka koneksi IndexedDB. */
         function openDB() {
             return new Promise((resolve, reject) => {
                 const request = indexedDB.open(DB_NAME, DB_VERSION);
@@ -272,7 +290,6 @@
             });
         }
 
-        /** Menyimpan laporan baru ke IndexedDB. */
         function addReport(reportData) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
@@ -284,12 +301,10 @@
             });
         }
 
-        /** Mengupdate laporan yang sudah ada di IndexedDB (menggunakan put). */
         function putReport(reportData) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readwrite');
                 const store = transaction.objectStore(STORE_NAME);
-                // put() akan mengupdate jika ID sudah ada
                 const request = store.put(reportData); 
 
                 request.onsuccess = () => resolve();
@@ -297,12 +312,10 @@
             });
         }
 
-        /** Mengambil laporan tunggal berdasarkan ID dari IndexedDB. */
         function getReportById(id) {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
-                // Pastikan ID diperlakukan sebagai Number karena IndexedDB autoIncrement key biasanya Number
                 const request = store.get(Number(id)); 
 
                 request.onsuccess = (event) => resolve(event.target.result);
@@ -310,21 +323,19 @@
             });
         }
 
-        /** Mengambil semua laporan dari IndexedDB. */
         function getReports() {
             return new Promise((resolve, reject) => {
                 const transaction = db.transaction([STORE_NAME], 'readonly');
                 const store = transaction.objectStore(STORE_NAME);
                 const request = store.getAll();
 
-                request.onsuccess = (event) => resolve(event.target.result.reverse()); // Urutkan terbaru di atas
+                request.onsuccess = (event) => resolve(event.target.result.reverse()); 
                 request.onerror = (event) => reject(event.target.error);
             });
         }
 
-        // --- FILE HANDLING FUNCTION ---
+        // --- FILE HANDLING FUNCTION (Sama seperti sebelumnya) ---
 
-        /** Mengubah objek File menjadi Base64 Data URL. */
         function readFileAsBase64(file) {
             return new Promise((resolve, reject) => {
                 if (!file) {
@@ -338,19 +349,17 @@
             });
         }
         
-        // --- UI & Logic Functions ---
+        // --- UI & Logic Functions (Sebagian besar sama) ---
         
-        /** Menampilkan pesan notifikasi kustom atau konfirmasi aksi. */
         function showMessage(text, isConfirmation = false, onConfirm = null) {
             const modal = document.getElementById('message-modal');
             const textElement = document.getElementById('message-text');
             const actionContainer = document.getElementById('modal-actions');
             
             textElement.textContent = text;
-            actionContainer.innerHTML = ''; // Bersihkan tombol aksi sebelumnya
+            actionContainer.innerHTML = ''; 
 
             if (isConfirmation && onConfirm) {
-                // Mode Konfirmasi: Tombol Batal dan Lanjutkan Simpan
                 const cancelButton = document.createElement('button');
                 cancelButton.textContent = "Batal";
                 cancelButton.className = "flex-1 bg-gray-400 hover:bg-gray-500 text-white font-bold py-3 rounded-xl transition duration-150";
@@ -361,7 +370,7 @@
                 confirmButton.className = "flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 rounded-xl shadow-md transition duration-150";
                 confirmButton.onclick = () => {
                     modal.classList.add('hidden');
-                    onConfirm(); // Eksekusi logika penyimpanan
+                    onConfirm(); 
                 };
 
                 actionContainer.classList.add('space-x-4');
@@ -369,7 +378,6 @@
                 actionContainer.appendChild(confirmButton);
 
             } else {
-                // Mode Notifikasi: Tombol OK saja
                 const okButton = document.createElement('button');
                 okButton.textContent = "OK";
                 okButton.className = "bg-indigo-500 hover:bg-indigo-600 text-white py-2 px-4 rounded-lg";
@@ -383,12 +391,11 @@
             modal.classList.add('flex');
         }
 
-        /** Mengisi formulir modal dengan data laporan (untuk mode edit) */
         async function editReport(id) {
             try {
                 const report = await getReportById(id);
                 if (report) {
-                    currentReportId = id; // Set ID yang sedang diedit
+                    currentReportId = id; 
                     openReportModal(report);
                 } else {
                     showMessage("Laporan tidak ditemukan.");
@@ -399,8 +406,6 @@
             }
         }
 
-
-        /** Buka modal form laporan (Manual Input/Edit) */
         function openReportModal(report = null) {
             const form = document.getElementById('report-form');
             const modalTitle = document.getElementById('modal-title');
@@ -408,25 +413,20 @@
             const fileInput = document.getElementById('foto');
             const photoPreviewDiv = document.getElementById('current-photo-preview'); 
 
-            photoPreviewDiv.innerHTML = ''; // Bersihkan pratinjau
+            photoPreviewDiv.innerHTML = ''; 
 
             if (report) {
-                // Mode Edit
                 modalTitle.textContent = "Edit Laporan (ID: " + report.id + ")";
                 submitButton.textContent = "UPDATE LAPORAN";
 
-                // Isi formulir dengan data laporan
                 form.sku.value = report.sku;
                 form.qtyMasuk.value = report.qtyMasuk;
                 form.qtyAktual.value = report.qtyAktual;
                 form.supplier.value = report.supplier;
-                // Pembagian akan memilih opsi yang sesuai (1-6) atau default (kosong)
                 form.pembagian.value = report.pembagian; 
                 
-                // Kosongkan input file untuk mencegah pengunggahan file yang tidak disengaja saat update
                 fileInput.value = ''; 
                 
-                // Logika untuk menampilkan foto saat ini
                 if (report.foto && typeof report.foto === 'string' && report.foto.startsWith('data:image')) {
                     photoPreviewDiv.innerHTML = `
                         <p class="text-sm font-semibold text-gray-700 mb-2">Foto Saat Ini Tersimpan:</p>
@@ -439,10 +439,8 @@
 
                 updateStatusDisplay();
             } else {
-                // Mode Buat Baru
-                currentReportId = null; // Pastikan null saat mode buat baru
+                currentReportId = null; 
                 form.reset();
-                // Set default Pembagian ke opsi pertama ("Tidak ada pembagian")
                 form.pembagian.value = ""; 
 
                 modalTitle.textContent = "Formulir Laporan Ketidaksesuaian";
@@ -454,14 +452,12 @@
             document.getElementById('report-modal').classList.add('flex');
         }
 
-        /** Tutup modal form laporan */
         function closeReportModal() {
-            currentReportId = null; // Reset ID saat modal ditutup
+            currentReportId = null; 
             document.getElementById('report-modal').classList.add('hidden');
             document.getElementById('report-modal').classList.remove('flex');
         }
         
-        /** Menampilkan modal rincian laporan saat kartu diklik */
         async function viewReportDetails(id) {
             try {
                 const report = await getReportById(id);
@@ -474,14 +470,11 @@
                 document.getElementById('detail-tanggal').textContent = report.tanggal;
                 document.getElementById('detail-supplier').textContent = report.supplier || '-';
                 
-                // --- LOGIKA UNTUK PEMBAGIAN ---
                 const rawPembagian = report.pembagian;
-                // Jika rawPembagian memiliki nilai (1-6), tampilkan "Pembagian X", jika kosong (""), tampilkan string kosong ("").
                 const formattedPembagian = rawPembagian 
                     ? `Pembagian ${rawPembagian}` 
-                    : "Tidak ada pembagian"; // Menampilkan teks jika kosong
+                    : "Tidak ada pembagian"; 
                 document.getElementById('detail-pembagian').textContent = formattedPembagian;
-                // --- AKHIR LOGIKA PEMBAGIAN ---
 
                 document.getElementById('detail-qtyMasuk').textContent = report.qtyMasuk;
                 document.getElementById('detail-qtyAktual').textContent = report.qtyAktual;
@@ -489,14 +482,12 @@
                 const detailStatusElement = document.getElementById('detail-status');
                 detailStatusElement.textContent = report.status;
                 
-                // Dynamic status color
                 let statusColorClass = 'text-gray-500';
                 if (report.status === 'KURANG') statusColorClass = 'text-red-600';
                 if (report.status === 'LEBIH') statusColorClass = 'text-yellow-600';
                 if (report.status === 'SESUAI') statusColorClass = 'text-green-600';
                 detailStatusElement.className = `font-bold ${statusColorClass}`;
 
-                // Photo handling
                 const photoContainer = document.getElementById('detail-photo-container');
                 if (report.foto && typeof report.foto === 'string' && report.foto.startsWith('data:image')) {
                     photoContainer.innerHTML = `
@@ -508,13 +499,11 @@
                     `;
                 }
                 
-                // Set up Edit button inside detail modal to open the main edit modal
                 document.getElementById('detail-edit-btn').onclick = () => {
                     document.getElementById('detail-modal').classList.add('hidden');
                     editReport(id); 
                 };
 
-                // Display modal
                 document.getElementById('detail-modal').classList.remove('hidden');
                 document.getElementById('detail-modal').classList.add('flex');
             } catch (error) {
@@ -523,23 +512,19 @@
             }
         }
 
-
-        /** Render daftar laporan ke DOM */
         async function renderReports() {
             try {
                 const reports = await getReports();
                 const listContainer = document.getElementById('report-list');
                 
-                listContainer.innerHTML = ''; // Bersihkan kontainer
+                listContainer.innerHTML = ''; 
                 
                 if (reports.length === 0) {
-                    // Gunakan node yang sudah di-detach
                     listContainer.appendChild(emptyMessageNode); 
                     emptyMessageNode.classList.remove('hidden');
                     return;
                 }
                 
-                // Sembunyikan pesan kosong
                 emptyMessageNode.classList.add('hidden');
 
                 reports.forEach(report => {
@@ -548,7 +533,6 @@
                     if (report.status === 'LEBIH') statusColor = 'bg-yellow-100 text-yellow-700 font-bold';
                     if (report.status === 'SESUAI') statusColor = 'bg-green-100 text-green-700 font-bold';
                     
-                    // LOGIKA UNTUK BADGE EDIT
                     let editedBadge = '';
                     if (report.isEdited) {
                          editedBadge = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-700">Diedit</span>`;
@@ -556,7 +540,6 @@
                     
                     const reportItem = document.createElement('div');
                     reportItem.className = 'bg-white p-4 rounded-xl shadow-md border-l-4 border-indigo-500 hover:shadow-lg transition duration-200 cursor-pointer';
-                    // Tambahkan event listener ke seluruh kartu untuk menampilkan detail
                     reportItem.setAttribute('onclick', `viewReportDetails(${report.id})`); 
                     
                     reportItem.innerHTML = `
@@ -567,7 +550,6 @@
                                 <p class="text-xs text-gray-600">${report.supplier || '-'}</p>
                                 <p class="text-sm mt-1 text-gray-700">Aktual: ${report.qtyAktual} / Masuk: ${report.qtyMasuk}</p>
                             </div>
-                            <!-- Flex container untuk badge Diedit dan Status -->
                             <div class="text-right ml-4 flex flex-col items-end space-y-1">
                                 ${editedBadge} 
                                 <span class="inline-flex items-center px-3 py-1 rounded-full text-xs ${statusColor}">
@@ -575,7 +557,6 @@
                                 </span>
                             </div>
                         </div>
-                        <!-- Menghilangkan konten foto dan tombol edit dari list card untuk memperjelas. Edit sekarang diakses via modal detail. -->
                     `;
                     listContainer.appendChild(reportItem);
                 });
@@ -586,7 +567,6 @@
             }
         }
 
-        /** Logika untuk menentukan Status dan mengupdate UI */
         function updateStatusDisplay() {
             const qtyMasuk = parseInt(document.getElementById('qtyMasuk').value) || 0;
             const qtyAktual = parseInt(document.getElementById('qtyAktual').value) || 0;
@@ -617,10 +597,9 @@
             statusCard.className = `rounded-lg p-3 transition duration-300 ${bgColor}`;
             statusDisplay.className = `font-bold text-lg text-center mt-1 ${textColor}`;
             
-            return statusText.split(' ')[0]; // Ambil hanya kata statusnya (SESUAI/KURANG/LEBIH)
+            return statusText.split(' ')[0]; 
         }
         
-        /** Menangani logika penyimpanan/update laporan yang sebenarnya */
         async function handleSaveReport(form, isEditing, reportIdToUse) {
             const qtyMasuk = parseInt(form.qtyMasuk.value);
             const qtyAktual = parseInt(form.qtyAktual.value);
@@ -636,20 +615,18 @@
                 qtyMasuk: qtyMasuk,
                 qtyAktual: qtyAktual,
                 supplier: form.supplier.value,
-                pembagian: form.pembagian.value, // Mengambil nilai dari dropdown (bisa "" atau "1"-"6")
+                pembagian: form.pembagian.value, 
                 tanggal: new Date().toLocaleString('id-ID', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' }),
                 status: updateStatusDisplay(), 
             };
 
             if (isEditing) {
-                // Mode Update
                 reportData.id = reportIdToUse; 
                 reportData.isEdited = true; 
 
                 try {
                     const oldReport = await getReportById(reportIdToUse);
 
-                    // 1. Pertahankan foto lama secara default
                     if (oldReport) {
                         reportData.foto = oldReport.foto || null;
                         reportData.isEdited = oldReport.isEdited || true;
@@ -657,7 +634,6 @@
                         reportData.foto = null; 
                     }
 
-                    // 2. Jika ada foto baru diupload, timpa data foto lama
                     if (photoDataUrl) {
                         reportData.foto = photoDataUrl;
                     }
@@ -665,7 +641,6 @@
                     await putReport(reportData);
                     closeReportModal();
                     await renderReports(); 
-                    console.log(`Laporan ID ${reportIdToUse} berhasil diupdate dan daftar dirender ulang.`);
                     showMessage('Laporan berhasil diupdate!');
                 } catch (error) {
                     console.error('Gagal mengupdate laporan:', error);
@@ -673,7 +648,6 @@
                 }
 
             } else {
-                // Mode Tambah Baru
                 reportData.foto = photoDataUrl;
                 reportData.isEdited = false; 
                 
@@ -688,17 +662,76 @@
                 }
             }
         }
+        
+        // --- FUNGSI BARU UNTUK SCANNER REAL-TIME ---
+        
+        /** Memulai kamera dan scanner kode */
+        function startScanner() {
+            // 1. Tampilkan modal scanner
+            document.getElementById('scanner-modal').classList.remove('hidden');
+            document.getElementById('scanner-modal').classList.add('flex');
 
+            // 2. Inisialisasi instance scanner (hanya jika belum ada)
+            if (!html5QrCode) {
+                const qrCodeRegionId = "reader";
+                html5QrCode = new Html5Qrcode(qrCodeRegionId);
+            }
+
+            const config = {
+                fps: 10, // Frames per second
+                qrbox: { width: 250, height: 250 }, // Area pindaian
+                // Meminta kamera belakang (environment) secara default untuk mobile
+                facingMode: "environment" 
+            };
+
+            // 3. Define success handler
+            const onScanSuccess = (decodedText, decodedResult) => {
+                // Hentikan scanner segera setelah berhasil memindai
+                stopScanner(); 
+                
+                // Masukkan kode yang dipindai ke input SKU
+                const finalSKU = decodedText.trim().toUpperCase();
+                document.getElementById('sku').value = finalSKU;
+                
+                showMessage(`Scan berhasil! Kode SKU ${finalSKU} telah dimasukkan.`, false);
+            };
+
+            // 4. Mulai scanning
+            // Gunakan `Html5Qrcode.getCameras()` untuk mendapatkan ID kamera yang benar jika diperlukan, 
+            // namun menggunakan `facingMode: "environment"` biasanya cukup.
+            html5QrCode.start({ facingMode: "environment" }, config, onScanSuccess)
+                .catch(err => {
+                    stopScanner();
+                    console.error("Gagal memulai scanner:", err);
+                    // Informasikan user tentang masalah izin kamera
+                    showMessage("Gagal memulai kamera. Pastikan izin kamera telah diberikan dan tidak digunakan oleh aplikasi lain.", false);
+                });
+        }
+        
+        /** Menghentikan kamera dan menutup modal scanner */
+        function stopScanner() {
+            // Pastikan instance ada dan sedang berjalan sebelum memanggil stop()
+            if (html5QrCode && html5QrCode.isScanning) {
+                html5QrCode.stop().then(() => {
+                    console.log("Scanner dihentikan.");
+                }).catch(err => {
+                    // Beberapa browser mungkin memerlukan penanganan khusus di sini
+                    console.error("Gagal menghentikan scanner:", err);
+                });
+            } else if (html5QrCode) {
+                // Jika instance ada tapi tidak scanning (misalnya, gagal start), kita tetap perlu meresetnya
+                html5QrCode = null; 
+            }
+            document.getElementById('scanner-modal').classList.add('hidden');
+            document.getElementById('scanner-modal').classList.remove('flex');
+        }
 
         // --- Event Listeners ---
 
-        // Inisialisasi Database dan Tampilan
         window.onload = async () => {
-            // Ambil referensi node pesan kosong sebelum DOM-nya dihancurkan oleh innerHTML
             emptyMessageNode = document.getElementById('empty-message');
             const listContainer = document.getElementById('report-list');
             
-            // Detach node dari parent. Ini mencegah innerHTML = '' menghancurkan elemen `empty-message`.
             if (emptyMessageNode && listContainer.contains(emptyMessageNode)) {
                 listContainer.removeChild(emptyMessageNode);
             }
@@ -710,42 +743,14 @@
                 showMessage('Aplikasi gagal terhubung dengan penyimpanan data lokal (IndexedDB).');
             }
 
-            // Listener untuk tombol "Buat Laporan"
             document.getElementById('create-report-btn').addEventListener('click', () => openReportModal(null));
 
-            // Listener untuk perubahan input QTY (untuk update Status otomatis)
             document.getElementById('qtyMasuk').addEventListener('input', updateStatusDisplay);
             document.getElementById('qtyAktual').addEventListener('input', updateStatusDisplay);
-
-            // --- Logika Scanner Baru ---
-            const scanSkuBtn = document.getElementById('scan-sku-btn');
-            const cameraInput = document.getElementById('camera-input');
-
-            // 1. Tombol "Scan SKU" diklik -> picu input kamera
-            scanSkuBtn.addEventListener('click', () => {
-                cameraInput.click();
-            });
-
-            // 2. Hasil dari kamera/galeri diterima
-            cameraInput.addEventListener('change', (e) => {
-                if (e.target.files && e.target.files.length > 0) {
-                    // SIMULASI HASIL SCAN:
-                    // Setelah gambar diambil/dipilih, kita anggap proses scanning berhasil
-                    // dan memasukkan hasilnya (SKU placeholder) ke kolom SKU.
-                    const randomCode = Math.floor(Math.random() * 90000) + 10000;
-                    const scannedSKU = 'BARCODE-' + randomCode.toString().padStart(5, '0');
-                    
-                    document.getElementById('sku').value = scannedSKU;
-                    
-                    showMessage(`Scan berhasil! SKU: ${scannedSKU} telah diisi otomatis. (Simulasi)`);
-                    
-                    // Membersihkan input file agar bisa digunakan lagi untuk scan berikutnya
-                    cameraInput.value = ''; 
-                }
-            });
-            // --- Akhir Logika Scanner Baru ---
             
-            // Listener untuk submit form
+            // Listener BARU untuk tombol Scan SKU
+            document.getElementById('scan-sku-btn').addEventListener('click', startScanner);
+
             document.getElementById('report-form').addEventListener('submit', async (e) => {
                 e.preventDefault();
                 
@@ -767,14 +772,11 @@
                 const isEditing = currentReportId !== null;
                 const reportIdToUse = currentReportId; 
                 
-                // Tampilkan konfirmasi sebelum menyimpan
                 const actionText = isEditing ? 
                     `Apakah Anda yakin ingin MENGUPDATE laporan ID ${reportIdToUse} ini?` : 
                     "Apakah Anda yakin ingin MENYIMPAN laporan baru ini?";
                     
                 showMessage(actionText, true, () => handleSaveReport(form, isEditing, reportIdToUse));
-                
-                // Hentikan proses di sini, penyimpanan akan dilanjutkan oleh callback 'onConfirm'
             });
         };
     </script>
