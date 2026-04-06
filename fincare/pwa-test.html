@@ -1,0 +1,290 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FinCare PWA — Test Checker</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: system-ui, sans-serif; background: #0a0e1a; color: #e2e8f0; min-height: 100vh; padding: 24px; }
+  h1 { font-size: 22px; font-weight: 700; margin-bottom: 6px; color: #3b82f6; }
+  .sub { font-size: 13px; color: #64748b; margin-bottom: 28px; }
+  .section { margin-bottom: 24px; }
+  .section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; color: #64748b; margin-bottom: 12px; }
+  .check-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: #111827; border: 1px solid #1f2d45; border-radius: 10px;
+    padding: 14px 16px; margin-bottom: 8px;
+  }
+  .status { width: 22px; height: 22px; border-radius: 50%; flex-shrink: 0; margin-top: 1px;
+    display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 700; }
+  .status.ok { background: rgba(16,185,129,.2); color: #10b981; border: 1.5px solid #10b981; }
+  .status.fail { background: rgba(239,68,68,.2); color: #ef4444; border: 1.5px solid #ef4444; }
+  .status.warn { background: rgba(245,158,11,.2); color: #f59e0b; border: 1.5px solid #f59e0b; }
+  .status.pending { background: #1a2234; color: #64748b; border: 1.5px solid #1f2d45; }
+  .check-label { font-size: 14px; font-weight: 600; margin-bottom: 3px; }
+  .check-desc { font-size: 12px; color: #64748b; }
+  .check-val { font-size: 11px; color: #94a3b8; margin-top: 4px; font-family: monospace; }
+  .btn { background: #3b82f6; color: white; border: none; border-radius: 8px; padding: 10px 20px;
+    font-size: 13px; font-weight: 600; cursor: pointer; transition: background .2s; display: inline-block; }
+  .btn:hover { background: #2563eb; }
+  .btn-sec { background: #1a2234; border: 1px solid #1f2d45; color: #e2e8f0; }
+  .btn-sec:hover { background: #1e2d45; }
+  .actions { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 28px; }
+  #score-bar { height: 8px; background: #1a2234; border-radius: 4px; overflow: hidden; margin-bottom: 6px; }
+  #score-fill { height: 100%; border-radius: 4px; transition: width .6s ease; background: #3b82f6; }
+  #score-text { font-size: 13px; color: #94a3b8; }
+  #overall { font-size: 28px; font-weight: 800; margin-bottom: 4px; }
+</style>
+</head>
+<body>
+
+<h1>🔍 FinCare PWA Test Checker</h1>
+<p class="sub">Jalankan halaman ini di browser untuk memverifikasi semua fitur PWA sudah berfungsi.</p>
+
+<div id="score-bar"><div id="score-fill" style="width:0%"></div></div>
+<div id="score-text">Menjalankan tes...</div>
+<div id="overall" style="margin-top:12px;margin-bottom:24px;">–</div>
+
+<div class="actions">
+  <button class="btn" onclick="runAllTests()">🔄 Jalankan Ulang Semua Tes</button>
+  <button class="btn btn-sec" onclick="window.open('index.html')">Buka FinCare App</button>
+  <button class="btn btn-sec" onclick="testPushNotif()">🔔 Test Notifikasi Lokal</button>
+</div>
+
+<div class="section">
+  <div class="section-title">🔐 Prasyarat</div>
+  <div id="checks-prereq"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">📦 Service Worker & Cache</div>
+  <div id="checks-sw"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">📱 Install & Manifest</div>
+  <div id="checks-manifest"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">🔔 Notifikasi</div>
+  <div id="checks-notif"></div>
+</div>
+
+<div class="section">
+  <div class="section-title">💾 Storage</div>
+  <div id="checks-storage"></div>
+</div>
+
+<script>
+let passCount = 0;
+let totalCount = 0;
+
+function makeCheck(container, label, desc, status, val = '') {
+  totalCount++;
+  if (status === 'ok') passCount++;
+  const statusChar = { ok: '✓', fail: '✗', warn: '!', pending: '?' }[status] || '?';
+  const el = document.createElement('div');
+  el.className = 'check-item';
+  el.innerHTML = `
+    <div class="status ${status}">${statusChar}</div>
+    <div>
+      <div class="check-label">${label}</div>
+      <div class="check-desc">${desc}</div>
+      ${val ? `<div class="check-val">${val}</div>` : ''}
+    </div>
+  `;
+  document.getElementById(container).appendChild(el);
+}
+
+async function runAllTests() {
+  // Reset
+  passCount = 0; totalCount = 0;
+  ['checks-prereq','checks-sw','checks-manifest','checks-notif','checks-storage'].forEach(id => {
+    document.getElementById(id).innerHTML = '';
+  });
+
+  // === PREREQ ===
+  const isHttps = location.protocol === 'https:' || location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+  makeCheck('checks-prereq', 'HTTPS / Localhost', 'PWA & Service Worker hanya jalan di HTTPS',
+    isHttps ? 'ok' : 'fail', location.origin);
+
+  const isMobile = /Android|iPhone|iPad/i.test(navigator.userAgent);
+  makeCheck('checks-prereq', 'Platform', 'Deteksi perangkat',
+    'ok', isMobile ? '📱 Mobile detected' : '🖥 Desktop detected');
+
+  // === SERVICE WORKER ===
+  if ('serviceWorker' in navigator) {
+    makeCheck('checks-sw', 'Service Worker API', 'Browser mendukung Service Worker', 'ok');
+    try {
+      const reg = await navigator.serviceWorker.getRegistration('./');
+      if (reg) {
+        const state = reg.active ? 'active' : reg.installing ? 'installing' : reg.waiting ? 'waiting' : 'registered';
+        makeCheck('checks-sw', 'SW Registered', 'Service Worker sudah terdaftar', 'ok', `State: ${state} | Scope: ${reg.scope}`);
+      } else {
+        makeCheck('checks-sw', 'SW Registered', 'Service Worker belum terdaftar — buka index.html dulu', 'warn',
+          'Buka index.html agar SW bisa register');
+      }
+    } catch(e) {
+      makeCheck('checks-sw', 'SW Registered', e.message, 'fail');
+    }
+
+    try {
+      const cacheNames = await caches.keys();
+      if (cacheNames.length > 0) {
+        let totalFiles = 0;
+        for (const name of cacheNames) {
+          const c = await caches.open(name);
+          const keys = await c.keys();
+          totalFiles += keys.length;
+        }
+        makeCheck('checks-sw', 'Cache Storage', 'Aset sudah tersimpan di cache', 'ok',
+          `${cacheNames.length} cache bucket · ${totalFiles} file ter-cache`);
+      } else {
+        makeCheck('checks-sw', 'Cache Storage', 'Belum ada cache — buka index.html dulu', 'warn');
+      }
+    } catch(e) {
+      makeCheck('checks-sw', 'Cache Storage', e.message, 'fail');
+    }
+  } else {
+    makeCheck('checks-sw', 'Service Worker API', 'Browser tidak mendukung Service Worker', 'fail');
+  }
+
+  // Offline simulation hint
+  makeCheck('checks-sw', 'Offline Mode', 'Test manual: DevTools → Network → Offline → Refresh',
+    'pending', 'Tidak bisa dites otomatis — lakukan manual');
+
+  // === MANIFEST ===
+  const manifestLink = document.querySelector('link[rel="manifest"]') ||
+    await fetch('../manifest.json').then(r => r.ok ? {ok:true} : null).catch(() => null);
+
+  try {
+    const r = await fetch('./manifest.json');
+    if (r.ok) {
+      const mf = await r.json();
+      makeCheck('checks-manifest', 'manifest.json', 'File manifest ditemukan dan valid', 'ok',
+        `name: "${mf.name}" | display: ${mf.display} | icons: ${mf.icons?.length}`);
+      makeCheck('checks-manifest', 'Theme Color', 'Warna tema untuk status bar', mf.theme_color ? 'ok' : 'warn',
+        mf.theme_color || 'tidak ada');
+      makeCheck('checks-manifest', 'Shortcuts', 'App shortcuts tersedia', mf.shortcuts?.length > 0 ? 'ok' : 'warn',
+        mf.shortcuts?.length ? `${mf.shortcuts.length} shortcut` : 'tidak ada shortcut');
+    } else {
+      makeCheck('checks-manifest', 'manifest.json', 'File manifest tidak ditemukan', 'fail');
+    }
+  } catch(e) {
+    makeCheck('checks-manifest', 'manifest.json', 'Gagal fetch manifest: ' + e.message, 'fail');
+  }
+
+  const standalone = window.matchMedia('(display-mode: standalone)').matches ||
+    window.navigator.standalone === true;
+  makeCheck('checks-manifest', 'Install Status', standalone ? 'App berjalan sebagai PWA standalone' : 'App belum diinstall ke homescreen',
+    standalone ? 'ok' : 'warn', standalone ? 'display-mode: standalone' : 'Berjalan di browser biasa');
+
+  // Icons check
+  const iconSizes = ['72','96','128','144','152','192','384','512'];
+  let iconOk = 0;
+  for (const size of iconSizes) {
+    try {
+      const r = await fetch(`./icons/icon-${size}x${size}.png`, { method: 'HEAD' });
+      if (r.ok) iconOk++;
+    } catch {}
+  }
+  makeCheck('checks-manifest', 'Ikon PWA', `${iconOk}/${iconSizes.length} ukuran ikon tersedia`,
+    iconOk === iconSizes.length ? 'ok' : iconOk > 0 ? 'warn' : 'fail',
+    iconSizes.map(s => `${s}px`).join(', '));
+
+  // === NOTIFICATION ===
+  if ('Notification' in window) {
+    const perm = Notification.permission;
+    const permStatus = { granted: 'ok', denied: 'fail', default: 'warn' }[perm];
+    makeCheck('checks-notif', 'Notification API', 'Browser mendukung Web Notifications', 'ok');
+    makeCheck('checks-notif', 'Permission Status', perm === 'granted' ? 'Izin notifikasi sudah diberikan' :
+      perm === 'denied' ? 'Izin ditolak — aktifkan di pengaturan browser' : 'Izin belum diminta',
+      permStatus, `Notification.permission = "${perm}"`);
+  } else {
+    makeCheck('checks-notif', 'Notification API', 'Browser tidak mendukung notifikasi', 'fail');
+  }
+
+  if ('serviceWorker' in navigator && 'PushManager' in window) {
+    makeCheck('checks-notif', 'Push API', 'Browser mendukung Web Push', 'ok');
+    try {
+      const reg = await navigator.serviceWorker.ready;
+      const sub = await reg.pushManager.getSubscription();
+      makeCheck('checks-notif', 'Push Subscription', sub ? 'Sudah subscribe push' : 'Belum subscribe push',
+        sub ? 'ok' : 'warn', sub ? sub.endpoint.substring(0, 60) + '...' : 'Aktifkan di Settings → Push Notification');
+    } catch(e) {
+      makeCheck('checks-notif', 'Push Subscription', 'SW belum ready — buka index.html dulu', 'warn');
+    }
+  } else {
+    makeCheck('checks-notif', 'Push API', 'Browser tidak mendukung Push Notification', 'warn');
+  }
+
+  // === STORAGE ===
+  if ('indexedDB' in window) {
+    makeCheck('checks-storage', 'IndexedDB', 'Browser mendukung IndexedDB (storage utama FinCare)', 'ok');
+  } else {
+    makeCheck('checks-storage', 'IndexedDB', 'Browser tidak mendukung IndexedDB', 'fail');
+  }
+
+  if (navigator.storage && navigator.storage.estimate) {
+    try {
+      const { usage, quota } = await navigator.storage.estimate();
+      const usageMB = (usage / 1024 / 1024).toFixed(2);
+      const quotaMB = (quota / 1024 / 1024).toFixed(0);
+      makeCheck('checks-storage', 'Storage Quota', 'Ruang penyimpanan tersedia', 'ok',
+        `Digunakan: ${usageMB} MB / ${quotaMB} MB`);
+    } catch(e) {
+      makeCheck('checks-storage', 'Storage Quota', e.message, 'warn');
+    }
+  }
+
+  if (navigator.storage && navigator.storage.persist) {
+    try {
+      const persistent = await navigator.storage.persist();
+      makeCheck('checks-storage', 'Persistent Storage', persistent ? 'Storage persisten — data tidak akan dihapus otomatis' : 'Storage belum persisten',
+        persistent ? 'ok' : 'warn', persistent ? 'navigator.storage.persist() = true' : 'Data bisa dihapus browser saat storage penuh');
+    } catch(e) {}
+  }
+
+  // Score
+  const pct = Math.round((passCount / totalCount) * 100);
+  document.getElementById('score-fill').style.width = pct + '%';
+  document.getElementById('score-fill').style.background = pct >= 80 ? '#10b981' : pct >= 60 ? '#f59e0b' : '#ef4444';
+  document.getElementById('score-text').textContent = `${passCount} dari ${totalCount} tes lulus`;
+  const emoji = pct >= 90 ? '🟢' : pct >= 70 ? '🟡' : '🔴';
+  document.getElementById('overall').textContent = `${emoji} Skor PWA: ${pct}%`;
+}
+
+async function testPushNotif() {
+  if (!('Notification' in window)) { alert('Browser tidak mendukung notifikasi'); return; }
+  const perm = await Notification.requestPermission();
+  if (perm !== 'granted') { alert('Izin notifikasi ditolak'); return; }
+
+  // Local notification via SW
+  if ('serviceWorker' in navigator) {
+    const reg = await navigator.serviceWorker.getRegistration('./');
+    if (reg) {
+      await reg.showNotification('✅ FinCare PWA', {
+        body: 'Notifikasi lokal berhasil! Budget alert & reminder sudah aktif.',
+        icon: './icons/icon-192x192.png',
+        badge: './icons/icon-96x96.png',
+        vibrate: [200, 100, 200],
+        tag: 'pwa-test'
+      });
+      return;
+    }
+  }
+
+  // Fallback
+  new Notification('✅ FinCare PWA', {
+    body: 'Notifikasi lokal berhasil!',
+    icon: './icons/icon-192x192.png'
+  });
+}
+
+// Auto-run
+runAllTests();
+</script>
+</body>
+</html>
